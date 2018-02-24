@@ -1,23 +1,46 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.2027
+VisualStudioVersion = 15.0.27130.2036
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PBIX-Tools", "src\PBIX-Tools\PBIX-Tools.csproj", "{66F1431D-0811-483D-8F8A-69354E9BF3BD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PBIX-Tools", "src\PBIX-Tools\PBIX-Tools.csproj", "{66F1431D-0811-483D-8F8A-69354E9BF3BD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{486E0587-B329-4F95-BA61-B0A19251AB1B}"
+	ProjectSection(SolutionItems) = preProject
+		paket.dependencies = paket.dependencies
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PBIX-Tools.Tests", "tests\PBIX-Tools.Tests\PBIX-Tools.Tests.csproj", "{69D4E7D3-261B-4581-A388-2B0BE237335D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{F954DB52-327A-47E5-A804-B13B6042F449}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PBIX-Tools.IntegrationTests", "tests\PBIX-Tools.IntegrationTests\PBIX-Tools.IntegrationTests.csproj", "{D326ECF1-0D05-46F5-9537-A677618DFB06}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
-		Release|Any CPU = Release|Any CPU
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{66F1431D-0811-483D-8F8A-69354E9BF3BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{66F1431D-0811-483D-8F8A-69354E9BF3BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{66F1431D-0811-483D-8F8A-69354E9BF3BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{66F1431D-0811-483D-8F8A-69354E9BF3BD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{66F1431D-0811-483D-8F8A-69354E9BF3BD}.Debug|x64.ActiveCfg = Debug|x64
+		{66F1431D-0811-483D-8F8A-69354E9BF3BD}.Debug|x64.Build.0 = Debug|x64
+		{66F1431D-0811-483D-8F8A-69354E9BF3BD}.Release|x64.ActiveCfg = Release|x64
+		{66F1431D-0811-483D-8F8A-69354E9BF3BD}.Release|x64.Build.0 = Release|x64
+		{69D4E7D3-261B-4581-A388-2B0BE237335D}.Debug|x64.ActiveCfg = Debug|x64
+		{69D4E7D3-261B-4581-A388-2B0BE237335D}.Debug|x64.Build.0 = Debug|x64
+		{69D4E7D3-261B-4581-A388-2B0BE237335D}.Release|x64.ActiveCfg = Release|x64
+		{69D4E7D3-261B-4581-A388-2B0BE237335D}.Release|x64.Build.0 = Release|x64
+		{D326ECF1-0D05-46F5-9537-A677618DFB06}.Debug|x64.ActiveCfg = Debug|x64
+		{D326ECF1-0D05-46F5-9537-A677618DFB06}.Debug|x64.Build.0 = Debug|x64
+		{D326ECF1-0D05-46F5-9537-A677618DFB06}.Release|x64.ActiveCfg = Release|x64
+		{D326ECF1-0D05-46F5-9537-A677618DFB06}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{69D4E7D3-261B-4581-A388-2B0BE237335D} = {F954DB52-327A-47E5-A804-B13B6042F449}
+		{D326ECF1-0D05-46F5-9537-A677618DFB06} = {F954DB52-327A-47E5-A804-B13B6042F449}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E2944C94-DCE9-41DF-A671-6F38744A17D2}

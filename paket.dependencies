@@ -1,0 +1,12 @@
+framework: auto-detect
+
+source https://www.nuget.org/api/v2
+
+nuget Serilog
+nuget Serilog.Sinks.Console
+nuget Microsoft.AnalysisServices.retail.amd64
+nuget Newtonsoft.Json
+nuget PowerArgs
+nuget xunit
+nuget xunit.runner.visualstudio
+nuget Moq

@@ -1,20 +1,22 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <TargetFramework>net471</TargetFramework>
     <RuntimeIdentifier>win7-x64</RuntimeIdentifier>
-    <AssemblyName>pbix-tools</AssemblyName>
-    <RootNamespace>PbixTools</RootNamespace>
+    <AssemblyName>pbix-tools.tests</AssemblyName>
+    <RootNamespace>PbixTools.Tests</RootNamespace>
     <Platforms>x64</Platforms>
-    <Authors>Mathias Thierbach</Authors>
-    <StartupObject>PbixTools.Program</StartupObject>
     <LangVersion>latest</LangVersion>
-    <OutputPath>bin\$(Configuration)\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutputPath>bin\Debug\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutputPath>bin\Release\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <None Remove="msmdsrv.ini.xml" />
-    <EmbeddedResource Include="msmdsrv.ini.xml" />
+    <ProjectReference Include="..\..\src\PBIX-Tools\PBIX-Tools.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Mashup.Client.Packaging">
@@ -23,7 +25,6 @@
     <Reference Include="Microsoft.PowerBI.Packaging">
       <HintPath>C:\Program Files\Microsoft Power BI Desktop\bin\Microsoft.PowerBI.Packaging.dll</HintPath>
     </Reference>
-    <Reference Include="WindowsBase" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>
