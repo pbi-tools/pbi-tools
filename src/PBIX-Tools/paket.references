@@ -3,3 +3,4 @@ Serilog.Sinks.Console
 Microsoft.AnalysisServices.retail.amd64
 Newtonsoft.Json
 PowerArgs
+System.ValueTuple
