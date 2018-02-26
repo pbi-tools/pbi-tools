@@ -8,6 +8,7 @@ namespace PbixTools
 {
     public interface IProjectFolder : IDisposable
     {
+        string BasePath { get;  }
         bool TryGetFile(string path, out Stream stream);
         void WriteFile(string path, Stream stream);
         void WriteText(string path, Action<TextWriter> writer);
@@ -25,18 +26,19 @@ namespace PbixTools
 
         private static readonly ILogger Log = Serilog.Log.ForContext<ProjectFolder>();
 
-        private readonly string _baseDir;
         private readonly HashSet<string> _filesWritten;
 
         public ProjectFolder(string baseDir)
         {
-            _baseDir = baseDir;
+            BasePath = baseDir;
             _filesWritten = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
         }
 
+        public string BasePath { get; }
+
         public bool TryGetFile(string path, out Stream stream)
         {
-            var fullPath = Path.Combine(_baseDir, path);
+            var fullPath = Path.Combine(BasePath, path);
             if (File.Exists(fullPath))
             {
                 stream = File.OpenRead(fullPath);
@@ -51,7 +53,7 @@ namespace PbixTools
 
         public void WriteFile(string path, Stream stream)
         {
-            var fullPath = Path.Combine(_baseDir, path);
+            var fullPath = Path.Combine(BasePath, path);
             _filesWritten.Add(fullPath); // keeps track of files added or updated
             Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
 
@@ -63,7 +65,7 @@ namespace PbixTools
 
         public void WriteText(string path, Action<TextWriter> writerCallback)
         {
-            var fullPath = Path.Combine(_baseDir, path);
+            var fullPath = Path.Combine(BasePath, path);
             _filesWritten.Add(fullPath); // keeps track of files added or updated
             Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
 
@@ -83,14 +85,14 @@ namespace PbixTools
 
             // Remove any existing files that have not been updated
 
-            foreach (var path in Directory.GetFiles(_baseDir, "*.*", SearchOption.AllDirectories))
+            foreach (var path in Directory.GetFiles(BasePath, "*.*", SearchOption.AllDirectories))
             {
                 if (!_filesWritten.Contains(path)) File.Delete(path);
                 // TODO Log the things
             }
 
             // Remove empty dirs:
-            foreach (var dir in Directory.GetDirectories(_baseDir, "*", SearchOption.TopDirectoryOnly))
+            foreach (var dir in Directory.GetDirectories(BasePath, "*", SearchOption.TopDirectoryOnly))
             {
                 if (Directory.Exists(dir) && Directory.EnumerateFiles(dir, "*.*", SearchOption.AllDirectories).FirstOrDefault() == null)
                 {

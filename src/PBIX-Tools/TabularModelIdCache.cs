@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -8,36 +9,64 @@ namespace PbixTools
 {
     public class TabularModelIdCache
     {
-        public static string FileName = ".id-cache.json";
+        // TODO Must convert this into two separate components, 1 - PBIXPROJ file, 2 - IdCache
+        // TODO Log the things
+        // TODO defensive error handling
+
+        public static string FileName = ".pbixproj.json";
 
         private readonly JsonSerializer _jsonSerializer = new JsonSerializer();
-        private readonly IProjectFolder _folder;
+        private readonly string _path;
         private readonly IDictionary<string, string> _dataSourcesByLocation; // get from existing cache file
         private readonly IDictionary<string, string> _locationsByDataSource; // build from current dataSources
 
-        public TabularModelIdCache(IProjectFolder folder, JArray dataSources)
+        public TabularModelIdCache(string baseFolder, JArray dataSources)
         {
-            _folder = folder ?? throw new ArgumentNullException(nameof(folder));
+            _path = Path.Combine(baseFolder, FileName);
             if (dataSources == null) throw new ArgumentNullException(nameof(dataSources));
             _jsonSerializer.Formatting = Formatting.Indented; // makes it readable in source control
 
             // only consider dataSources with a connectionString having a 'location' property
 
+            var currentDataSources = BuildDataSourceLookup(dataSources);
+
             // Lookup: location ->> dataSource (static)
-            if (folder.TryGetFile(FileName, out var stream))
+            if (File.Exists(_path))
             {
                 // load file and convert to dict
-                using (var reader = new JsonTextReader(new StreamReader(stream)))
+                using (var reader = new JsonTextReader(new StreamReader(File.OpenRead(_path))))
                 {
-                    _dataSourcesByLocation = _jsonSerializer.Deserialize<Dictionary<string, string>>(reader);
+                    var pbixProj = _jsonSerializer.Deserialize<JObject>(reader); // TODO error handling
+                    if (pbixProj.TryGetValue("dataSources", out var token))
+                    {
+                        _dataSourcesByLocation = token.ToObject<Dictionary<string, string>>();
+                        // Add newly added data sources (merge)
+                        foreach (var dataSource in currentDataSources)
+                        {
+                            // key: Location, value: Data Source Guid
+                            if (!_dataSourcesByLocation.ContainsKey(dataSource.Key))
+                                _dataSourcesByLocation.Add(dataSource);
+                        }
+                        // Remove deleted ddata sources
+                        foreach (var location in _dataSourcesByLocation.Keys.ToArray())
+                        {
+                            if (!currentDataSources.ContainsKey(location))
+                                _dataSourcesByLocation.Remove(location);
+                        }
+                    }
+                    else
+                    {
+                        _dataSourcesByLocation = currentDataSources;
+                    }
                 }
             }
             else
             {
                 // build dict from current dataSources
                 // assume each location only occurs once
-                _dataSourcesByLocation = BuildDataSourceLookup(dataSources);
+                _dataSourcesByLocation = currentDataSources;
             }
+
 
             // Lookup: dataSource ->> location
             _locationsByDataSource = BuildCurrentLocationsLookup(dataSources);
@@ -75,12 +104,11 @@ namespace PbixTools
 
         public void WriteCacheFile()
         {
-            // dont write if empty
-            if (_dataSourcesByLocation.Count > 0)
+            using (var writer = File.CreateText(_path))
             {
-                _folder.WriteText(FileName, writer =>
-                {
-                    _jsonSerializer.Serialize(writer, _dataSourcesByLocation);
+                _jsonSerializer.Serialize(writer, new JObject {
+                    { "version", "0.0" }, // TODO Must move this to an outer scope
+                    { "dataSources", JObject.FromObject(_dataSourcesByLocation) }
                 });
             }
         }

@@ -51,7 +51,8 @@ namespace PbixTools
         public void Serialize(JObject db)
         {
             var dataSources = db.SelectToken("model.dataSources") as JArray ?? new JArray();
-            var idCache = new TabularModelIdCache(_folder, dataSources);
+            var projFolder = Path.GetFullPath(Path.Combine(_folder.BasePath, ".."));
+            var idCache = new TabularModelIdCache(projFolder, dataSources);
 
             // 
             // model

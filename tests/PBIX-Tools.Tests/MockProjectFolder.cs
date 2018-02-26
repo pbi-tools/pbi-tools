@@ -18,6 +18,8 @@ namespace PbixTools.Tests
         {
         }
 
+        public string BasePath { get; }
+
         public bool TryGetFile(string path, out Stream stream)
         {
             stream = null;

@@ -10,8 +10,15 @@ using Xunit;
 
 namespace PbixTools.Tests
 {
-    public class TabularModelSerializerTests
+    public class TabularModelSerializerTests : IDisposable
     {
+        private readonly TempFolder _tmp = new TempFolder();
+
+        public void Dispose()
+        {
+            ((IDisposable)_tmp).Dispose();
+        }
+
         #region Tables
 
         [Fact]
@@ -25,7 +32,7 @@ namespace PbixTools.Tests
         ""relationships"": []
     }
 }");
-            var db2 = TabularModelSerializer.ProcessTables(db, folder, new TabularModelIdCache(folder, new JArray()));
+            var db2 = TabularModelSerializer.ProcessTables(db, folder, new TabularModelIdCache(_tmp.Path, new JArray()));
 
             Assert.Null(db2.Value<JObject>("model").Property("tables"));
         }
@@ -43,7 +50,7 @@ namespace PbixTools.Tests
         ]
     }
 }");
-            TabularModelSerializer.ProcessTables(db, folder, new TabularModelIdCache(folder, new JArray()));
+            TabularModelSerializer.ProcessTables(db, folder, new TabularModelIdCache(_tmp.Path, new JArray()));
 
             Assert.True(folder.ContainsPath(@"tables\table1\table1.json"));
             Assert.True(folder.ContainsPath(@"tables\table2\table2.json"));
@@ -227,7 +234,7 @@ namespace PbixTools.Tests
             };
 
             var folder = new MockProjectFolder();
-            var db2 = TabularModelSerializer.ProcessDataSources(db, folder, new TabularModelIdCache(folder, db.SelectToken("model.dataSources") as JArray));
+            var db2 = TabularModelSerializer.ProcessDataSources(db, folder, new TabularModelIdCache(_tmp.Path, db.SelectToken("model.dataSources") as JArray));
 
             Assert.True(folder.ContainsPath(@"dataSources\ds1\ds1.json"));
             Assert.True(folder.ContainsPath(@"dataSources\ds2\ds2.json"));
