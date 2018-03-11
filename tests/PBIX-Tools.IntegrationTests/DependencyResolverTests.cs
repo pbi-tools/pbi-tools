@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace PbixTools.Tests
+namespace PbixTools.IntegrationTests
 {
     public class DependencyResolverTests : IClassFixture<DependencyResolverFixture>
     {

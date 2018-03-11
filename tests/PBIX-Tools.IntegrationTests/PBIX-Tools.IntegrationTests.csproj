@@ -5,7 +5,7 @@
     <TargetFramework>net471</TargetFramework>
     <RuntimeIdentifier>win7-x64</RuntimeIdentifier>
     <AssemblyName>pbix-tools.integrationtests</AssemblyName>
-    <RootNamespace>PbixTools.Tests</RootNamespace>
+    <RootNamespace>PbixTools.IntegrationTests</RootNamespace>
     <Platforms>x64</Platforms>
     <LangVersion>latest</LangVersion>
     <OutputPath>bin\$(Configuration)\</OutputPath>
