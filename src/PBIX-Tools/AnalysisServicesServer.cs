@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -13,6 +14,7 @@ using System.Xml.Linq;
 using System.Xml.XPath;
 using TOM = Microsoft.AnalysisServices.Tabular;
 using Microsoft.PowerBI.Packaging;
+using Polly;
 using Serilog;
 
 namespace PbixTools
@@ -46,14 +48,16 @@ namespace PbixTools
 
     public class AnalysisServicesServer : IDisposable
     {
+        private readonly IDependenciesResolver _dependenciesResolver;
         private static readonly ILogger Log = Serilog.Log.ForContext<AnalysisServicesServer>();
 
 
         private readonly string _tempPath;
-        private readonly string _asToolPath;
+        private string _asToolPath;
 
         public AnalysisServicesServer(ASInstanceConfig config, IDependenciesResolver dependenciesResolver)
         {
+            _dependenciesResolver = dependenciesResolver ?? throw new ArgumentNullException(nameof(dependenciesResolver));
             _tempPath = Path.GetTempFileName(); // TODO Use TempFolder
             File.Delete(_tempPath);
             Directory.CreateDirectory(_tempPath);
@@ -66,33 +70,6 @@ namespace PbixTools
             Log.Information("MSMDSRV.EXE found at {ASTOOLPATH}", _asToolPath);
             Log.Information("Working directory: {WorkingDirectory}", _tempPath);
 
-            //// Start CMD host process
-            //var procStartInfo = //new ProcessStartInfo(_asToolPath, $"-c -n {Guid.NewGuid()} -s \"{_tempPath}\"")
-            //    new ProcessStartInfo(Environment.ExpandEnvironmentVariables("%COMSPEC%"), "/k")
-            //    {
-            //        CreateNoWindow = true,
-            //        WorkingDirectory = _tempPath,
-            //        WindowStyle = ProcessWindowStyle.Hidden,
-            //        RedirectStandardOutput = true,
-            //        RedirectStandardError = true,
-            //        RedirectStandardInput = true,
-            //        UseShellExecute = false,  // required for stdout/stderr redirection
-            //    };
-
-            //_proc = new Process();
-
-
-            //// TODO Could declare receivers on instance, otherwise fwd output to logger
-            //_proc.OutputDataReceived += (sender, e) => Log.Verbose("MSMDSRV INF: {Data}", e.Data);
-            //_proc.ErrorDataReceived += (sender, e) => Log.Verbose("MSMDSRV ERR: {Data}", e.Data);
-
-            //_proc.StartInfo = procStartInfo;
-            //_proc.Start();
-
-            //_proc.BeginErrorReadLine();
-            //_proc.BeginOutputReadLine();
-
-            //config.PrivateProcess = _proc.Id.Dump("PID");
             CreateConfig(config);
         }
 
@@ -122,9 +99,9 @@ namespace PbixTools
             config.SetWorkingDir(_tempPath);
 
             var iniFilePath = Path.Combine(_tempPath, "msmdsrv.ini");
-            var templ = GetEmbeddedResource("msmdsrv.ini.xml", XDocument.Load);
+            var iniTemplate = GetEmbeddedResource("msmdsrv.ini.xml", XDocument.Load);
 
-            ASIniFile.WriteConfig(config, templ, iniFilePath);
+            ASIniFile.WriteConfig(config, iniTemplate, iniFilePath);
         }
 
         private static T GetEmbeddedResource<T>(string name, Func<Stream, T> transform)
@@ -151,7 +128,7 @@ namespace PbixTools
             if (IsRunning) throw new InvalidOperationException("Server is already running.");
 
             // Start new instance
-            // '-n' arg is REQUIRED for dynamic port assignment! -- will only use default port 2383 otherwise
+            // '-n' arg is REQUIRED for dynamic port assignment! -- will only use default port 2383 otherwise (and fail if that port is in use)
             var procStartInfo = new ProcessStartInfo(_asToolPath, $"-c -n {Guid.NewGuid()} -s \"{_tempPath}\"")
             {
                 WorkingDirectory = _tempPath,
@@ -176,8 +153,18 @@ namespace PbixTools
             }
 
             _proc.StartInfo = procStartInfo;
-            _proc.Start();
-            _proc.Id.Dump("PID");
+            Policy
+                .Handle<Win32Exception>(ex => ex.NativeErrorCode == 5 /* ERROR_ACCESS_DENIED */)
+                .Retry((ex, i) =>
+                {
+                    Log.Information("Shadow-copying msmdsrv...");
+                    _asToolPath = _dependenciesResolver.ShadowCopyMsmdsrv(_asToolPath);
+                    _proc.StartInfo.FileName = _asToolPath;
+                    Log.Information("Using msmdsrv from shadow-copied location: {Path}", _asToolPath);
+                })
+                .Execute(_proc.Start);
+
+            Log.Verbose("Started MSMDSRV, PID: {PID}", _proc.Id);
 
             if (HideWindow)
             {
@@ -194,7 +181,10 @@ namespace PbixTools
             }
 
             if (File.Exists(portFilePath))
-                Port = Int32.Parse(File.ReadAllText(portFilePath, Encoding.Unicode /* IMPORTANT */)).Dump("Port");
+            {
+                Port = Int32.Parse(File.ReadAllText(portFilePath, Encoding.Unicode /* IMPORTANT */));
+                Log.Information("Tabular Server process launched successfully. Port: {Port}", Port);
+            }
             else if (_proc.HasExited) // happens when process could not start, for instance because of misconfiguration or missing capabilities
                 throw new Exception("Process has terminated");
             else
@@ -216,6 +206,8 @@ namespace PbixTools
 
                 server.ImageLoad(name, id, package.DataModel.GetStream());
                 server.Refresh();
+
+                Log.Information("Model image from PBIX loaded successfully.");
             }
         }
 
@@ -227,8 +219,15 @@ namespace PbixTools
 
             using (_proc)
             {
-                if (!_proc.HasExited)
-                    _proc.Kill();
+                try
+                {
+                    if (!_proc.HasExited)
+                        _proc.Kill();
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e, "Could not terminate msmdsrv.exe.");
+                }
             }
 
             Directory.EnumerateFiles(_tempPath, "*", SearchOption.AllDirectories).Dump("Deleting...");
