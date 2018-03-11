@@ -1,0 +1,17 @@
+{
+  "name": "Simple",
+  "compatibilityLevel": 1400,
+  "model": {
+    "culture": "en-GB",
+    "annotations": [
+      {
+        "name": "__PBI_TimeIntelligenceEnabled",
+        "value": "1"
+      },
+      {
+        "name": "PBIDesktopVersion",
+        "value": "2.55.5010.641 (PBIDesktop)"
+      }
+    ]
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "name": "Query1",
+  "columns": [
+    {
+      "name": "ID",
+      "dataType": "double",
+      "sourceColumn": "ID",
+      "summarizeBy": "count",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"General\" />"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "Double#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "ID"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "Label",
+      "dataType": "string",
+      "sourceColumn": "Label",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Text\" />"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "String#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "Label"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    }
+  ],
+  "partitions": [
+    {
+      "name": "Query1-9e2582d4-d91f-47b9-9254-041fa715140e",
+      "mode": "import",
+      "source": {
+        "query": "SELECT * FROM [Query1]",
+        "dataSource": "29bfdd2b-a53c-4cf7-894d-1743d87c4caa"
+      }
+    }
+  ],
+  "annotations": [
+    {
+      "name": "PBI_Id",
+      "value": "636d827a-7f19-4fbb-9ef3-a726e720bc88"
+    },
+    {
+      "name": "LinkedQueryName",
+      "value": "Query1"
+    }
+  ]
+}
