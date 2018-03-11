@@ -1,6 +1,7 @@
 framework: auto-detect
 
-source https://www.nuget.org/api/v2
+source https://nuget.org/api/v2
+content: none
 
 nuget Serilog
 nuget Serilog.Sinks.Console
@@ -11,3 +12,18 @@ nuget xunit
 nuget xunit.runner.visualstudio
 nuget Moq
 nuget System.ValueTuple
+nuget Polly
+
+
+group Build
+  content: none
+  #framework >= net461
+  source https://nuget.org/api/v2
+  #source https://ci.appveyor.com/nuget/fsharp-formatting
+  
+  nuget FAKE
+  #nuget FSharp.Formatting prerelease
+  #nuget ILRepack
+  
+  github fsharp/FAKE modules/Octokit/Octokit.fsx
+  

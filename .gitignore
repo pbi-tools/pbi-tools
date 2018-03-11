@@ -18,6 +18,7 @@
 x64/
 x86/
 bld/
+build/
 [Bb]in/
 [Oo]bj/
 [Ll]og/
@@ -155,8 +156,8 @@ PublishScripts/
 *.nupkg
 # The packages folder can be ignored because of Package Restore
 **/packages/*
-# except build/, which is used as an MSBuild target.
-!**/packages/build/
+## except build/, which is used as an MSBuild target.
+#!**/packages/build/
 # Uncomment if necessary however generally it will be regenerated when needed
 #!**/packages/repositories.config
 # NuGet v3's project.json files produces more ignoreable files
@@ -248,6 +249,7 @@ paket-files/
 
 # FAKE - F# Make
 .fake/
+AssemblyInfo.cs
 
 # JetBrains Rider
 .idea/

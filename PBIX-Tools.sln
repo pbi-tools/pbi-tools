@@ -7,7 +7,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PBIX-Tools", "src\PBIX-Tool
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{486E0587-B329-4F95-BA61-B0A19251AB1B}"
 	ProjectSection(SolutionItems) = preProject
+		build.fsx = build.fsx
 		paket.dependencies = paket.dependencies
+		README.md = README.md
+		RELEASE_NOTES.md = RELEASE_NOTES.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PBIX-Tools.Tests", "tests\PBIX-Tools.Tests\PBIX-Tools.Tests.csproj", "{69D4E7D3-261B-4581-A388-2B0BE237335D}"
