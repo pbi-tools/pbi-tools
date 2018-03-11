@@ -6,11 +6,33 @@ using Serilog;
 
 namespace PbixTools
 {
+    /// <summary>
+    /// Represents a sub-folder inside the PBIXPROJ directory, containing the artifacts for one PBIX part (e.g., Mashup, Report, etc.)
+    /// </summary>
     public interface IProjectFolder : IDisposable
     {
-        string BasePath { get;  }
+        /// <summary>
+        /// Gets the path of the folder.
+        /// </summary>
+        string BasePath { get; }
+        /// <summary>
+        /// When set to <c>true</c>, deletes all files/folders that were not added or updated 
+        /// during the current lifetime of the <see cref="IProjectFolder"/> when <c>Dispose()</c> is called.
+        /// This is to ensure that unhandled exceptions do not cause the entire folder to be removed
+        /// when an action has only been performed partially.
+        /// </summary>
+        bool CommitDelete { get; set; }
+        /// <summary>
+        /// Provides access to the <see cref="Stream"/> of a file if it exists.
+        /// </summary>
         bool TryGetFile(string path, out Stream stream);
+        /// <summary>
+        /// Writes a binary file to the folder.
+        /// </summary>
         void WriteFile(string path, Stream stream);
+        /// <summary>
+        /// Writes a text file to the folder.
+        /// </summary>
         void WriteText(string path, Action<TextWriter> writer);
     }
 
@@ -36,6 +58,8 @@ namespace PbixTools
 
         public string BasePath { get; }
 
+        public bool CommitDelete { get; set; }
+
         public bool TryGetFile(string path, out Stream stream)
         {
             var fullPath = Path.Combine(BasePath, path);
@@ -57,6 +81,7 @@ namespace PbixTools
             _filesWritten.Add(fullPath); // keeps track of files added or updated
             Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
 
+            Log.Verbose("Writing file: {Path}", fullPath);
             using (var file = File.Create(fullPath))
             {
                 stream.CopyTo(file);
@@ -69,6 +94,7 @@ namespace PbixTools
             _filesWritten.Add(fullPath); // keeps track of files added or updated
             Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
 
+            Log.Verbose("Writing file: {Path}", fullPath);
             using (var writer = File.CreateText(fullPath))
             {
                 writerCallback(writer);
@@ -77,10 +103,11 @@ namespace PbixTools
 
         public void Dispose()
         {
-            // TODO Remove base folder if empty
             if (_filesWritten.Count == 0)
             {
-
+                if (Directory.Exists(BasePath))
+                    Directory.Delete(BasePath, recursive: true);
+                return;
             }
 
             // Remove any existing files that have not been updated
@@ -101,6 +128,7 @@ namespace PbixTools
                 }
             }
 
+            // TODO Check if nested empty dirs need to be removed explicitly
         }
 
     }

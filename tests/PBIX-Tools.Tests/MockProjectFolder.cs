@@ -19,6 +19,7 @@ namespace PbixTools.Tests
         }
 
         public string BasePath { get; }
+        public bool CommitDelete { get; set; }
 
         public bool TryGetFile(string path, out Stream stream)
         {

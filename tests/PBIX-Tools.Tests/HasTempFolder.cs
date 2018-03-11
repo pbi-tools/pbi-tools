@@ -1,0 +1,14 @@
+﻿using System;
+
+namespace PbixTools.Tests
+{
+    public abstract class HasTempFolder : IDisposable
+    {
+        protected readonly TempFolder TestFolder = new TempFolder();
+
+        public virtual void Dispose()
+        {
+            ((IDisposable)TestFolder).Dispose();
+        }
+    }
+}
