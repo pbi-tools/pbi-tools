@@ -35,6 +35,8 @@ namespace PbixTools
         [SuppressMessage("ReSharper", "AssignNullToNotNullAttribute")]
         public void ExtractModel()
         {
+            // TODO Handle PBIT format (has model in DataModelSchema)
+
             const string forbiddenCharacters = @". , ; ' ` : / \ * | ? "" & % $ ! + = ( ) [ ] { } < >"; // grabbed these from an AMO exception message
             var modelName = forbiddenCharacters  // TODO Could also use TOM.Server.Databases.CreateNewName()
                 .Replace(" ", "")
@@ -54,6 +56,8 @@ namespace PbixTools
                 // Dirs will be set automatically
             }, _resolver))
             {
+                msmdsrv.HideWindow = true;
+
                 msmdsrv.Start();
                 msmdsrv.LoadPbixModel(_pbixPath, modelName, modelName);
 
@@ -79,30 +83,6 @@ namespace PbixTools
                 var serializer = new TabularModelSerializer(folder);
                 serializer.Serialize(tmsl);
             }
-
-            //var outFolder = GetFolder("Model");
-
-
-            //}
-
-            //using (var temp = new TempFolder { Delete = true })
-            //{
-            //    var bimPath = Path.Combine(temp.Path, "tabular.bim");
-            //    File.WriteAllText(bimPath, tmsl.ToString());
-
-            //    // TODO Remove dependency on Tabular Editor...
-
-            //    using (var tom = new TabularModelHandler(bimPath, new TabularModelHandlerSettings { }))
-            //    {
-            //        var options = TabularEditor.TOMWrapper.SerializeOptions.Default;
-            //        options.Levels.Remove("Tables/Columns");
-            //        options.Levels.Remove("Relationships");
-            //        //options.Levels.Remove("Data Sources");
-            //        tom.Save(outFolder.Dump(), SaveFormat.TabularEditorFolder, options);
-            //    }
-            //}
-
-            // TODO create list of current files to detect deletions required
 
         }
 
@@ -193,6 +173,7 @@ namespace PbixTools
             //   ...
             // config.json
             // filters.json
+            // LinguisticSchema.xml
             // /sections: /{name} ("ReportSection1")
             //            filters.json
             //   /visualContainers: /{config.name} ("638f08d2f495792449ca")
@@ -250,5 +231,10 @@ namespace PbixTools
 
         }
 
+        // TODO Version
+        // TODO Connections
+        // TODO Metadata
+        // TODO Settings
+        // TODO PBIXPROJ.json
     }
 }
