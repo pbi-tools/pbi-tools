@@ -107,7 +107,13 @@ namespace PbixTools
             using (var writer = File.CreateText(_path))
             {
                 _jsonSerializer.Serialize(writer, new JObject {
-                    { "version", "0.0" }, // TODO Must move this to an outer scope
+                    { "version", "0.1" }, // TODO Must move this to an outer scope
+                    /* PBIXPROJ Change Log
+                     * ===================
+                     * 0.0 - Initial version (Mashup, Model, Report, CustomVisuals, StaticResources)
+                     * 0.1 - Model/dataSources: use location (query name) as folder name (rather than datasource guid); always write 'dataSource.json'
+                     *       FIX: use static name inside dataSource.json
+                     */
                     { "dataSources", JObject.FromObject(_dataSourcesByLocation) }
                 });
             }

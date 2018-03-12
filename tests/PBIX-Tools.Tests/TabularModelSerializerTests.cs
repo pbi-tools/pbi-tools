@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
 using System.Xml;
 using System.Xml.XPath;
 using Newtonsoft.Json.Linq;
@@ -204,9 +201,22 @@ namespace PbixTools.Tests
         #endregion
 
 
+
         [Fact]
-        public void ProcessDataSources__CreatesSubfolderForEachDataSource()
+        public void ProcessDataSources__ReplaceDatasourceNamePropertyWithStaticLookupValue()
         {
+            // We've got an existing pbixproj file with dataSource mappings:
+            File.WriteAllText(
+                Path.Combine(TestFolder.Path, TabularModelIdCache.FileName), 
+                new JObject
+                {
+                    { "dataSources", new JObject
+                    {
+                        { "Table1", "09a6f778-cfbd-4153-9354-15085bdbf371" },
+                        { "Table2", "d85453b6-f15f-4116-9a65-cad48a4bc967" },
+                    }}
+                }.ToString());
+
             var db = new JObject
             {
                 { "model", new JObject
@@ -214,23 +224,68 @@ namespace PbixTools.Tests
                     { "dataSources", new JArray(
                         new JObject
                         {
-                            { "name", "ds1" },
+                            { "name", "1b4f67fe-4f1c-4828-9971-b258a79f5b79" },
                             { "connectionString", MashupHelpers.BuildPowerBIConnectionString(TestData.GlobalPipe, TestData.MinimalMashupPackageBytes, "Table1" ) }
                         },
                         new JObject
                         {
-                            { "name", "ds2" },
+                            { "name", "a6312d03-f6eb-4455-bfd4-04f472995193" },
                             { "connectionString", MashupHelpers.BuildPowerBIConnectionString(TestData.GlobalPipe, TestData.MinimalMashupPackageBytes, "Table2" ) }
                         }
-                    ) }
+                    )}
                 }}
             };
 
             var folder = new MockProjectFolder();
-            var db2 = TabularModelSerializer.ProcessDataSources(db, folder, new TabularModelIdCache(TestFolder.Path, db.SelectToken("model.dataSources") as JArray));
+            TabularModelSerializer.ProcessDataSources(db, folder, new TabularModelIdCache(TestFolder.Path, db.SelectToken("model.dataSources") as JArray));
 
-            Assert.True(folder.ContainsPath(@"dataSources\ds1\ds1.json"));
-            Assert.True(folder.ContainsPath(@"dataSources\ds2\ds2.json"));
+            Assert.True(folder.ContainsPath(@"dataSources\Table1\dataSource.json"));
+            Assert.True(folder.ContainsPath(@"dataSources\Table2\dataSource.json"));
+        }
+
+        [Fact]
+        public void ProcessDataSources__UsesLocationNameForDatasourceFolder()
+        {
+            // We've got an existing pbixproj file with dataSource mappings:
+            File.WriteAllText(
+                Path.Combine(TestFolder.Path, TabularModelIdCache.FileName),
+                new JObject
+                {
+                    { "dataSources", new JObject
+                    {
+                        { "Table1", "09a6f778-cfbd-4153-9354-15085bdbf371" },
+                        { "Table2", "d85453b6-f15f-4116-9a65-cad48a4bc967" },
+                    }}
+                }.ToString());
+
+            var db = new JObject
+            {
+                { "model", new JObject
+                {
+                    { "dataSources", new JArray(
+                        new JObject
+                        {
+                            { "name", "1b4f67fe-4f1c-4828-9971-b258a79f5b79" }, // those dataSource names are volatile and will be dropped completely
+                            { "connectionString", MashupHelpers.BuildPowerBIConnectionString(TestData.GlobalPipe, TestData.MinimalMashupPackageBytes, "Table1" ) }
+                        },
+                        new JObject
+                        {
+                            { "name", "a6312d03-f6eb-4455-bfd4-04f472995193" },
+                            { "connectionString", MashupHelpers.BuildPowerBIConnectionString(TestData.GlobalPipe, TestData.MinimalMashupPackageBytes, "Table2" ) }
+                        }
+                    )}
+                }}
+            };
+
+            var folder = new MockProjectFolder();
+            TabularModelSerializer.ProcessDataSources(db, folder, new TabularModelIdCache(TestFolder.Path, db.SelectToken("model.dataSources") as JArray));
+
+            var ds1 = folder.GetAsJson(@"dataSources\Table1\dataSource.json");
+            var ds2 = folder.GetAsJson(@"dataSources\Table2\dataSource.json");
+
+            // Expecting 
+            Assert.Equal("09a6f778-cfbd-4153-9354-15085bdbf371", ds1["name"].Value<string>());
+            Assert.Equal("d85453b6-f15f-4116-9a65-cad48a4bc967", ds2["name"].Value<string>());
         }
 
         // Test: Sanitize filenames

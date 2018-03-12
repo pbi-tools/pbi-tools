@@ -2,6 +2,7 @@
 using System.Data.OleDb;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
@@ -177,6 +178,7 @@ namespace PbixTools
             {
                 var name = dataSource["name"]?.Value<string>();  //TODO replace name using IDCache
                 if (name == null) continue;
+                var dir = name;
 
                 // connectionString: Global Pipe, Mashup
                 var connectionStringToken = dataSource["connectionString"] as JValue;
@@ -185,6 +187,8 @@ namespace PbixTools
                 {
                     // lookup static name
                     name = idCache.LookupOriginalDataSourceId(name); // idCache is traversing via location
+                    dataSource["name"] = name;
+                    dir = location;
                     // strip values:
                     var bldr = new OleDbConnectionStringBuilder(connectionString);
                     bldr.Remove("global pipe");
@@ -194,12 +198,12 @@ namespace PbixTools
 
                     var mashupPrefix = Path.Combine(
                         "dataSources",
-                        name,
+                        location,
                         "mashup");
                     MashupPackageSerializer.ExtractMashup(folder, mashupPrefix, mashup);
                 }
 
-                folder.WriteText($@"dataSources\{name}\{name}.json", WriteJson(dataSource));
+                folder.WriteText($@"dataSources\{dir}\dataSource.json", WriteJson(dataSource));
             }
 
             db.Value<JObject>("model").Remove("dataSources");
