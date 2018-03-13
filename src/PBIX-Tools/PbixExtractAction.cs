@@ -14,11 +14,17 @@ namespace PbixTools
 {
     public class PbixExtractAction
     {
+        /* PbixExtractor : IDisposable
+           - assembles and invokes PackageComponents (Mashup, Model, Report, Version, ...)
+           - create PBIXPROJ component (init from existing, modifiable by each child component, write on exit) -- check version
+           - provides Context: BaseFolder (derived from PBIX path or customized, PBIXPROJ, IPowerBiPackage)
+           - each PackageComponent should provide extract/compile methods (to keep respective actions in same place)
+         */
+
         private readonly string _pbixPath;
         private readonly IDependenciesResolver _resolver;
 
         private readonly string _baseFolder;
-        // model, mashup, report, resources, version, etc...
 
         public PbixExtractAction(string pbixPath, IDependenciesResolver resolver)
         {
@@ -235,6 +241,7 @@ namespace PbixTools
         // TODO Connections
         // TODO Metadata
         // TODO Settings
+        // TODO DiagramState
         // TODO PBIXPROJ.json
     }
 }

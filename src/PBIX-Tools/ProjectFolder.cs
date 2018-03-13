@@ -38,7 +38,7 @@ namespace PbixTools
 
     public class ProjectFolder : IProjectFolder
     {
-        // represents a PBIX (source controlled) folder, like: Model, Mashup, Report
+        // represents a PBIX (source controlled) component folder, like: Model, Mashup, Report
         // each extract action maintains one instance
         // ctor with basePath
         // create list of all existing files

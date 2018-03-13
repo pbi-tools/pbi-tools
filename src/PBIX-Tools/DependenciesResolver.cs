@@ -13,6 +13,7 @@ namespace PbixTools
     {
         bool TryFindMsmdsrv(out string path);
         string ShadowCopyMsmdsrv(string path);
+        string GetEffectivePowerBiInstallDir();
     }
 
     public class DependenciesResolver : IDependenciesResolver
@@ -148,6 +149,9 @@ namespace PbixTools
 
             return Path.Combine(copyDest, MSMDSRV_EXE);
         }
+
+        public string GetEffectivePowerBiInstallDir() => _pbiInstall.Value.InstallDir;
+
     }
 
     public class PowerBIDesktopInstallation

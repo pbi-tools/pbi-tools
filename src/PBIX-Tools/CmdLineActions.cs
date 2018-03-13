@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using PowerArgs;
+using Serilog.Events;
 
 namespace PbixTools
 {
@@ -13,6 +14,7 @@ namespace PbixTools
     {
 
         private readonly IDependenciesResolver _dependenciesResolver = new DependenciesResolver(); // TODO allow to init this with a set path from config
+        private readonly AppSettings _appSettings;
 
         public CmdLineActions() : this(Program.AppSettings)
         {
@@ -20,7 +22,7 @@ namespace PbixTools
 
         public CmdLineActions(AppSettings appSettings)
         {
-            if (appSettings == null) throw new ArgumentNullException(nameof(appSettings));
+            _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
         }
 
 
@@ -57,9 +59,12 @@ namespace PbixTools
         [ArgActionMethod, ArgDescription("Collects diagnostic information about the local system and writes a JSON object to StdOut.")]
         public void Info()
         {
+            _appSettings.LevelSwitch.MinimumLevel = LogEventLevel.Warning;
+            
             var pbiInstalls = PowerBILocator.FindInstallations();
             var json = new JObject
             {
+                { "effectivePowerBiFolder", _dependenciesResolver.GetEffectivePowerBiInstallDir() },
                 { "pbiInstalls", JArray.Parse(JsonConvert.SerializeObject(pbiInstalls)) }
             };
             using (var writer = new JsonTextWriter(Console.Out))

@@ -5,6 +5,8 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using PowerArgs;
 using Serilog;
+using Serilog.Core;
+using Serilog.Events;
 
 [assembly: InternalsVisibleTo("pbix-tools.tests")]
 
@@ -33,10 +35,8 @@ namespace PbixTools
             SetErrorMode(prevMode | ErrorModes.SEM_NOGPFAULTERRORBOX); // Set error mode w/o overwriting prev settings
 
             Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.ControlledBy(AppSettings.LevelSwitch)
                 .WriteTo.Console()
-#if DEBUG
-                    .MinimumLevel.Verbose()
-#endif
                 .CreateLogger();
         }
 
@@ -123,7 +123,11 @@ namespace PbixTools
 
     public class AppSettings
     {
-        // TODO Define AppSettings
+        public LoggingLevelSwitch LevelSwitch { get; } = new LoggingLevelSwitch(
+#if DEBUG
+            LogEventLevel.Verbose
+#endif
+        );
     }
 
 }
