@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "pbix-tools-cli"
+		},
+		{
+			"path": "pbix-tools-vscode"
+		},
+		{
+			"path": ".", 
+			"name": "root"
+		}
+	]
+}
