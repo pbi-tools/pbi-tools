@@ -1,8 +1,11 @@
 
+#### 0.2.0-beta.1 - 2018-04-17
+* Handle PBIX w/o embedded model (live connection or PBIT)
+* WIP: Version, Connections, Metadata, Settings, LinguisticSchema, MashupPackageMetadata, MashupPackageContent
+* WIP: Assembly bundling
+
 #### 0.1.0-beta.3 - 2018-03-13
 * [info] action returns 'effectivePowerBiFolder'
-* WIP: Version, Connections, Metadata, Settings, LinguisticSchema, DataModelSchema, MashupPackageMetadata, MashupPackageContent
-* WIP: Assembly bundling
 
 #### 0.1.0-beta.2 - 2018-03-12
 * PBIXPROJ v0.1: Model/dataSources: use location (query name) as folder name (rather than datasource guid); always write 'dataSource.json'

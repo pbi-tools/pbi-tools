@@ -191,12 +191,10 @@ namespace PbixTools
                 Console.Error.WriteLine("Port Detection Timeout"); // Throw instead?
         }
 
-        public void LoadPbixModel(string path, string id, string name)
+        public void LoadPbixModel(IPowerBIPackage package, string id, string name)
         {
             if (!IsRunning) throw new Exception("Server not running");
 
-            using (var pbix = File.OpenRead(path))
-            using (var package = PowerBIPackager.Open(pbix))
             using (var server = new TOM.Server())
             {
                 if (package.DataModel == null)

@@ -12,7 +12,7 @@ using TOM = Microsoft.AnalysisServices.Tabular;
 
 namespace PbixTools
 {
-    public class PbixExtractAction
+    public class PbixExtractAction : IDisposable
     {
         /* PbixExtractor : IDisposable
            - assembles and invokes PackageComponents (Mashup, Model, Report, Version, ...)
@@ -22,6 +22,8 @@ namespace PbixTools
          */
 
         private readonly string _pbixPath;
+        private readonly Stream _pbixStream;
+        private readonly IPowerBIPackage _package;
         private readonly IDependenciesResolver _resolver;
 
         private readonly string _baseFolder;
@@ -32,60 +34,73 @@ namespace PbixTools
             _resolver = resolver ?? throw new ArgumentNullException(nameof(resolver));
             if (!File.Exists(pbixPath)) throw new FileNotFoundException("PBIX file not found.", pbixPath);
 
-            // TODO Could read package here, then close in Dispose
-
             _baseFolder = Path.Combine(Path.GetDirectoryName(pbixPath), Path.GetFileNameWithoutExtension(pbixPath));
             Directory.CreateDirectory(_baseFolder);
+
+            _pbixStream = File.OpenRead(pbixPath);
+            _package = PowerBIPackager.Open(_pbixStream);
         }
 
         [SuppressMessage("ReSharper", "AssignNullToNotNullAttribute")]
         public void ExtractModel()
         {
-            // TODO Handle PBIT format (has model in DataModelSchema)
+            var tmsl = default(JObject);
 
-            const string forbiddenCharacters = @". , ; ' ` : / \ * | ? "" & % $ ! + = ( ) [ ] { } < >"; // grabbed these from an AMO exception message
-            var modelName = forbiddenCharacters  // TODO Could also use TOM.Server.Databases.CreateNewName()
-                .Replace(" ", "")
-                .ToCharArray()
-                .Aggregate(
-                    Path.GetFileNameWithoutExtension(_pbixPath),
-                    (n, c) => n.Replace(c, '_')
-                );
-
-            JObject tmsl;
-
-            using (var msmdsrv = new AnalysisServicesServer(new ASInstanceConfig
+            if (_package.DataModelSchema != null)
             {
-                DeploymentMode = DeploymentMode.SharePoint, // required for PBI Desktop
-                DisklessModeRequested = true,
-                EnableDisklessTMImageSave = true, 
-                // Dirs will be set automatically
-            }, _resolver))
-            {
-                msmdsrv.HideWindow = true;
-
-                msmdsrv.Start();
-                msmdsrv.LoadPbixModel(_pbixPath, modelName, modelName);
-
-                using (var server = new TOM.Server())
+                using (var reader = new JsonTextReader(new StreamReader(_package.DataModelSchema.GetStream(), Encoding.Unicode)))
                 {
-                    server.Connect(msmdsrv.ConnectionString);
-                    using (var db = server.Databases[modelName])
+                    tmsl = new JsonSerializer().Deserialize<JObject>(reader);
+                }
+            }
+            else if (_package.DataModel != null)
+            {
+                const string
+                    forbiddenCharacters =
+                        @". , ; ' ` : / \ * | ? "" & % $ ! + = ( ) [ ] { } < >"; // grabbed these from an AMO exception message
+                var modelName = forbiddenCharacters // TODO Could also use TOM.Server.Databases.CreateNewName()
+                    .Replace(" ", "")
+                    .ToCharArray()
+                    .Aggregate(
+                        Path.GetFileNameWithoutExtension(_pbixPath),
+                        (n, c) => n.Replace(c, '_')
+                    );
+
+                using (var msmdsrv = new AnalysisServicesServer(new ASInstanceConfig
+                {
+                    DeploymentMode = DeploymentMode.SharePoint, // required for PBI Desktop
+                    DisklessModeRequested = true,
+                    EnableDisklessTMImageSave = true,
+                    // Dirs will be set automatically
+                }, _resolver))
+                {
+                    msmdsrv.HideWindow = true;
+
+                    msmdsrv.Start();
+                    msmdsrv.LoadPbixModel(_package, modelName, modelName);
+
+                    using (var server = new TOM.Server())
                     {
-                        var json = TOM.JsonSerializer.SerializeDatabase(db, new TOM.SerializeOptions
+                        server.Connect(msmdsrv.ConnectionString);
+                        using (var db = server.Databases[modelName])
                         {
-                            IgnoreTimestamps = true, // that way we don't have to strip them out below
-                            IgnoreInferredObjects = true,
-                            IgnoreInferredProperties = true,
-                            SplitMultilineStrings = true
-                        });
-                        tmsl = JObject.Parse(json);
+                            var json = TOM.JsonSerializer.SerializeDatabase(db, new TOM.SerializeOptions
+                            {
+                                IgnoreTimestamps = true, // that way we don't have to strip them out below
+                                IgnoreInferredObjects = true,
+                                IgnoreInferredProperties = true,
+                                SplitMultilineStrings = true
+                            });
+                            tmsl = JObject.Parse(json);
+                        }
                     }
                 }
             }
 
+
             using (var folder = Folder("Model"))
             {
+                if (tmsl == null) return; // Checking inside here ensures ProjectFolder cleanup
                 var serializer = new TabularModelSerializer(folder);
                 serializer.Serialize(tmsl);
             }
@@ -119,31 +134,27 @@ namespace PbixTools
                 }
             };
 
-            using (var stream = File.OpenRead(_pbixPath))
-            using (var package = PowerBIPackager.Open(stream))
-            {
-                var resources = EnumerateResources(package.CustomVisuals, nameof(package.CustomVisuals)).Concat(
-                    EnumerateResources(package.StaticResources, nameof(package.StaticResources)));
+            var resources = EnumerateResources(_package.CustomVisuals, nameof(IPowerBIPackage.CustomVisuals)).Concat(
+                EnumerateResources(_package.StaticResources, nameof(IPowerBIPackage.StaticResources)));
 
-                foreach (var file in resources)
+            foreach (var file in resources)
+            {
+                var path = Path.Combine(GetFolder(file.Label, skipCreate: true), file.Path);
+                using (var src = file.Content.GetStream())
                 {
-                    var path = Path.Combine(GetFolder(file.Label, skipCreate: true), file.Path);
-                    using (var src = file.Content.GetStream())
+                    Directory.CreateDirectory(Path.GetDirectoryName(path)); // ensuring all subfolders are in place
+                    if (file.Label == nameof(_package.CustomVisuals) && Path.GetFileName(path).Equals("package.json", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        Directory.CreateDirectory(Path.GetDirectoryName(path)); // ensuring all subfolders are in place
-                        if (file.Label == nameof(package.CustomVisuals) && Path.GetFileName(path).Equals("package.json", StringComparison.InvariantCultureIgnoreCase))
+                        // Expanding the package.json file:
+                        using (var reader = new JsonTextReader(new StreamReader(src)))
                         {
-                            // Expanding the package.json file:
-                            using (var reader = new JsonTextReader(new StreamReader(src)))
-                            {
-                                File.WriteAllText(path, JToken.ReadFrom(reader).ToString(Formatting.Indented));
-                            }
+                            File.WriteAllText(path, JToken.ReadFrom(reader).ToString(Formatting.Indented));
                         }
-                        else // any other file
-                        {
-                            using (var dest = File.Create(path))
-                                src.CopyTo(dest);
-                        }
+                    }
+                    else // any other file
+                    {
+                        using (var dest = File.Create(path))
+                            src.CopyTo(dest);
                     }
                 }
             }
@@ -243,5 +254,12 @@ namespace PbixTools
         // TODO Settings
         // TODO DiagramState
         // TODO PBIXPROJ.json
+
+        public void Dispose()
+        {
+            _package.Dispose();
+            _pbixStream.Dispose();
+        }
+
     }
 }

@@ -38,19 +38,20 @@ namespace PbixTools
             [ArgRequired, /*ArgPosition(1),*/ ArgExistingFile, ArgDescription("The path to an existing PBIX file")] string path
         )
         {
-            var extractor = new PbixExtractAction(path, _dependenciesResolver);
+            using (var extractor = new PbixExtractAction(path, _dependenciesResolver))
+            {
+                extractor.ExtractMashup();
+                Console.WriteLine("Mashup extracted");
 
-            extractor.ExtractMashup();
-            Console.WriteLine("Mashup extracted");
+                extractor.ExtractReport();
+                Console.WriteLine("Report extracted");
 
-            extractor.ExtractModel();
-            Console.WriteLine("Model extracted");
+                extractor.ExtractResources();
+                Console.WriteLine("Resources extracted");
 
-            extractor.ExtractReport();
-            Console.WriteLine("Report extracted");
-
-            extractor.ExtractResources();
-            Console.WriteLine("Resources extracted");
+                extractor.ExtractModel();
+                Console.WriteLine("Model extracted");
+            }
 
             Console.WriteLine("Completed.");
         }
