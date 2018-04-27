@@ -1,6 +1,12 @@
 System.IO.Directory.SetCurrentDirectory __SOURCE_DIRECTORY__
 
-// clean, assemblyinfo, build, test, docs (gh-pages), package (nuget), release (myget, chocolatey)
+// [x] clean
+// [x] assemblyinfo
+// [x] build
+// [ ] test
+// [ ] docs (gh-pages)
+// [ ] package (nuget)
+// [ ] release (myget, chocolatey)
 
 #r @"packages/build/FAKE/tools/FakeLib.dll"
 #r "System.IO.Compression.FileSystem"
@@ -9,7 +15,6 @@ open Fake
 open Fake.Git
 open Fake.AssemblyInfoFile
 open Fake.ReleaseNotesHelper
-open Fake.UserInputHelper
 open System
 open System.IO
 open Fake.Testing.NUnit3
@@ -58,7 +63,7 @@ let gitHome = "https://github.com/" + gitOwner
 let gitName = "pbix-tools"
 
 // The url for the raw files hosted
-let gitRaw = environVarOrDefault "gitRaw" "https://raw.github.com/pbix-tools"
+let gitRaw = environVarOrDefault "gitRaw" ("https://raw.github.com/" + gitOwner)
 
 
 // --------------------------------------------------------------------------------------

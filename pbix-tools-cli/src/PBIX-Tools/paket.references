@@ -5,3 +5,4 @@ Newtonsoft.Json
 PowerArgs
 System.ValueTuple
 Polly
+StreamJsonRpc

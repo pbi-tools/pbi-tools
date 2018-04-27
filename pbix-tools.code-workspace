@@ -10,5 +10,12 @@
 			"path": ".", 
 			"name": "root"
 		}
-	]
+	],
+	"launch": {
+		"configurations": [],
+		"compounds": []
+	},
+	"settings": {
+		// Add workspace settings here
+	}
 }

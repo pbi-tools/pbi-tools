@@ -12,6 +12,7 @@ using Serilog.Events;
 
 namespace PbixTools
 {
+
     class Program
     {
         [DllImport("kernel32.dll")]
@@ -37,6 +38,7 @@ namespace PbixTools
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.ControlledBy(AppSettings.LevelSwitch)
                 .WriteTo.Console()
+                    .Filter.ByExcluding(e => AppSettings.ShouldSuppressConsoleLogs)
                 .CreateLogger();
         }
 
@@ -45,18 +47,21 @@ namespace PbixTools
 
         static int Main(string[] args)
         {
+            var argsDef = CmdLineArgumentsDefinitionExtensions.For<CmdLineActions>().RemoveAutoAliases();
 
             // When invoked w/o args, print usage and exit immediately (do not trigger ArgException)
             if ((args ?? new string[0]).Length == 0)
             {
-                ArgUsage.GenerateUsageFromTemplate<CmdLineActions>().WriteLine();
+                ArgUsage.GenerateUsageFromTemplate(argsDef).WriteLine();
                 return (int)ExitCode.NoArgsProvided;
             }
 
             var result = default(ExitCode);
             try
             {
-                var action = Args.InvokeAction<CmdLineActions>(args); // throws ArgException
+                var action = Args.ParseAction(argsDef, args);
+                
+                action.Invoke(); // throws ArgException
 
                 // in Debug compilation, propagates any exceptions thrown by executing action
                 // in Release compilation, a user friendly error message is displayed, and exceptions thrown are available via the HandledException property
@@ -128,6 +133,31 @@ namespace PbixTools
             LogEventLevel.Verbose
 #endif
         );
+
+        internal bool ShouldSuppressConsoleLogs { get; set; } = false;
+
+        public IDisposable SuppressConsoleLogs()
+        {
+            this.ShouldSuppressConsoleLogs = true;
+            return new Disposable(()=>
+            {
+                this.ShouldSuppressConsoleLogs = false;
+            });
+        }
+
+        private class Disposable : IDisposable
+        {
+            private readonly Action _disposeAction;
+
+            public Disposable(Action disposeAction)
+            {
+                this._disposeAction = disposeAction ?? throw new ArgumentNullException(nameof(disposeAction));
+            }
+            void IDisposable.Dispose()
+            {
+                _disposeAction();
+            }
+        }
     }
 
 }

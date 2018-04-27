@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using PowerArgs;
@@ -72,6 +73,38 @@ namespace PbixTools
                 writer.Formatting = Environment.UserInteractive ? Formatting.Indented : Formatting.None;
                 json.WriteTo(writer);
             }
+        }
+
+        [ArgActionMethod, ArgShortcut("start-server")]
+        public void StartJsonRpcServer()
+        {
+            using (var cts = new CancellationTokenSource())
+            using (_appSettings.SuppressConsoleLogs())
+            {
+                if (Environment.UserInteractive)
+                {
+                    Console.CancelKeyPress += (sender,e) => {
+                        e.Cancel = true; // intercept Ctrl+C
+                        cts.Cancel();
+                    };
+                }
+
+                using (var rpcServer = RpcServer.Start(Console.OpenStandardOutput, Console.OpenStandardInput, cts))
+                {
+                    cts.Token.WaitHandle.WaitOne(); // waits until cancel key pressed, RpcServer disconnected, or exit message sent
+                }
+            }
+
+            /* OmniSharp sample server:
+
+            var server = new LanguageServer(Console.OpenStandardInput(), Console.OpenStandardOutput(), new LoggerFactory());
+
+            server.AddHandler(new TextDocumentHandler(server));
+
+            await server.Initialize();
+            await server.WaitForExit;
+
+             */
         }
     }
 }
