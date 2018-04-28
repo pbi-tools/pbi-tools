@@ -44,8 +44,10 @@ namespace PbixTools.IntegrationTests
                     pbixSrc.CopyTo(dest);
                 }
 
-                var extractor = new PbixExtractAction(pbixPath, _fixture.DependenciesResolver);
-                extractor.ExtractMashup(); // This one will require to load the Mashup.Packaging dll
+                using (var extractor = new PbixExtractAction(pbixPath, _fixture.DependenciesResolver))
+                {
+                    extractor.ExtractMashup(); // This one will require to load the Mashup.Packaging dll
+                }
 
                 // Double-check that the M script has actually be extracted
                 Assert.True(File.Exists(Path.Combine(
