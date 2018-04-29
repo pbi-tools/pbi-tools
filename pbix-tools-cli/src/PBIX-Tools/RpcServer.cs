@@ -13,7 +13,7 @@ namespace PbixTools
     /// </summary>
     public class RpcServer : IDisposable
     {
-        private readonly static ILogger Log = Serilog.Log.ForContext<RpcServer>();
+        private static readonly ILogger Log = Serilog.Log.ForContext<RpcServer>();
 
         public static RpcServer Start(Func<Stream> sender, Func<Stream> receiver, CancellationTokenSource cts)
         {

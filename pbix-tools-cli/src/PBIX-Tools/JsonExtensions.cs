@@ -36,7 +36,7 @@ namespace PbixTools
         }
 
         /// <summary>
-        /// Parses a string-encoded json token 
+        /// Parses a string-encoded json token out of a property on a json object.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="parent"></param>

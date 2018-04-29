@@ -8,6 +8,7 @@ using Microsoft.Mashup.Client.Packaging;
 using Microsoft.PowerBI.Packaging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Formatting = Newtonsoft.Json.Formatting;
 using TOM = Microsoft.AnalysisServices.Tabular;
 
 namespace PbixTools
