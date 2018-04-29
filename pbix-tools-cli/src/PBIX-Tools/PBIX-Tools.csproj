@@ -27,6 +27,12 @@
     <Reference Include="Microsoft.Mashup.Client.Packaging">
       <HintPath>C:\Program Files\Microsoft Power BI Desktop\bin\Microsoft.Mashup.Client.Packaging.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Mashup.Document">
+      <HintPath>C:\Program Files\Microsoft Power BI Desktop\bin\Microsoft.Mashup.Document.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.PowerBI.Client.Windows">
+      <HintPath>C:\Program Files\Microsoft Power BI Desktop\bin\Microsoft.PowerBI.Client.Windows.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.PowerBI.Packaging">
       <HintPath>C:\Program Files\Microsoft Power BI Desktop\bin\Microsoft.PowerBI.Packaging.dll</HintPath>
     </Reference>
