@@ -174,7 +174,7 @@ namespace PbixTools
 
             // Wait for cration of Port file
             var portFilePath = Path.Combine(_tempPath, "msmdsrv.port.txt");
-            var attempts = 10;
+            var attempts = 20;
             while (!File.Exists(portFilePath) && attempts-- > 0)
             {
                 Thread.Sleep(1000);
@@ -334,7 +334,7 @@ namespace PbixTools
         [Map("DAX/DQ/EnableAllFunctions")] public bool EnableAllDaxFunctions { get; set; } = true;
         [Map("DAX/DQ/EnableVariationNotation")] public bool EnableVariationNotation { get; set; } = true;
         [Map("Network/ListenOnlyOnLocalConnections")] public bool ListenOnlyOnLocalConnections { get; set; } = true;
-        public int TMCompatibilitySKU { get; set; } = 0; // Required for MEngine Integration, only compatible with DeploymentMode.Tabular and with SSDT distro
+        [Map("TMCompatibilitySKU")] public bool EnableMEngineIntegration { get; set; } // Only compatible with DeploymentMode.Tabular and with SSDT distribution
     }
 
     // ReSharper disable once InconsistentNaming
