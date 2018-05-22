@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.Data.OleDb;
+using System.IO;
 using System.Xml;
 using System.Xml.XPath;
 using Newtonsoft.Json.Linq;
@@ -22,7 +24,7 @@ namespace PbixTools.Tests
         ""relationships"": []
     }
 }");
-            var db2 = TabularModelSerializer.ProcessTables(db, folder, new TabularModelIdCache(TestFolder.Path, new JArray()));
+            var db2 = TabularModelSerializer.ProcessTables(db, folder, new MockQueriesLookup());
 
             Assert.Null(db2.Value<JObject>("model").Property("tables"));
         }
@@ -40,7 +42,7 @@ namespace PbixTools.Tests
         ]
     }
 }");
-            TabularModelSerializer.ProcessTables(db, folder, new TabularModelIdCache(TestFolder.Path, new JArray()));
+            TabularModelSerializer.ProcessTables(db, folder, new MockQueriesLookup());
 
             Assert.True(folder.ContainsPath(@"tables\table1\table1.json"));
             Assert.True(folder.ContainsPath(@"tables\table2\table2.json"));
@@ -201,23 +203,9 @@ namespace PbixTools.Tests
         #endregion
 
 
-
-        [Fact]
-        public void ProcessDataSources__ReplaceDatasourceNamePropertyWithStaticLookupValue()
+        public class ProcessDataSources
         {
-            // We've got an existing pbixproj file with dataSource mappings:
-            File.WriteAllText(
-                Path.Combine(TestFolder.Path, TabularModelIdCache.FileName), 
-                new JObject
-                {
-                    { "dataSources", new JObject
-                    {
-                        { "Table1", "09a6f778-cfbd-4153-9354-15085bdbf371" },
-                        { "Table2", "d85453b6-f15f-4116-9a65-cad48a4bc967" },
-                    }}
-                }.ToString());
-
-            var db = new JObject
+            private readonly JObject _databaseJson = new JObject
             {
                 { "model", new JObject
                 {
@@ -236,57 +224,63 @@ namespace PbixTools.Tests
                 }}
             };
 
-            var folder = new MockProjectFolder();
-            TabularModelSerializer.ProcessDataSources(db, folder, new TabularModelIdCache(TestFolder.Path, db.SelectToken("model.dataSources") as JArray));
-
-            Assert.True(folder.ContainsPath(@"dataSources\Table1\dataSource.json"));
-            Assert.True(folder.ContainsPath(@"dataSources\Table2\dataSource.json"));
-        }
-
-        [Fact]
-        public void ProcessDataSources__UsesLocationNameForDatasourceFolder()
-        {
-            // We've got an existing pbixproj file with dataSource mappings:
-            File.WriteAllText(
-                Path.Combine(TestFolder.Path, TabularModelIdCache.FileName),
-                new JObject
-                {
-                    { "dataSources", new JObject
-                    {
-                        { "Table1", "09a6f778-cfbd-4153-9354-15085bdbf371" },
-                        { "Table2", "d85453b6-f15f-4116-9a65-cad48a4bc967" },
-                    }}
-                }.ToString());
-
-            var db = new JObject
+            private readonly IQueriesLookup _queriesLookup = new MockQueriesLookup(new Dictionary<string, string>
             {
-                { "model", new JObject
-                {
-                    { "dataSources", new JArray(
-                        new JObject
-                        {
-                            { "name", "1b4f67fe-4f1c-4828-9971-b258a79f5b79" }, // those dataSource names are volatile and will be dropped completely
-                            { "connectionString", MashupHelpers.BuildPowerBIConnectionString(TestData.GlobalPipe, TestData.MinimalMashupPackageBytes, "Table1" ) }
-                        },
-                        new JObject
-                        {
-                            { "name", "a6312d03-f6eb-4455-bfd4-04f472995193" },
-                            { "connectionString", MashupHelpers.BuildPowerBIConnectionString(TestData.GlobalPipe, TestData.MinimalMashupPackageBytes, "Table2" ) }
-                        }
-                    )}
-                }}
-            };
+                { "1b4f67fe-4f1c-4828-9971-b258a79f5b79", "09a6f778-cfbd-4153-9354-15085bdbf371" }, /* Table1 */
+                { "a6312d03-f6eb-4455-bfd4-04f472995193", "d85453b6-f15f-4116-9a65-cad48a4bc967" }  /* Table2 */
+            });
 
-            var folder = new MockProjectFolder();
-            TabularModelSerializer.ProcessDataSources(db, folder, new TabularModelIdCache(TestFolder.Path, db.SelectToken("model.dataSources") as JArray));
+            private readonly MockProjectFolder _folder;
 
-            var ds1 = folder.GetAsJson(@"dataSources\Table1\dataSource.json");
-            var ds2 = folder.GetAsJson(@"dataSources\Table2\dataSource.json");
+            public ProcessDataSources()
+            {
+                _folder = new MockProjectFolder();
+                TabularModelSerializer.ProcessDataSources(_databaseJson, _folder, _queriesLookup);
+            }
 
-            // Expecting 
-            Assert.Equal("09a6f778-cfbd-4153-9354-15085bdbf371", ds1["name"].Value<string>());
-            Assert.Equal("d85453b6-f15f-4116-9a65-cad48a4bc967", ds2["name"].Value<string>());
+            [Fact]
+            public void UsesLocationNameForDatasourceFolder()
+            {
+                Assert.True(_folder.ContainsPath(@"dataSources\Table1\dataSource.json"));
+                Assert.True(_folder.ContainsPath(@"dataSources\Table2\dataSource.json"));
+            }
+
+            [Fact]
+            public void ReplaceDatasourceNamePropertyWithStaticLookupValue()
+            {
+                var table1 = _folder.GetAsJson(@"dataSources\Table1\dataSource.json");
+                var table2 = _folder.GetAsJson(@"dataSources\Table2\dataSource.json");
+
+                Assert.Equal("09a6f778-cfbd-4153-9354-15085bdbf371", table1["name"].Value<string>());
+                Assert.Equal("d85453b6-f15f-4116-9a65-cad48a4bc967", table2["name"].Value<string>());
+            }
+
+            [Fact]
+            public void RemovesGlobalPipeFromConnectionString()
+            {
+                var table1 = _folder.GetAsJson(@"dataSources\Table1\dataSource.json");
+                var table2 = _folder.GetAsJson(@"dataSources\Table2\dataSource.json");
+
+                var connStr1 = new OleDbConnectionStringBuilder(table1["connectionString"].Value<string>());
+                Assert.False(connStr1.ContainsKey("global pipe"));
+                var connStr2 = new OleDbConnectionStringBuilder(table2["connectionString"].Value<string>());
+                Assert.False(connStr2.ContainsKey("global pipe"));
+            }
+
+            [Fact]
+            public void RemovesMashupFromConnectionString()
+            {
+                var table1 = _folder.GetAsJson(@"dataSources\Table1\dataSource.json");
+                var table2 = _folder.GetAsJson(@"dataSources\Table2\dataSource.json");
+
+                var connStr1 = new OleDbConnectionStringBuilder(table1["connectionString"].Value<string>());
+                Assert.False(connStr1.ContainsKey("mashup"));
+                var connStr2 = new OleDbConnectionStringBuilder(table2["connectionString"].Value<string>());
+                Assert.False(connStr2.ContainsKey("mashup"));
+            }
+
         }
+
 
         // Test: Sanitize filenames
         // Test: Table partitions (dataSource id replace)

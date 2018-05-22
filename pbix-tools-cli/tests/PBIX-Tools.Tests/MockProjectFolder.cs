@@ -14,12 +14,14 @@ namespace PbixTools.Tests
 
         public int NumberOfFilesWritten => _filesWritten.Count;
 
-        public void Dispose()
-        {
-        }
 
         public string BasePath { get; }
         public bool CommitDelete { get; set; }
+
+        public IProjectFolder GetSubfolder(params string[] segments)
+        {
+            throw new NotImplementedException();
+        }
 
         public bool TryGetFile(string path, out Stream stream)
         {
@@ -27,9 +29,17 @@ namespace PbixTools.Tests
             return false;
         }
 
-        public void WriteFile(string path, Stream stream)
+        public void WriteFile(string path, Action<Stream> onStreamAvailable)
         {
-            _filesWritten[path] = "**STREAM**";  // TODO Implement once needed by tests
+            using (var stream = new MemoryStream())
+            {
+                onStreamAvailable(stream);
+
+                using (var reader = new StreamReader(stream))
+                {
+                    _filesWritten[path] = reader.ReadToEnd();
+                }
+            }
         }
 
         public void WriteText(string path, Action<TextWriter> writerCallback)

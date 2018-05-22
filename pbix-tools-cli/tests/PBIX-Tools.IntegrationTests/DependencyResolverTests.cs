@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace PbixTools.IntegrationTests
@@ -54,6 +51,8 @@ namespace PbixTools.IntegrationTests
                     Path.GetDirectoryName(pbixPath),
                     Path.GetFileNameWithoutExtension(pbixPath),
                     "Mashup",
+                    "Package",
+                    "Formulas",
                     "Section1.m")));
             }
         }

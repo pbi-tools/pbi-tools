@@ -8,7 +8,7 @@ namespace PbixTools.Tests
 
         public virtual void Dispose()
         {
-            ((IDisposable)TestFolder).Dispose();
+            (TestFolder as IDisposable)?.Dispose();
         }
     }
 }
