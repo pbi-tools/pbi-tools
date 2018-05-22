@@ -9,7 +9,7 @@ namespace PbixTools
 {
     /// <summary>
     /// ... An instance has the same lifetime as the surrounding process.
-    /// Multiple sessions can be launched inside a <see cref="RpcServer"/> instance.
+    /// Multiple sessions can be launched from inside a <see cref="RpcServer"/> instance.
     /// </summary>
     public class RpcServer : IDisposable
     {
@@ -25,7 +25,9 @@ namespace PbixTools
                 cts.Cancel();
             });
 
+#pragma warning disable VSTHRD002 // Avoid problematic synchronous waits
             server.AnnounceServerAsync().Wait();
+#pragma warning restore VSTHRD002 // Avoid problematic synchronous waits
 
             return server;
         }
@@ -41,6 +43,7 @@ namespace PbixTools
             this._sendingStream = sendingStream;
             this._receivingStream = receivingStream;
             this._onDisconnected = onDisconnected;
+
             this._jsonRpc = JsonRpc.Attach(sendingStream, receivingStream, this);
             _jsonRpc.Disconnected += (sender,e) =>
             {
@@ -67,7 +70,10 @@ namespace PbixTools
         [JsonRpcMethod("shutdown")]
         public void Shutdown()
         {
+            // TODO Need to explicitly stop server here? This feels dodgy...
             _onDisconnected(new JsonRpcDisconnectedEventArgs("Client requested server shutdown", DisconnectedReason.Unknown));
+            // ??? Do it this way: ??
+            (this as IDisposable).Dispose();
         }
 
 #endregion
