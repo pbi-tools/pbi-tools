@@ -1,28 +1,34 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
 namespace PbixTools
 {
-    public static class JsonExtensions
+    public static class ReportJsonExtensions
     {
-        public static JObject ExtractObject(this JObject parent, string property, string baseFolder)
+        /// <summary>
+        /// Removes the specified property from its parent, parses its content as a string-encoded <see cref="JObject"/>, and saves the parsed json object
+        /// to the provided <see cref="IProjectFolder"/>, using the property name as the filename (unless a null folder is provided).
+        /// </summary>
+        /// <returns>The <see cref="JObject"/> extracted from the property.</returns>
+        public static JObject ExtractObject(this JObject parent, string property, IProjectFolder folder)
         {
-            return parent.ExtractToken<JObject>(property, baseFolder);
+            return parent.ExtractToken<JObject>(property, folder);
         }
 
-        public static JArray ExtractArray(this JObject parent, string property, string baseFolder)
+        /// <summary>
+        /// Removes the specified property from its parent, parses its content as a string-encoded <see cref="JArray"/>, and saves the parsed json array
+        /// to the provided <see cref="IProjectFolder"/>, using the property name as the filename (unless a null folder is provided).
+        /// </summary>
+        /// <returns>The <see cref="JArray"/> extracted from the property.</returns>
+        public static JArray ExtractArray(this JObject parent, string property, IProjectFolder folder)
         {
-            return parent.ExtractToken<JArray>(property, baseFolder);
+            return parent.ExtractToken<JArray>(property, folder);
         }
 
         public static IEnumerable<T> ExtractArrayAs<T>(this JObject parent, string property)
         {
-            var array = parent.ExtractToken<JArray>(property, baseFolder: null);
+            var array = parent.ExtractToken<JArray>(property, folder: null);
             if (array != null) return array.OfType<T>();
             else return new T[0];
         }
@@ -41,9 +47,9 @@ namespace PbixTools
         /// <typeparam name="T"></typeparam>
         /// <param name="parent"></param>
         /// <param name="property"></param>
-        /// <param name="baseFolder"></param>
+        /// <param name="folder"></param>
         /// <returns></returns>
-        public static T ExtractToken<T>(this JObject parent, string property, string baseFolder = null) where T : JToken
+        public static T ExtractToken<T>(this JObject parent, string property, IProjectFolder folder = null) where T : JToken
         {
             T obj = null;
             var token = parent[property];
@@ -51,15 +57,18 @@ namespace PbixTools
             {
                 parent.Remove(property);
                 obj = JToken.Parse(token.Value<string>()) as T;
-                obj.Save(property, baseFolder);
+                obj.Save(property, folder);
             }
             return obj;
         }
 
-        public static void Save(this JToken token, string property, string baseFolder)
+        /// <summary>
+        /// Saves the <see cref="JToken"/> to the <see cref="IProjectFolder"/> using the <see cref="name"/> provided.
+        /// </summary>
+        public static void Save(this JToken token, string name, IProjectFolder folder)
         {
-            if (baseFolder != null)
-                File.WriteAllText(Path.Combine(baseFolder, $"{property}.json"), token.ToString(Newtonsoft.Json.Formatting.Indented));
+            if (folder == null || token == null) return;
+            folder.Write(token, $"{name}.json");
         }
     }
 }

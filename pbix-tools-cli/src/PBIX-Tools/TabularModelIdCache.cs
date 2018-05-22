@@ -1,72 +1,51 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace PbixTools
 {
-    public class TabularModelIdCache
+    public interface IQueriesLookup
+    {
+        /// <summary>
+        /// Given a dataSource id from the current model, looks up the cached id as maintained in the PBIXPROJ file (if any).
+        /// </summary>
+        /// <param name="currentDataSourceId"></param>
+        /// <returns></returns>
+        string LookupOriginalDataSourceId(string currentDataSourceId);
+    }
+
+    public class TabularModelIdCache : IQueriesLookup
     {
         // TODO Must convert this into two separate components, 1 - PBIXPROJ file, 2 - IdCache
         // TODO Log the things
         // TODO defensive error handling
 
-        public static string FileName = ".pbixproj.json";
-
-        private readonly JsonSerializer _jsonSerializer = new JsonSerializer();
-        private readonly string _path;
         private readonly IDictionary<string, string> _dataSourcesByLocation; // get from existing cache file
         private readonly IDictionary<string, string> _locationsByDataSource; // build from current dataSources
 
-        public TabularModelIdCache(string baseFolder, JArray dataSources)
+        public TabularModelIdCache(JArray dataSources, IDictionary<string, string> queriesLookup)
         {
-            _path = Path.Combine(baseFolder, FileName);
             if (dataSources == null) throw new ArgumentNullException(nameof(dataSources));
-            _jsonSerializer.Formatting = Formatting.Indented; // makes it readable in source control
 
             // only consider dataSources with a connectionString having a 'location' property
 
+            _dataSourcesByLocation = queriesLookup ?? new Dictionary<string, string>();
             var currentDataSources = BuildDataSourceLookup(dataSources);
 
-            // Lookup: location ->> dataSource (static)
-            if (File.Exists(_path))
+            // Add newly added data sources (merge)
+            foreach (var dataSource in currentDataSources)
             {
-                // load file and convert to dict
-                using (var reader = new JsonTextReader(new StreamReader(File.OpenRead(_path))))
-                {
-                    var pbixProj = _jsonSerializer.Deserialize<JObject>(reader); // TODO error handling
-                    if (pbixProj.TryGetValue("dataSources", out var token))
-                    {
-                        _dataSourcesByLocation = token.ToObject<Dictionary<string, string>>();
-                        // Add newly added data sources (merge)
-                        foreach (var dataSource in currentDataSources)
-                        {
-                            // key: Location, value: Data Source Guid
-                            if (!_dataSourcesByLocation.ContainsKey(dataSource.Key))
-                                _dataSourcesByLocation.Add(dataSource);
-                        }
-                        // Remove deleted ddata sources
-                        foreach (var location in _dataSourcesByLocation.Keys.ToArray())
-                        {
-                            if (!currentDataSources.ContainsKey(location))
-                                _dataSourcesByLocation.Remove(location);
-                        }
-                    }
-                    else
-                    {
-                        _dataSourcesByLocation = currentDataSources;
-                    }
-                }
+                // key: Location, value: Data Source Guid
+                if (!_dataSourcesByLocation.ContainsKey(dataSource.Key))
+                    _dataSourcesByLocation.Add(dataSource);
             }
-            else
+            // Remove deleted ddata sources
+            foreach (var location in _dataSourcesByLocation.Keys.ToArray())
             {
-                // build dict from current dataSources
-                // assume each location only occurs once
-                _dataSourcesByLocation = currentDataSources;
+                if (!currentDataSources.ContainsKey(location))
+                    _dataSourcesByLocation.Remove(location);
             }
-
 
             // Lookup: dataSource ->> location
             _locationsByDataSource = BuildCurrentLocationsLookup(dataSources);
@@ -100,23 +79,6 @@ namespace PbixTools
             }
 
             return dict;
-        }
-
-        public void WriteCacheFile()
-        {
-            using (var writer = File.CreateText(_path))
-            {
-                _jsonSerializer.Serialize(writer, new JObject {
-                    { "version", "0.1" }, // TODO Must move this to an outer scope
-                    /* PBIXPROJ Change Log
-                     * ===================
-                     * 0.0 - Initial version (Mashup, Model, Report, CustomVisuals, StaticResources)
-                     * 0.1 - Model/dataSources: use location (query name) as folder name (rather than datasource guid); always write 'dataSource.json'
-                     *       FIX: use static name inside dataSource.json
-                     */
-                    { "dataSources", JObject.FromObject(_dataSourcesByLocation) }
-                });
-            }
         }
 
         /// <summary>

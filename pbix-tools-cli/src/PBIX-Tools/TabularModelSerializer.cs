@@ -1,14 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.OleDb;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Formatting = Newtonsoft.Json.Formatting;
 
 namespace PbixTools
 {
@@ -49,11 +47,11 @@ namespace PbixTools
             _folder = folder ?? throw new ArgumentNullException(nameof(folder));
         }
 
-        public void Serialize(JObject db)
+        public void Serialize(JObject db, IDictionary<string, string> queries)
         {
             var dataSources = db.SelectToken("model.dataSources") as JArray ?? new JArray();
-            var projFolder = Path.GetFullPath(Path.Combine(_folder.BasePath, ".."));
-            var idCache = new TabularModelIdCache(projFolder, dataSources);
+
+            var idCache = new TabularModelIdCache(dataSources, queries);
 
             // 
             // model
@@ -73,11 +71,9 @@ namespace PbixTools
             // TODO ProcessExpressions()
 
             SaveDatabase(db, _folder);
-
-            idCache.WriteCacheFile();
         }
 
-        internal static JObject ProcessTables(JObject db, IProjectFolder folder, TabularModelIdCache idCache)
+        internal static JObject ProcessTables(JObject db, IProjectFolder folder, IQueriesLookup idCache)
         {
             // hierarchies
             // measures
@@ -98,7 +94,7 @@ namespace PbixTools
                 _table = ProcessHierarchies(_table, folder, $@"tables\{name}");
                 _table = ProcessTablePartitions(_table, idCache);
 
-                folder.WriteText($@"tables\{name}\{name}.json", WriteJson(_table));
+                folder.Write(_table, $@"tables\{name}\{name}.json"); // TODO rename to 'table.json'?
             }
 
             db.Value<JObject>("model").Remove("tables");
@@ -136,7 +132,7 @@ namespace PbixTools
                 var name = hierarchy["name"]?.Value<string>();
                 if (name == null) continue;
 
-                folder.WriteText(Path.Combine(pathPrefix, "hierarchies", $"{name}.json"), WriteJson(hierarchy));
+                folder.Write(hierarchy, Path.Combine(pathPrefix, "hierarchies", $"{name}.json"));
             }
 
             table = new JObject(table);
@@ -144,7 +140,7 @@ namespace PbixTools
             return table;
         }
 
-        internal static JObject ProcessTablePartitions(JObject table, TabularModelIdCache idCache)
+        internal static JObject ProcessTablePartitions(JObject table, IQueriesLookup idCache)
         {
             var _table = new JObject(table);
             var dataSources = _table.SelectTokens("partitions[*].source.dataSource").OfType<JValue>();
@@ -157,7 +153,7 @@ namespace PbixTools
             return _table;
         }
 
-        internal static JObject ProcessDataSources(JObject db, IProjectFolder folder, TabularModelIdCache idCache)
+        internal static JObject ProcessDataSources(JObject db, IProjectFolder folder, IQueriesLookup idCache)
         {
             // if Provider=PowerBI, strip out global pipe
             // if mashup, strip out & extract package
@@ -203,7 +199,7 @@ namespace PbixTools
                     MashupPackageSerializer.ExtractMashup(folder, mashupPrefix, mashup);
                 }
 
-                folder.WriteText($@"dataSources\{dir}\dataSource.json", WriteJson(dataSource));
+                folder.Write(dataSource, $@"dataSources\{dir}\dataSource.json");
             }
 
             db.Value<JObject>("model").Remove("dataSources");
@@ -239,20 +235,9 @@ namespace PbixTools
 
         internal static void SaveDatabase(JObject db, IProjectFolder folder)
         {
-            folder.WriteText("database.json", WriteJson(db));
+            folder.Write(db, "database.json");
         }
 
-        private static Action<TextWriter> WriteJson(JToken json)
-        {
-            return writer =>
-            {
-                using (var jWriter = new JsonTextWriter(writer))
-                {
-                    jWriter.Formatting = Formatting.Indented;
-                    json.WriteTo(jWriter);
-                }
-            };
-        }
 
         private static Action<TextWriter> WriteMeasureXml(JToken json)
         {

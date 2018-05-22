@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.IO.Compression;
-using System.Xml;
 using System.Xml.Linq;
 
 namespace PbixTools
@@ -32,17 +31,17 @@ namespace PbixTools
                         && zipEntry.Name != "[Content_Types].xml")
                     {
                         var xml = XDocument.Load(zipEntry.Open());  // XmlException
-                        folder.WriteText(path, writer =>
-                        {
-                            using (var xmlWriter = XmlWriter.Create(writer, new XmlWriterSettings { Indent = true, OmitXmlDeclaration = true }))
-                            {
-                                xml.WriteTo(xmlWriter);
-                            }
-                        });
+                        folder.Write(xml, path);
                     }
                     else // any other files written as-is
                     {
-                        folder.WriteFile(path, zipEntry.Open());
+                        folder.WriteFile(path, stream => 
+                        {
+                            using (var entry = zipEntry.Open())
+                            {
+                                entry.CopyTo(stream);
+                            }
+                        });
                     }
                 }
             }
