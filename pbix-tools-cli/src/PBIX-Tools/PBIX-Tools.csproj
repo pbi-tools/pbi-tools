@@ -26,21 +26,22 @@
   <ItemGroup>
     <Reference Include="Microsoft.Mashup.Client.Packaging">
       <HintPath>C:\Program Files\Microsoft Power BI Desktop\bin\Microsoft.Mashup.Client.Packaging.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="Microsoft.Mashup.Document">
       <HintPath>C:\Program Files\Microsoft Power BI Desktop\bin\Microsoft.Mashup.Document.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="Microsoft.PowerBI.Client.Windows">
       <HintPath>C:\Program Files\Microsoft Power BI Desktop\bin\Microsoft.PowerBI.Client.Windows.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="Microsoft.PowerBI.Packaging">
       <HintPath>C:\Program Files\Microsoft Power BI Desktop\bin\Microsoft.PowerBI.Packaging.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="System.IO.Compression" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(Configuration)' == 'Release'">
-    <Exec Command="DEL /F /S /Q &quot;$(TargetDir)Microsoft.Mashup.*&quot;&#xD;&#xA;DEL /F /S /Q &quot;$(TargetDir)Microsoft.PowerBI.*&quot;" />
-  </Target>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>
