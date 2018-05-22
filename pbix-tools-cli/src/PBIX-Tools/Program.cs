@@ -5,8 +5,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using PowerArgs;
 using Serilog;
-using Serilog.Core;
-using Serilog.Events;
 
 [assembly: InternalsVisibleTo("pbix-tools.tests")]
 
@@ -124,40 +122,6 @@ namespace PbixTools
         Success = 0,
         FileNotFound = 1,
         DependenciesNotInstalled = 2,
-    }
-
-    public class AppSettings
-    {
-        public LoggingLevelSwitch LevelSwitch { get; } = new LoggingLevelSwitch(
-#if DEBUG
-            LogEventLevel.Verbose
-#endif
-        );
-
-        internal bool ShouldSuppressConsoleLogs { get; set; } = false;
-
-        public IDisposable SuppressConsoleLogs()
-        {
-            this.ShouldSuppressConsoleLogs = true;
-            return new Disposable(()=>
-            {
-                this.ShouldSuppressConsoleLogs = false;
-            });
-        }
-
-        private class Disposable : IDisposable
-        {
-            private readonly Action _disposeAction;
-
-            public Disposable(Action disposeAction)
-            {
-                this._disposeAction = disposeAction ?? throw new ArgumentNullException(nameof(disposeAction));
-            }
-            void IDisposable.Dispose()
-            {
-                _disposeAction();
-            }
-        }
     }
 
 }
