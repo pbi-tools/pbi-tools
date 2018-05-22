@@ -16,35 +16,10 @@ using TOM = Microsoft.AnalysisServices.Tabular;
 using Microsoft.PowerBI.Packaging;
 using Polly;
 using Serilog;
+using Serilog.Events;
 
 namespace PbixTools
 {
-    /// <summary>
-    /// TODO - Remove these references (replace with Serilog calls)
-    /// </summary>
-    public static class DumpHelper
-    {
-        public static T Dump<T>(this T o, string message = null)
-        {
-            switch (o)
-            {
-                case string s when message != null:
-                    Console.WriteLine($"[{message}]: {s}");
-                    break;
-                case string s:
-                    Console.WriteLine(s);
-                    break;
-                case int i when message != null:
-                    Console.WriteLine($"[{message}]: {i}");
-                    break;
-                case int i:
-                    Console.WriteLine(i);
-                    break;
-            }
-
-            return o;
-        }
-    }
 
     public class AnalysisServicesServer : IDisposable
     {
@@ -172,7 +147,7 @@ namespace PbixTools
                 _proc.BeginOutputReadLine();
             }
 
-            // Wait for cration of Port file
+            // Wait for creation of Port file
             var portFilePath = Path.Combine(_tempPath, "msmdsrv.port.txt");
             var attempts = 20;
             while (!File.Exists(portFilePath) && attempts-- > 0)
@@ -188,7 +163,7 @@ namespace PbixTools
             else if (_proc.HasExited) // happens when process could not start, for instance because of misconfiguration or missing capabilities
                 throw new Exception("Process has terminated");
             else
-                Console.Error.WriteLine("Port Detection Timeout"); // Throw instead?
+                Console.Error.WriteLine("Port Detection Timeout"); // TODO Throw instead?
         }
 
         public void LoadPbixModel(IPowerBIPackage package, string id, string name)
@@ -228,24 +203,25 @@ namespace PbixTools
                 }
             }
 
-            Directory.EnumerateFiles(_tempPath, "*", SearchOption.AllDirectories).Dump("Deleting...");
-            var retry = 0;
-            var success = false;
-            while (!success && retry++ < 5)
+            _proc = null;
+
+            if (Log.IsEnabled(LogEventLevel.Debug))
             {
-                try
+                foreach (var file in Directory.EnumerateFiles(_tempPath, "*", SearchOption.AllDirectories))
                 {
-                    Directory.Delete(_tempPath, recursive: true);
-                    success = true;
-                    _tempPath.Dump("Deleted");
-                }
-                catch (IOException) // Could use Polly instead
-                {
-                    Thread.Sleep(500);
+                    Log.Debug("Deleting file {Path}", file);
                 }
             }
 
-            _proc = null;
+            Policy.Wrap(
+                    Policy
+                        .Handle<IOException>()
+                        .Fallback(() => { /* give up and do nothing */ }),
+                    Policy
+                        .Handle<IOException>()
+                        .WaitAndRetry(5, _ => TimeSpan.FromMilliseconds(500)))
+                .Execute(
+                    () => Directory.Delete(_tempPath, recursive: true));
         }
     }
 
