@@ -2,42 +2,41 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml;
+using System.Xml.Linq;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Serilog;
+using Formatting = Newtonsoft.Json.Formatting;
 
 namespace PbixTools
 {
     /// <summary>
-    /// Represents a sub-folder inside the PBIXPROJ directory, containing the artifacts for one PBIX part (e.g., Mashup, Report, etc.)
+    /// Represents a sub-folder inside the PBIXPROJ directory, containing the artifacts for one PBIX part (e.g., /Mashup, /Report, etc.)
     /// </summary>
     public interface IProjectFolder
     {
         /// <summary>
-        /// Gets the path of the folder.
+        /// Gets the full path of the folder.
         /// </summary>
         string BasePath { get; }
 
-        ///// <summary>
-        ///// When set to <c>true</c>, deletes all files/folders that were not added or updated 
-        ///// during the current lifetime of the <see cref="IProjectFolder"/> when <c>Dispose()</c> is called.
-        ///// This is to ensure that unhandled exceptions do not cause the entire folder to be removed
-        ///// when an action has only been performed partially.
-        ///// </summary>
-        //bool CommitDelete { get; set; }
-        
+        IProjectFolder GetSubfolder(params string[] segments);
+
         /// <summary>
         /// Provides access to the <see cref="Stream"/> of a file if it exists.
         /// </summary>
         bool TryGetFile(string path, out Stream stream);
         
         /// <summary>
-        /// Writes a binary file to the folder.
+        /// Writes a binary file at the specified path by providing a <see cref="Stream"/> to write to.
         /// </summary>
-        void WriteFile(string path, Stream stream);
+        void WriteFile(string path, Action<Stream> onStreamAvailable);
         
         /// <summary>
-        /// Writes a text file to the folder.
+        /// Writes a binary file at the specified path by providing a <see cref="TextWriter"/> to write to.
         /// </summary>
-        void WriteText(string path, Action<TextWriter> writer);
+        void WriteText(string path, Action<TextWriter> onTextWriterAvailable);
     }
 
 
@@ -46,6 +45,9 @@ namespace PbixTools
     /// </summary>
     public interface IProjectFile
     {
+        /// <summary>
+        /// Gets the full path of the file
+        /// </summary>
         string Path { get; }
 
         /// <summary>
@@ -54,31 +56,23 @@ namespace PbixTools
         bool TryGetFile(out Stream stream);
 
         /// <summary>
-        /// Writes a binary file to the folder.
+        /// Provides a <see cref="Stream"/> to write the file to.
         /// </summary>
-        void WriteFile(Stream stream);
+        void WriteFile(Action<Stream> onStreamAvailable);
 
         /// <summary>
-        /// Writes a text file to the folder.
+        /// Provides a <see cref="TextWriter"/> to write the file to.
         /// </summary>
-        void WriteText(Action<TextWriter> writer);
+        void WriteText(Action<TextWriter> onTextWriterAvailable);
     }
 
     public class ProjectFolder : IProjectFolder
     {
-        // represents a PBIX (source controlled) component folder, like: Model, Mashup, Report
-        // each extract action maintains one instance
-        // ctor with basePath
-        // create list of all existing files
-        // use to add/modify files: Write(path)
-        // Dispose: Remove deleted
-        // Log changes
-
         private static readonly ILogger Log = Serilog.Log.ForContext<ProjectFolder>();
 
-        private readonly IProjectRootFolder _root;
+        private readonly ProjectRootFolder _root;
 
-        public ProjectFolder(IProjectRootFolder root, string baseDir)
+        public ProjectFolder(ProjectRootFolder root, string baseDir)
         {
             _root = root ?? throw new ArgumentNullException(nameof(root));
             var dir = new DirectoryInfo(baseDir);
@@ -87,6 +81,14 @@ namespace PbixTools
 
         public string BasePath { get; }
 
+
+        public IProjectFolder GetSubfolder(params string[] segments)
+        {
+            if (segments == null) throw new ArgumentNullException(nameof(segments));
+            return segments.Length == 0 
+                ? this 
+                : new ProjectFolder(_root, Path.Combine(this.BasePath, Path.Combine(segments)));
+        }
 
         public bool TryGetFile(string path, out Stream stream)
         {
@@ -103,43 +105,45 @@ namespace PbixTools
             }
         }
 
-        public void WriteFile(string path, Stream stream)
+        public void WriteFile(string path, Action<Stream> onStreamAvailable)
         {
-            var fullPath = Path.Combine(BasePath, path);
+            WriteFile(path, File.Create, onStreamAvailable);
+        }
+
+        public void WriteText(string path, Action<TextWriter> onTextWriterAvailable)
+        {
+            WriteFile(path, File.CreateText, onTextWriterAvailable);
+        }
+
+        private void WriteFile<T>(string path, Func<string, T> factory, Action<T> callback) where T : IDisposable
+        {
+            var fullPath = new FileInfo(Path.Combine(BasePath, SanitizePath(path))).FullName;
             Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
 
             Log.Verbose("Writing file: {Path}", fullPath);
-            using (var file = File.Create(fullPath))
+            using (var writer = factory(fullPath))
             {
-                stream.CopyTo(file);
+                callback(writer);
             }
 
             _root.FileWritten(fullPath); // keeps track of files added or updated
         }
 
-        public void WriteText(string path, Action<TextWriter> writerCallback)
+        private static string SanitizePath(string path)
         {
-            var fullPath = Path.Combine(BasePath, path);
-            Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
-
-            Log.Verbose("Writing file: {Path}", fullPath);
-            using (var writer = File.CreateText(fullPath))
-            {
-                writerCallback(writer);
-            }
-
-            _root.FileWritten(fullPath); // keeps track of files added or updated
+            if (path == null) throw new ArgumentNullException(nameof(path));
+            if (path.StartsWith("/") || path.StartsWith("\\")) return path.Substring(1);
+            return path;
         }
-
     }
 
     public class ProjectFile : IProjectFile
     {
         private static readonly ILogger Log = Serilog.Log.ForContext<ProjectFile>();
 
-        private readonly IProjectRootFolder _root;
+        private readonly ProjectRootFolder _root;
 
-        public ProjectFile(IProjectRootFolder root, string path)
+        public ProjectFile(ProjectRootFolder root, string path)
         {
             _root = root ?? throw new ArgumentNullException(nameof(root));
             var file = new FileInfo(path); // will throw for invalid paths
@@ -160,45 +164,40 @@ namespace PbixTools
             return false;
         }
 
-        public void WriteFile(Stream stream)
+        public void WriteFile(Action<Stream> onStreamAvailable)
         {
-            // ReSharper disable once AssignNullToNotNullAttribute
-            Directory.CreateDirectory(System.IO.Path.GetDirectoryName(Path));
-
-            Log.Verbose("Writing file: {Path}", Path);
-            using (var file = File.Create(Path))
-            {
-                stream.CopyTo(file);
-            }
-
-            _root.FileWritten(Path);
+            WriteFile(File.Create, onStreamAvailable);
         }
 
-        public void WriteText(Action<TextWriter> writerCallback)
+        public void WriteText(Action<TextWriter> onTextWriterAvailable)
         {
-            // ReSharper disable once AssignNullToNotNullAttribute
+            WriteFile(File.CreateText, onTextWriterAvailable);
+        }
+
+        private void WriteFile<T>(Func<string, T> factory, Action<T> callback) where T : IDisposable
+        {
             Directory.CreateDirectory(System.IO.Path.GetDirectoryName(Path));
 
             Log.Verbose("Writing file: {Path}", Path);
-            using (var writer = File.CreateText(Path))
+            using (var writer = factory(Path))
             {
-                writerCallback(writer);
+                callback(writer);
             }
 
-            _root.FileWritten(Path);
+            _root.FileWritten(Path); // keeps track of files added or updated
         }
     }
 
-    public interface IProjectRootFolder
+    public interface IProjectRootFolder : IDisposable
     {
-        void FileWritten(string fullPath);
         IProjectFolder GetFolder(string name);
         IProjectFile GetFile(string relativePath);
     }
 
-    public class ProjectRootFolder : IProjectRootFolder, IDisposable
+
+    public class ProjectRootFolder : IProjectRootFolder
     {
-        // central registry over all files written
+        // central registry over all files written:
         private readonly HashSet<string> _filesWritten;
 
         public ProjectRootFolder(string basePath)
@@ -211,18 +210,11 @@ namespace PbixTools
 
         public string BasePath { get; }
 
-        // GetFolder("Mashup")
-        // GetFile("version.txt")
-        //
-        // keep track of all folders/files written
-        // on Dispose - fetch list of all actually written files
-        // that way, ProjectFiles can be nested within ProjectFolders, and object creation is irrelevant
 
-
-
-        public void FileWritten(string fullPath)
+        internal void FileWritten(string fullPath)
         {
             _filesWritten.Add(fullPath); // keeps track of files added or updated
+            Log.Verbose("File written: {Path}", fullPath);
         }
 
         public IProjectFolder GetFolder(string name)
@@ -240,29 +232,94 @@ namespace PbixTools
             if (_filesWritten.Count == 0)
             {
                 if (Directory.Exists(BasePath))
+                {
                     Directory.Delete(BasePath, recursive: true);
+                    Log.Information("No files written. Removed base folder: {Path}", BasePath);
+                }
+
                 return;
             }
 
             // Remove any existing files that have not been updated
-
             foreach (var path in Directory.GetFiles(BasePath, "*.*", SearchOption.AllDirectories))
             {
-                if (!_filesWritten.Contains(path)) File.Delete(path);
-                // TODO Log the things
+                if (!_filesWritten.Contains(path))
+                {
+                    File.Delete(path);
+                    Log.Information("Removed file: {Path}", path);
+                }
             }
 
             // Remove empty dirs:
-            foreach (var dir in Directory.GetDirectories(BasePath, "*", SearchOption.TopDirectoryOnly))
+            foreach (var dir in Directory.GetDirectories(BasePath, "*", SearchOption.AllDirectories).ToArray())
             {
                 if (Directory.Exists(dir) && Directory.EnumerateFiles(dir, "*.*", SearchOption.AllDirectories).FirstOrDefault() == null)
                 {
                     Directory.Delete(dir, recursive: true); // Could be root of a series of empty folders
-                    // TODO log
+                    Log.Information("Removed empty directory: {Path}", dir);
                 }
             }
 
             // TODO Check if nested empty dirs need to be removed explicitly
+            // ./ROOT
+            // ./ROOT/dir1
+            // ./ROOT/dir1/file.txt
+            // ./ROOT/dir1/empty/ ***
+        }
+
+    }
+
+    public static class ProjectFolderExtensions
+    {
+        public static void Write(this IProjectFolder folder, JToken json, string path)
+        {
+            folder.WriteText(path, writer =>
+            {
+                using (var jsonWriter = new JsonTextWriter(writer) { Formatting = Formatting.Indented })
+                {
+                    json.WriteTo(jsonWriter);
+                }
+            });
+        }
+
+        public static void Write(this IProjectFolder folder, XDocument xml, string path, bool omitXmlDeclaration = true)
+        {
+            folder.WriteText(path, writer =>
+            {
+                using (var xmlWriter = XmlWriter.Create(writer, new XmlWriterSettings { Indent = true, OmitXmlDeclaration = omitXmlDeclaration }))
+                {
+                    xml.WriteTo(xmlWriter);
+                }
+            });
+        }
+        public static void Write(this IProjectFile file, JToken json)
+        {
+            file.WriteText(writer =>
+            {
+                using (var jsonWriter = new JsonTextWriter(writer) { Formatting = Formatting.Indented })
+                {
+                    json.WriteTo(jsonWriter);
+                }
+            });
+        }
+
+        public static void Write(this IProjectFile file, string text)
+        {
+            file.WriteText(writer =>
+            {
+                writer.Write(text);
+            });
+        }
+
+        public static void Write(this IProjectFile file, XDocument xml, bool omitXmlDeclaration = true)
+        {
+            file.WriteText(writer =>
+            {
+                using (var xmlWriter = XmlWriter.Create(writer, new XmlWriterSettings { Indent = true, OmitXmlDeclaration = omitXmlDeclaration }))
+                {
+                    xml.WriteTo(xmlWriter);
+                }
+            });
         }
 
     }
