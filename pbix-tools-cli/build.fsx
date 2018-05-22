@@ -156,7 +156,7 @@ Target "CleanDocs" (fun _ ->
 // Previously, msbuild would fail not being able to find **\obj\project.assets.json
 Target "Build" (fun _ ->
     !! solutionFile
-    |> MSBuildReleaseExt "" [
+    |> MSBuildReleaseExt buildDir [
             "VisualStudioVersion" , "15.0"
             "ToolsVersion"        , "15.0"
     ] "Restore;Rebuild"
