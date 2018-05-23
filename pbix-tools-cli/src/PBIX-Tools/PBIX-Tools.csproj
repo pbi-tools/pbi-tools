@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net45</TargetFramework>
+    <TargetFramework>net452</TargetFramework>
     <RuntimeIdentifier>win7-x64</RuntimeIdentifier>
     <AssemblyName>pbix-tools</AssemblyName>
     <RootNamespace>PbixTools</RootNamespace>

@@ -14,6 +14,7 @@ nuget Moq
 nuget System.ValueTuple
 nuget Polly
 nuget StreamJsonRpc
+nuget Costura.Fody
 
 
 group Build

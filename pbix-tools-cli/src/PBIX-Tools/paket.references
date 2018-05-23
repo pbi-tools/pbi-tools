@@ -6,3 +6,4 @@ PowerArgs
 System.ValueTuple
 Polly
 StreamJsonRpc
+Costura.Fody
