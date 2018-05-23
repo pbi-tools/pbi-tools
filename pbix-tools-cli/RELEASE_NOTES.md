@@ -1,8 +1,15 @@
 
+#### 0.3.0 - 2018-05-22
+* PBIXPROJ format 0.2: 'dataSources' renamed to 'queries' to be consistent with internal PowerBI APIs
+* Bundling all dependencies into 'pbix-tools.exe' so that there is only one executable to distribute (using Costura.Fody)
+* Change: Mashup extraction format changed (full mashup package in /Mashup/Package)
+* Feature: Added extraction support for: Version, Connections, ReportMetadata, ReportSettings, LinguisticSchema, MashupPackageMetadata, MashupPackageContent
+* Fix: Full cleanup of deleted files (between extractions)
+* WIP: Assembly bundling
+* Breaking Change: target framework is now .Net 4.5.2 (required by Costura.Fody)
+
 #### 0.2.0-beta.1 - 2018-04-17
 * Handle PBIX w/o embedded model (live connection or PBIT)
-* WIP: Version, Connections, Metadata, Settings, LinguisticSchema, MashupPackageMetadata, MashupPackageContent
-* WIP: Assembly bundling
 
 #### 0.1.0-beta.3 - 2018-03-13
 * [info] action returns 'effectivePowerBiFolder'
