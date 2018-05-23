@@ -12,7 +12,7 @@ namespace PbixTools
     {
         JObject Connections { get; }
         JObject DataModel { get; }
-        Package MashupPackage { get; }
+        ZipArchive MashupPackage { get; }
         JObject MashupPermissions { get; }
         XDocument MashupMetadata { get; }
         ZipArchive MashupContent { get; }
@@ -109,7 +109,7 @@ namespace PbixTools
 
         public JObject Connections { get; private set; }
         public JObject DataModel { get; private set; }
-        public Package MashupPackage { get; private set; }
+        public ZipArchive MashupPackage { get; private set; }
         public JObject MashupPermissions { get; private set; }
         public XDocument MashupMetadata { get; private set; }
         public ZipArchive MashupContent { get; private set; }
