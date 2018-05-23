@@ -39,6 +39,7 @@ namespace PbixTools
             [ArgRequired, ArgExistingFile, ArgDescription("The path to an existing PBIX file")] string path
         )
         {
+            // TODO Support '-parts' parameter, listing specifc parts to extract only
             using (var extractor = new PbixExtractAction(path, _dependenciesResolver))
             {
                 extractor.ExtractAll();
