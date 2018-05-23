@@ -28,7 +28,9 @@ namespace PbixTools
         // Settings
         // Deployments
 
+        [JsonProperty("version")]
         public string Version { get; set; }
+        [JsonProperty("queries")]
         public IDictionary<string, string> Queries { get; set; }
 
 
@@ -65,10 +67,7 @@ namespace PbixTools
         {
             this.Version = CurrentVersion.ToString(); // making sure we're always upgrading to the latest version number
 
-            var json = JsonConvert.SerializeObject(this, Formatting.Indented, new JsonSerializerSettings
-            {
-                ContractResolver = new CamelCasePropertyNamesContractResolver()
-            });
+            var json = JsonConvert.SerializeObject(this, Formatting.Indented); // don't use CamelCaseContractResolver as it will modify query names
 
             folder.GetFile(Filename).Write(json);
         }
