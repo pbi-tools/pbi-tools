@@ -11,6 +11,7 @@ namespace PbixTools
     [ArgExceptionBehavior(ArgExceptionPolicy.StandardExceptionHandling)]  // PowerArgs will print the user friendly error message as well as the auto-generated usage documentation for the program.
 #endif
     [ArgDescription(AssemblyVersionInformation.AssemblyProduct + ", " + AssemblyVersionInformation.AssemblyInformationalVersion)]
+    [ApplyDefinitionTransforms]
     public class CmdLineActions
     {
 
@@ -34,7 +35,7 @@ namespace PbixTools
 
 
 
-        [ArgActionMethod, ArgDescription("Extracts the contents of a PBIX/PBIT file into a folder structure suitable for source control. By default, this will create a sub-folder in the directory of the *.pbix file with the same name without the extension.")]
+        [ArgActionMethod, ArgShortcut("extract"), ArgDescription("Extracts the contents of a PBIX/PBIT file into a folder structure suitable for source control. By default, this will create a sub-folder in the directory of the *.pbix file with the same name without the extension.")]
         public void Extract(
             [ArgRequired, ArgExistingFile, ArgDescription("The path to an existing PBIX file")] string path
         )
@@ -49,7 +50,7 @@ namespace PbixTools
         }
 
 
-        [ArgActionMethod, ArgDescription("Collects diagnostic information about the local system and writes a JSON object to StdOut.")]
+        [ArgActionMethod, ArgShortcut("info"), ArgDescription("Collects diagnostic information about the local system and writes a JSON object to StdOut.")]
         public void Info()
         {
             _appSettings.LevelSwitch.MinimumLevel = LogEventLevel.Warning;
@@ -67,7 +68,7 @@ namespace PbixTools
             }
         }
 
-        [ArgActionMethod, ArgShortcut("start-server")]
+        [ArgActionMethod, ArgShortcut("start-server"), HideFromUsage]
         public void StartJsonRpcServer()
         {
             using (_appSettings.SuppressConsoleLogs())
@@ -99,4 +100,5 @@ namespace PbixTools
              */
         }
     }
+
 }
