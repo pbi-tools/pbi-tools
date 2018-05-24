@@ -85,6 +85,15 @@ let releaseNotesData =
     |> parseAllReleaseNotes
 
 let release = List.head releaseNotesData
+let assemblyVersion = sprintf "%i.%i.0.0" release.SemVer.Major release.SemVer.Minor
+let timestampString =
+    let now = DateTime.UtcNow
+    let ytd = now - DateTime(now.Year,1,1,0,0,0,DateTimeKind.Utc)
+    String.Format("{0:yy}{1:ddd}.{0:HHmm}",now,ytd)
+let fileVersion = sprintf "%i.%i.%s"
+                   release.SemVer.Major
+                   release.SemVer.Minor
+                   timestampString
 
 let stable = 
     match releaseNotesData |> List.tryFind (fun r -> r.NugetVersion.Contains("-") |> not) with
@@ -101,9 +110,10 @@ let genFSAssemblyInfo (projectPath) =
       [ Attribute.Title (projectName)
         Attribute.Product project
         Attribute.Company (authors |> String.concat ", ")
+        Attribute.Copyright (sprintf "Copyright \u00A9 Mathias Thierbach %i" 2018)
         Attribute.Description summary
         Attribute.Version release.AssemblyVersion
-        Attribute.FileVersion release.AssemblyVersion
+        Attribute.FileVersion fileVersion
         Attribute.InformationalVersion release.NugetVersion ]
 
 let genCSAssemblyInfo (projectPath) =
@@ -114,9 +124,11 @@ let genCSAssemblyInfo (projectPath) =
     CreateCSharpAssemblyInfo fileName
       [ Attribute.Title (projectName)
         Attribute.Product project
+        Attribute.Company (authors |> String.concat ", ")
+        Attribute.Copyright (sprintf "Copyright \u00A9 Mathias Thierbach %i" 2018)
         Attribute.Description summary
         Attribute.Version release.AssemblyVersion
-        Attribute.FileVersion release.AssemblyVersion
+        Attribute.FileVersion fileVersion
         Attribute.InformationalVersion release.NugetVersion ]
 
 // Generate assembly info files with the right version & up-to-date information
