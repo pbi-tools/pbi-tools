@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using Serilog;
 
 namespace PbixTools
@@ -29,14 +28,21 @@ namespace PbixTools
         // Deployments
 
         [JsonProperty("version")]
-        public string Version { get; set; }
+        public string VersionString { get; set; }
         [JsonProperty("queries")]
         public IDictionary<string, string> Queries { get; set; }
 
 
+        [JsonIgnore]
+        public Version Version
+        {
+            get => Version.TryParse(VersionString, out var version) ? version : CurrentVersion;
+            set => this.VersionString = value.ToString();
+        }
+
         public PbixProject()
         {
-            this.Version = CurrentVersion.ToString();
+            this.Version = CurrentVersion;
             this.Queries = new Dictionary<string, string>();
         }
 
@@ -65,8 +71,6 @@ namespace PbixTools
 
         public void Save(IProjectRootFolder folder)
         {
-            this.Version = CurrentVersion.ToString(); // making sure we're always upgrading to the latest version number
-
             var json = JsonConvert.SerializeObject(this, Formatting.Indented); // don't use CamelCaseContractResolver as it will modify query names
 
             folder.GetFile(Filename).Write(json);

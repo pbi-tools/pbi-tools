@@ -62,6 +62,7 @@ namespace PbixTools
             this.ExtractModel(pbixProj);
             Log.Information("Model extracted");
 
+            pbixProj.Version = PbixProject.CurrentVersion;
             pbixProj.Save(_rootFolder);
         }
 
