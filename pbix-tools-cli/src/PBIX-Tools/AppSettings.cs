@@ -7,7 +7,7 @@ namespace PbixTools
 {
     public class AppSettings
     {
-        public LoggingLevelSwitch LevelSwitch { get; } = new LoggingLevelSwitch(
+        public LoggingLevelSwitch LevelSwitch { get; } = new LoggingLevelSwitch( // default is Information
 #if DEBUG
             LogEventLevel.Verbose
 #endif

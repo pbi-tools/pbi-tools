@@ -66,12 +66,12 @@ namespace PbixTools
             var path = Path.Combine(_pbiInstall.Value.InstallDir, $"{dllName}.dll");
             if (File.Exists(path))
             {
-                Log.Verbose("Assembly '{AssenblyName}' found at {Path}", args.Name, path);
+                Log.Debug("Assembly '{AssemblyName}' found at {Path}", args.Name, path);
                 return Assembly.LoadFile(path);
             }
             else
             {
-                Log.Warning("Could not resolve assembly: {AssemblyName}", args.Name);
+                Log.Debug("Could not resolve assembly: {AssemblyName}", args.Name);
                 return null;
             }
         }
@@ -144,7 +144,7 @@ namespace PbixTools
                 var destPath = Path.Combine(copyDest, file.Substring(basePath.Length + 1));
                 Directory.CreateDirectory(Path.GetDirectoryName(destPath));
                 File.Copy(file, destPath, overwrite: true);
-                Log.Information("File copied: {Path}", destPath);
+                Log.Verbose("File copied: {Path}", destPath);
             }
 
             return Path.Combine(copyDest, MSMDSRV_EXE);
