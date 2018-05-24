@@ -109,7 +109,7 @@ namespace PbixTools
         {
             if (token is JObject obj)
                 return new JObject(obj.Properties().Select(x => new JProperty(x.Name, x.Value.NormalizeNumbers())));
-            else if (token.Type == JTokenType.Float && (int) token.Value<float>() == token.Value<int>())
+            else if (token.Type == JTokenType.Float && Math.Abs(token.Value<float>() - token.Value<int>()) <= 0.0001)
                 return token.Value<int>();
             else return token;
         }
