@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 
@@ -65,10 +66,52 @@ namespace PbixTools
         /// <summary>
         /// Saves the <see cref="JToken"/> to the <see cref="IProjectFolder"/> using the <see cref="name"/> provided.
         /// </summary>
-        public static void Save(this JToken token, string name, IProjectFolder folder)
+        public static void Save(this JToken token, string name, IProjectFolder folder, params Func<JToken, JToken>[] transforms)
         {
             if (folder == null || token == null) return;
+            if (transforms != null) token = transforms.Aggregate(token, (t, func) => func(t));
             folder.Write(token, $"{name}.json");
+        }
+
+    }
+
+    public static class JsonTransforms
+    {
+        /// <summary>
+        /// Sorts the properties of any nested json object alphabetically.
+        /// </summary>
+        public static JToken SortProperties(this JToken token)
+        {
+            if (token is JObject obj)
+                //return obj.SortObjectProperties();
+                return new JObject(obj.Properties().OrderBy(x => x.Name).Select(x => new JProperty(x.Name, x.Value.SortProperties())));
+            else if (token is JArray arr)
+                return new JArray(arr.Select(SortProperties));
+            else
+                return token;
+        }
+
+        ///// <summary>
+        ///// Sorts the properties of this and any nested json objects alphabetically.
+        ///// </summary>
+        //public static JObject SortObjectProperties(this JObject obj)
+        //{
+        //    var prop = obj.Properties().ToList();
+        //    obj.RemoveAll();
+        //    foreach (var property in prop.OrderBy(p => p.Name))
+        //    {
+        //        obj.Add(property.Name, property.Value.SortProperties());
+        //    }
+        //    return obj;
+        //}
+
+        public static JToken NormalizeNumbers(this JToken token)
+        {
+            if (token is JObject obj)
+                return new JObject(obj.Properties().Select(x => new JProperty(x.Name, x.Value.NormalizeNumbers())));
+            else if (token.Type == JTokenType.Float && (int) token.Value<float>() == token.Value<int>())
+                return token.Value<int>();
+            else return token;
         }
     }
 }
