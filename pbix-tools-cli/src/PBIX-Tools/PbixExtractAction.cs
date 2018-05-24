@@ -19,7 +19,7 @@ namespace PbixTools
 
         public PbixExtractAction(string pbixPath, IDependenciesResolver resolver)
         {
-            _pbixReader = new PbixReader(
+            _pbixReader = new PbixReader( // TODO Pass in IPbixReader for better testability
                 pbixPath ?? throw new ArgumentNullException(nameof(pbixPath)), 
                 resolver ?? throw new ArgumentNullException(nameof(resolver)));
 
@@ -42,7 +42,7 @@ namespace PbixTools
             Log.Information("Report extracted");
 
             this.ExtractReportMetadata();
-            Log.Information("ReportMatadata extracted");
+            Log.Information("ReportMetadata extracted");
 
             this.ExtractReportSettings();
             Log.Information("ReportSettings extracted");
