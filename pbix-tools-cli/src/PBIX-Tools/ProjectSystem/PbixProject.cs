@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
+using PbixTools.FileSystem;
 using Serilog;
 
-namespace PbixTools
+namespace PbixTools.ProjectSystem
 {
     public class PbixProject
     {

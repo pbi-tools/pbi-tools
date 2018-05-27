@@ -3,7 +3,7 @@ using System.Diagnostics;
 using Serilog;
 using Serilog.Events;
 
-namespace PbixTools
+namespace PbixTools.Utils
 {
     public class LogOperationScope : IDisposable
     {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace PbixTools
+namespace PbixTools.Utils
 {
     public static class MashupHelpers
     {

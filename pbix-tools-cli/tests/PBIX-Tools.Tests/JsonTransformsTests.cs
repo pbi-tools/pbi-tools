@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using PbixTools.Serialization;
 using Xunit;
 
 namespace PbixTools.Tests

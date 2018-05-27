@@ -18,9 +18,10 @@ using Microsoft.PowerBI.Packaging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
+using PbixTools.Utils;
 using Serilog;
 
-namespace PbixTools
+namespace PbixTools.PowerBI
 {
     public class PbixReader : IDisposable
     {

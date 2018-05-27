@@ -7,7 +7,7 @@ using System.Reflection;
 using Microsoft.Win32;
 using Serilog;
 
-namespace PbixTools
+namespace PbixTools.Utils
 {
     public interface IDependenciesResolver
     {

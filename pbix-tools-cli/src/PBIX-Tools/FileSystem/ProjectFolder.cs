@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 using Serilog;
 using Formatting = Newtonsoft.Json.Formatting;
 
-namespace PbixTools
+namespace PbixTools.FileSystem
 {
     /// <summary>
     /// Represents a sub-folder inside the PBIXPROJ directory, containing the artifacts for one PBIX part (e.g., /Mashup, /Report, etc.)

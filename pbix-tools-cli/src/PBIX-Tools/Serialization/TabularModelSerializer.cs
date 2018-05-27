@@ -7,8 +7,9 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using Newtonsoft.Json.Linq;
+using PbixTools.FileSystem;
 
-namespace PbixTools
+namespace PbixTools.Serialization
 {
     /// <summary>
     /// Serializes a TMSL database into a <see cref="IProjectFolder"/>.

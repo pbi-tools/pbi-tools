@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace PbixTools
+namespace PbixTools.Utils
 {
     public class TempFolder : IDisposable
     {

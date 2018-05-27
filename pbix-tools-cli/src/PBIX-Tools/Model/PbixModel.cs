@@ -4,9 +4,11 @@ using System.IO.Compression;
 using System.IO.Packaging;
 using System.Xml.Linq;
 using Newtonsoft.Json.Linq;
+using PbixTools.PowerBI;
+using PbixTools.Utils;
 using Serilog;
 
-namespace PbixTools
+namespace PbixTools.Model
 {
     public interface IPbixModel
     {

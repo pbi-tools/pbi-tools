@@ -2,8 +2,10 @@
 using System.IO;
 using System.IO.Compression;
 using System.Xml.Linq;
+using PbixTools.FileSystem;
+using PbixTools.Utils;
 
-namespace PbixTools
+namespace PbixTools.Serialization
 {
     public class MashupPackageSerializer
     {

@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using PbixTools.FileSystem;
 using Xunit;
 
 namespace PbixTools.Tests

@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Xml.Linq;
 using Newtonsoft.Json.Linq;
+using PbixTools.FileSystem;
 
 namespace PbixTools.Tests
 {

@@ -5,9 +5,14 @@ using System.Text;
 using System.Xml.Linq;
 using Microsoft.PowerBI.Packaging;
 using Newtonsoft.Json.Linq;
+using PbixTools.FileSystem;
+using PbixTools.PowerBI;
+using PbixTools.ProjectSystem;
+using PbixTools.Serialization;
+using PbixTools.Utils;
 using Serilog;
 
-namespace PbixTools
+namespace PbixTools.Actions
 {
     public class PbixExtractAction : IDisposable
     {

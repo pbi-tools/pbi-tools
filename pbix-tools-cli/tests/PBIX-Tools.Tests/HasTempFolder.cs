@@ -1,4 +1,5 @@
 ﻿using System;
+using PbixTools.Utils;
 
 namespace PbixTools.Tests
 {

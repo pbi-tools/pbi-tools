@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Serilog;
 using StreamJsonRpc;
 
-namespace PbixTools
+namespace PbixTools.Rpc
 {
     /// <summary>
     /// ... An instance has the same lifetime as the surrounding process.

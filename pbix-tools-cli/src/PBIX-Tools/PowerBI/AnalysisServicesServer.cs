@@ -14,11 +14,12 @@ using System.Xml.Linq;
 using System.Xml.XPath;
 using TOM = Microsoft.AnalysisServices.Tabular;
 using Microsoft.PowerBI.Packaging;
+using PbixTools.Utils;
 using Polly;
 using Serilog;
 using Serilog.Events;
 
-namespace PbixTools
+namespace PbixTools.PowerBI
 {
 
     public class AnalysisServicesServer : IDisposable

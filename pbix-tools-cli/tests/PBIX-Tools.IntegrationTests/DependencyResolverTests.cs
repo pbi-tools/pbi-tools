@@ -2,6 +2,8 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using PbixTools.Actions;
+using PbixTools.Utils;
 using Xunit;
 
 namespace PbixTools.IntegrationTests

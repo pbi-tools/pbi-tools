@@ -4,6 +4,8 @@ using System.IO;
 using System.Xml;
 using System.Xml.XPath;
 using Newtonsoft.Json.Linq;
+using PbixTools.Serialization;
+using PbixTools.Utils;
 using Xunit;
 
 namespace PbixTools.Tests
