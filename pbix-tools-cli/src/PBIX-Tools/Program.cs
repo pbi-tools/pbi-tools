@@ -35,7 +35,11 @@ namespace PbixTools
 
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.ControlledBy(AppSettings.LevelSwitch)
-                .WriteTo.Console()
+                .WriteTo.Console(
+#if !DEBUG
+                        outputTemplate: "{Message:lj}{NewLine}{Exception}"
+#endif
+                    )
                     .Filter.ByExcluding(_ => AppSettings.ShouldSuppressConsoleLogs)
                 .CreateLogger();
         }
