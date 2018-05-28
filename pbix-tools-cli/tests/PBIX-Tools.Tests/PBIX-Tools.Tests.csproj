@@ -11,16 +11,24 @@
     <OutputPath>bin\$(Configuration)\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="TestResources\MashupMetadata_LastAnalysisServicesFormulaText.xml" />
+    <None Remove="TestResources\MashupMetadata_Simple.xml" />
+    <None Remove="TestResources\MashupMetadata_WithQueryGroups.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="TestResources\MashupMetadata_LastAnalysisServicesFormulaText.xml" />
+    <EmbeddedResource Include="TestResources\MashupMetadata_Simple.xml" />
+    <EmbeddedResource Include="TestResources\MashupMetadata_WithQueryGroups.xml" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\src\PBIX-Tools\PBIX-Tools.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Mashup.Client.Packaging">
       <HintPath>C:\Program Files\Microsoft Power BI Desktop\bin\Microsoft.Mashup.Client.Packaging.dll</HintPath>
-      <Private>false</Private>
     </Reference>
     <Reference Include="Microsoft.PowerBI.Packaging">
       <HintPath>C:\Program Files\Microsoft Power BI Desktop\bin\Microsoft.PowerBI.Packaging.dll</HintPath>
-      <Private>false</Private>
     </Reference>
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />

@@ -1,0 +1,31 @@
+﻿<LocalPackageMetadataFile>
+  <Items>
+    <Item>
+      <ItemLocation>
+        <ItemType>Formula</ItemType>
+        <ItemPath>Section1/Change%20Log</ItemPath>
+      </ItemLocation>
+      <StableEntries>
+        <Entry Type="LastAnalysisServicesFormulaText" Value="s{&quot;IncludesReferencedQueries&quot;:true,&quot;RootFormulaText&quot;:&quot;let\r\n    Source = #\&quot;Has / Special \u0026 Characters\&quot;\r\nin\r\n    Source&quot;,&quot;ReferencedQueriesFormulaText&quot;:{&quot;Has / Special \u0026 Characters&quot;:&quot;\&quot;#[]\&quot; meta [IsParameterQuery=true, Type=\&quot;Text\&quot;, IsParameterQueryRequired=true]&quot;}}" />
+      </StableEntries>
+    </Item>
+    <Item>
+      <ItemLocation>
+        <ItemType>Formula</ItemType>
+        <ItemPath>Section1/Revenue/Added%20%5BRevenue%20Type%5D%20%28Recognized%29</ItemPath>
+      </ItemLocation>
+      <StableEntries>
+        <Entry Type="LastAnalysisServicesFormulaText" Value="s{&quot;IncludesReferencedQueries&quot;:false,&quot;RootFormulaText&quot;:&quot;let\n    Source = #table(type table[ID = number, Label = text], {\n    { 1, \&quot;Foo\&quot; },\n    { 2, \&quot;Bar\&quot; }\n})\nin\n    Source&quot;,&quot;ReferencedQueriesFormulaText&quot;:{&quot;Query0&quot;:&quot;42&quot;}}" />
+      </StableEntries>
+    </Item>
+    <Item>
+      <ItemLocation>
+        <ItemType>Formula</ItemType>
+        <ItemPath>Section1/Special%20Characters/%22%20%3C%20%3E%20%7C%20%3A%20*%20%3F%20%2F%20%5C</ItemPath>
+      </ItemLocation>
+      <StableEntries>
+        <Entry Type="LastAnalysisServicesFormulaText" Value="s{&quot;IncludesReferencedQueries&quot;:true,&quot;RootFormulaText&quot;:&quot;&quot;,&quot;ReferencedQueriesFormulaText&quot;:{}}" />
+      </StableEntries>
+    </Item>
+  </Items>
+</LocalPackageMetadataFile>

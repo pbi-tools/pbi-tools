@@ -1,0 +1,38 @@
+﻿<LocalPackageMetadataFile>
+  <Items>
+    <Item>
+      <ItemLocation>
+        <ItemType>AllFormulas</ItemType>
+        <ItemPath />
+      </ItemLocation>
+      <StableEntries>
+        <Entry Type="RunBackgroundAnalysis" Value="sFalse" />
+      </StableEntries>
+    </Item>
+    <Item>
+      <ItemLocation>
+        <ItemType>Formula</ItemType>
+        <ItemPath>Section1/Query1</ItemPath>
+      </ItemLocation>
+      <StableEntries>
+        <Entry Type="IsPrivate" Value="l0" />
+        <Entry Type="IsDirectQuery" Value="l0" />
+        <Entry Type="NavigationStepName" Value="sNavigation" />
+        <Entry Type="FillColumnNames" Value="s[&quot;ID&quot;,&quot;Label&quot;]" />
+        <Entry Type="RelationshipInfoContainer" Value="s{&quot;columnCount&quot;:2,&quot;keyColumnNames&quot;:[],&quot;queryRelationships&quot;:[],&quot;columnIdentities&quot;:[&quot;Section1/Query1/Source.{ID,0}&quot;,&quot;Section1/Query1/Source.{Label,1}&quot;],&quot;ColumnCount&quot;:2,&quot;KeyColumnNames&quot;:[],&quot;ColumnIdentities&quot;:[&quot;Section1/Query1/Source.{ID,0}&quot;,&quot;Section1/Query1/Source.{Label,1}&quot;],&quot;RelationshipInfo&quot;:[]}" />
+        <Entry Type="LastAnalysisServicesFormulaText" Value="s{&quot;IncludesReferencedQueries&quot;:true,&quot;RootFormulaText&quot;:&quot;let\n    Source = #table(type table[ID = number, Label = text], {\n    { 1, \&quot;Foo\&quot; },\n    { 2, \&quot;Bar\&quot; }\n})\nin\n    Source&quot;,&quot;ReferencedQueriesFormulaText&quot;:{}}" />
+        <Entry Type="IsLastAnalysisServicesFormulaTextCollection" Value="l1" />
+        <Entry Type="LoadedToAnalysisServices" Value="l1" />
+        <Entry Type="BufferNextRefresh" Value="l0" />
+        <Entry Type="ResultType" Value="sTable" />
+      </StableEntries>
+    </Item>
+    <Item>
+      <ItemLocation>
+        <ItemType>Formula</ItemType>
+        <ItemPath>Section1/Query1/Source</ItemPath>
+      </ItemLocation>
+      <StableEntries />
+    </Item>
+  </Items>
+</LocalPackageMetadataFile>
