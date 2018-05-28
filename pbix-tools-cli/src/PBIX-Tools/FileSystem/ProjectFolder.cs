@@ -271,6 +271,15 @@ namespace PbixTools.FileSystem
 
     public static class ProjectFolderExtensions
     {
+
+        public static void Write(this IProjectFolder folder, string text, string path)
+        {
+            folder.WriteText(path, writer =>
+            {
+                writer.Write(text);
+            });
+        }
+
         public static void Write(this IProjectFolder folder, JToken json, string path)
         {
             folder.WriteText(path, writer =>
