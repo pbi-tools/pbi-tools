@@ -32,8 +32,8 @@ namespace PbixTools.PowerBI
         private readonly IPowerBIPackage _package;
         private readonly IDependenciesResolver _resolver;
 
-        private readonly JsonSerializer _serializer = new JsonSerializer {  };
-        private readonly JsonSerializer _camelCaseSerializer = new JsonSerializer { ContractResolver = new CamelCasePropertyNamesContractResolver() };
+        private static readonly JsonSerializer DefaultSerializer = new JsonSerializer {  };
+        private static readonly JsonSerializer CamelCaseSerializer = new JsonSerializer { ContractResolver = new CamelCasePropertyNamesContractResolver() };
 
         private readonly XmlSerializerNamespaces _xmlNamespaces = new XmlSerializerNamespaces();
 
@@ -59,7 +59,7 @@ namespace PbixTools.PowerBI
             if (_package.Connections == null) return default(JObject);
             using (var reader = new JsonTextReader(new StreamReader(_package.Connections.GetStream())))
             {
-                return _serializer.Deserialize<JObject>(reader);
+                return DefaultSerializer.Deserialize<JObject>(reader);
             }
         }
 
@@ -71,7 +71,7 @@ namespace PbixTools.PowerBI
             {
                 using (var reader = new JsonTextReader(new StreamReader(_package.DataModelSchema.GetStream(), Encoding.Unicode)))
                 {
-                    tmsl = _serializer.Deserialize<JObject>(reader);
+                    tmsl = DefaultSerializer.Deserialize<JObject>(reader);
                 }
             }
             else if (_package.DataModel != null)
@@ -149,7 +149,7 @@ namespace PbixTools.PowerBI
             EnsurePackageComponents();
 
             var permissions = PermissionsSerializer.Deserialize(_packageComponents.PermissionBytes);
-            return JObject.FromObject(permissions, _camelCaseSerializer);
+            return JObject.FromObject(permissions, CamelCaseSerializer);
         }
 
         public XDocument ReadMashupMetadata()
@@ -178,14 +178,21 @@ namespace PbixTools.PowerBI
 
             if (PackageMetadataSerializer.TryDeserialize(_packageComponents.MetadataBytes, out SerializedPackageMetadata packageMetadata, out var contentStorageBytes))
             {
-                foreach (var item in packageMetadata.Items)
+                return ParseQueryGroups(packageMetadata);
+            }
+            return null;
+        }
+
+        internal static JArray ParseQueryGroups(SerializedPackageMetadata packageMetadata)
+        {
+            foreach (var item in packageMetadata.Items)
+            {
+                if (QueriesMetadataSerializer.TryGetQueryGroups(item, out QueryGroupMetadataSet queryGroups))
                 {
-                    if (QueriesMetadataSerializer.TryGetQueryGroups(item, out QueryGroupMetadataSet queryGroups))
-                    {
-                        return JArray.FromObject(queryGroups.ToArray(), _camelCaseSerializer);
-                    }
+                    return JArray.FromObject(queryGroups.ToArray(), CamelCaseSerializer);
                 }
             }
+
             return null;
         }
 
@@ -210,7 +217,7 @@ namespace PbixTools.PowerBI
             if (_package.ReportDocument == null) return default(JObject);
             using (var reader = new JsonTextReader(new StreamReader(_package.ReportDocument.GetStream(), Encoding.Unicode /* this is the crucial bit! */)))
             {
-                return _serializer.Deserialize<JObject>(reader);
+                return DefaultSerializer.Deserialize<JObject>(reader);
             }
         }
 
@@ -219,7 +226,7 @@ namespace PbixTools.PowerBI
             if (_package.DiagramViewState == null) return default(JObject);
             using (var reader = new JsonTextReader(new StreamReader(_package.DiagramViewState.GetStream(), Encoding.Unicode)))
             {
-                return _serializer.Deserialize<JObject>(reader);
+                return DefaultSerializer.Deserialize<JObject>(reader);
             }
         }
 
@@ -240,7 +247,7 @@ namespace PbixTools.PowerBI
                 var metadata = new ReportMetadata();
                 metadata.Deserialize(reader);
 
-                return JObject.FromObject(metadata, _camelCaseSerializer);
+                return JObject.FromObject(metadata, CamelCaseSerializer);
             }
         }
 
@@ -252,7 +259,7 @@ namespace PbixTools.PowerBI
                 var settings = new ReportSettings();
                 settings.Deserialize(reader);
 
-                return JObject.FromObject(settings, _camelCaseSerializer);
+                return JObject.FromObject(settings, CamelCaseSerializer);
             }
         }
 
