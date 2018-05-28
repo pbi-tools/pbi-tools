@@ -12,36 +12,12 @@ using PbixTools.FileSystem;
 namespace PbixTools.Serialization
 {
     /// <summary>
-    /// Serializes a TMSL database into a <see cref="IProjectFolder"/>.
+    /// Serializes a tabular database (represented as TMSL/json) into a <see cref="IProjectFolder"/>.
     /// </summary>
     /// <remarks>Methods for deserialization to be added in a future version.</remarks>
     public class TabularModelSerializer
     {
         private readonly IProjectFolder _folder;
-
-        // Serialize: TMSL (JObject) ==> //*.json|.xml
-        //            Expand: database.json (relationships, roles, perspectives)
-        //                    dataSources
-        //                    tables (columns, hierarchies)
-        //                     partitions, measures
-        //            Handle non-significant changes (datasourceId)
-        //            Replace IDs with static values
-        //            Extract Mashup blob (package)
-        // Deserialize: Compile 'DataModel' blob
-
-        /* .ids.json
-           {
-              globalPipe: "",
-              dataSources: [],
-              tables: [
-                partitions: [
-                {
-                  name, dataSource, location
-                }
-                ]
-              ]
-           }
-         */
 
         public TabularModelSerializer(IProjectFolder folder)
         {
