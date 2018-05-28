@@ -55,7 +55,7 @@ namespace PbixTools.Serialization
                     ? "Formulas"
                     : item.ItemLocation.ItemType.ToString();
 
-                var entry = CreateEntry(sectionName, String.IsNullOrEmpty(item.ItemLocation.ItemPath) ? null : item.ItemLocation.ItemPath);
+                var entry = CreateEntry(sectionName, String.IsNullOrEmpty(item.ItemLocation.ItemPath) ? null : WebUtility.UrlDecode(item.ItemLocation.ItemPath));
 
                 if (item.Entries == null || item.Entries.Length == 0)
                     entry.Replace(JValue.CreateNull());

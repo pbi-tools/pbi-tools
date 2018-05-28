@@ -34,5 +34,30 @@
       </ItemLocation>
       <StableEntries />
     </Item>
+    <Item>
+      <ItemLocation>
+        <ItemType>Formula</ItemType>
+        <ItemPath>Section1/Sample%20File</ItemPath>
+      </ItemLocation>
+      <StableEntries>
+        <Entry Type="IsPrivate" Value="l0" />
+        <Entry Type="ResultType" Value="sBinary" />
+        <Entry Type="IsDirectQuery" Value="l0" />
+        <Entry Type="BufferNextRefresh" Value="l1" />
+        <Entry Type="LoadedToAnalysisServices" Value="l0" />
+        <Entry Type="FillErrorCode" Value="sUnknown" />
+        <Entry Type="FillLastUpdated" Value="d2018-05-08T11:59:25.8072699Z" />
+        <Entry Type="LoadToReportDisabled" Value="l1" />
+        <Entry Type="QueryGroupID" Value="s1ea3efeb-eea4-4151-9444-74c137844b33" />
+        <Entry Type="NameUpdatedAfterFill" Value="l1" />
+      </StableEntries>
+    </Item>
+    <Item>
+      <ItemLocation>
+        <ItemType>Formula</ItemType>
+        <ItemPath>Section1/Sample%20File/Source</ItemPath>
+      </ItemLocation>
+      <StableEntries />
+    </Item>
   </Items>
 </LocalPackageMetadataFile>

@@ -120,5 +120,15 @@ namespace PbixTools.Tests
             // &quot;Has / Special \u0026 Characters&quot;
             Assert.True(_folder.ContainsPath("Metadata/Section1/Change Log/ReferencedQueries/Has %2F Special & Characters.m"));
         }
+
+        [Fact]
+        public void Replaces_escape_sequences_in_ItemPaths()
+        {
+            var json = SerializeFromResource("MashupMetadata_Simple.xml");
+
+            Assert.Equal(JTokenType.Object, json["Formulas"]["Section1/Sample File"].Type);
+            Assert.Equal(JValue.CreateNull(), json["Formulas"]["Section1/Sample File/Source"]);
+        }
+
     }
 }
