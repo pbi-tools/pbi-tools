@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -12,12 +11,13 @@ using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
-using TOM = Microsoft.AnalysisServices.Tabular;
 using Microsoft.PowerBI.Packaging;
 using PbixTools.Utils;
 using Polly;
 using Serilog;
 using Serilog.Events;
+using TOM = Microsoft.AnalysisServices.Tabular;
+using static PbixTools.Utils.Resources;
 
 namespace PbixTools.PowerBI
 {
@@ -78,19 +78,6 @@ namespace PbixTools.PowerBI
             var iniTemplate = GetEmbeddedResource("msmdsrv.ini.xml", XDocument.Load);
 
             ASIniFile.WriteConfig(config, iniTemplate, iniFilePath);
-        }
-
-        private static T GetEmbeddedResource<T>(string name, Func<Stream, T> transform)
-        {
-            var asm = Assembly.GetExecutingAssembly();
-            var resourceNames = asm.GetManifestResourceNames();
-            var match = resourceNames.FirstOrDefault(n => n.EndsWith(name));
-            if (match == null) throw new ArgumentException($"Embedded resource '{name}' not found.", nameof(name));
-
-            using (var stream = asm.GetManifestResourceStream(match))
-            {
-                return transform(stream);
-            }
         }
 
         public int Port { get; private set; }

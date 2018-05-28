@@ -1,10 +1,8 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Reflection;
+﻿using System.IO;
 using PbixTools.Actions;
 using PbixTools.Utils;
 using Xunit;
+using static PbixTools.Utils.Resources;
 
 namespace PbixTools.IntegrationTests
 {
@@ -34,7 +32,7 @@ namespace PbixTools.IntegrationTests
         [Fact]
         public void Can_use_Mashup_Packaging_API()
         {
-            using (var pbixSrc = GetEmbeddedResource("Simple.pbix"))
+            using (var pbixSrc = GetEmbeddedResourceStream("Simple.pbix"))
             using (var tmp = new TempFolder())
             {
                 var pbixPath = Path.Combine(tmp.Path, "Simple.pbix");
@@ -57,16 +55,6 @@ namespace PbixTools.IntegrationTests
                     "Formulas",
                     "Section1.m")));
             }
-        }
-
-        private static Stream GetEmbeddedResource(string name)
-        {
-            var asm = Assembly.GetExecutingAssembly();
-            var resourceNames = asm.GetManifestResourceNames();
-            var match = resourceNames.FirstOrDefault(n => n.EndsWith(name));
-            if (match == null) throw new ArgumentException($"Embedded resource '{name}' not found.", nameof(name));
-
-            return asm.GetManifestResourceStream(match);
         }
 
     }
