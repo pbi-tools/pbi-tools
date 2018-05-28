@@ -173,7 +173,7 @@ namespace PbixTools.Serialization
                         "dataSources",
                         location,
                         "mashup");
-                    MashupPackageSerializer.ExtractMashup(folder, mashupPrefix, mashup);
+                    MashupSerializer.ExtractMashup(folder, mashupPrefix, mashup);
                 }
 
                 folder.Write(dataSource, $@"dataSources\{dir}\dataSource.json");

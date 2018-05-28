@@ -125,7 +125,7 @@ namespace PbixTools.Actions
 
         public void ExtractMashup()
         {
-            //var folder = _rootFolder.GetFolder("Mashup");
+            var mashupSerializer = new MashupSerializer(_rootFolder.GetFolder("Mashup"));
 
             /*
              *   /Mashup
@@ -184,14 +184,13 @@ namespace PbixTools.Actions
             var metadata = _pbixReader.ReadMashupMetadata();
             if (metadata != null)
             {
-                var metadataFile = _rootFolder.GetFile("Mashup/metadata.xml");
-                metadataFile.Write(metadata);
+                mashupSerializer.SerializeMetadata(metadata);
             }
 
             var queryGroups = _pbixReader.ReadQueryGroups();
             if (queryGroups != null)
             {
-                var queryGroupsFile = _rootFolder.GetFile("Mashup/queryGroups.json");
+                var queryGroupsFile = _rootFolder.GetFile("Mashup/Metadata/queryGroups.json");
                 queryGroupsFile.Write(queryGroups);
             }
 

@@ -12,7 +12,7 @@ namespace PbixTools.ProjectSystem
         private static readonly ILogger Log = Serilog.Log.ForContext<PbixProject>();
 
         public static readonly string Filename = ".pbixproj.json";
-        public static readonly Version CurrentVersion = new Version(0, 2);
+        public static readonly Version CurrentVersion = new Version(0, 3);
 
         /*
          * PBIXPROJ Change Log
@@ -22,6 +22,7 @@ namespace PbixTools.ProjectSystem
          *     - FIX: use static name inside dataSource.json
          * 0.2 - "dataSources" renamed to "queries"
          *     - '/Mashup/Package/Formulas/Section1.m' rather than '/Mashup/Section1.m' (package fully extracted)
+         * 0.3 - '/Mashup/Metadata/**' (instead of '/Mashup/metadata.xml')
          */
 
         /* Entries to add later: */
@@ -30,6 +31,7 @@ namespace PbixTools.ProjectSystem
 
         [JsonProperty("version")]
         public string VersionString { get; set; }
+        
         [JsonProperty("queries")]
         public IDictionary<string, string> Queries { get; set; }
 
