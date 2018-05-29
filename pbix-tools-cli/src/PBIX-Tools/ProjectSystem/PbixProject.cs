@@ -21,8 +21,10 @@ namespace PbixTools.ProjectSystem
          * 0.1 - Model/dataSources: use location (query name) as folder name (rather than datasource guid); always write 'dataSource.json'
          *     - FIX: use static name inside dataSource.json
          * 0.2 - "dataSources" renamed to "queries"
+         *     - all PBIX parts extracted
          *     - '/Mashup/Package/Formulas/Section1.m' rather than '/Mashup/Section1.m' (package fully extracted)
          * 0.3 - '/Mashup/Metadata/**' (instead of '/Mashup/metadata.xml')
+         *     - excluding Report/visualContainers/queryHash, Report/section/objectId, Report/report/objectId to eliminate insignificant noise in source controlled files
          */
 
         /* Entries to add later: */

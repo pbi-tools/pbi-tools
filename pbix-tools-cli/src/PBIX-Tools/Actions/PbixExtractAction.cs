@@ -270,13 +270,21 @@ namespace PbixTools.Actions
                     jVisual.ExtractObject("dataTransforms", visualFolder);
 
                     visualConfig.Save("config", visualFolder);
-                    jVisual.Save("visualContainer", visualFolder, JsonTransforms.SortProperties, JsonTransforms.NormalizeNumbers); // TODO Make transforms configurable; Drop 'queryHash'?
+                    jVisual.Save("visualContainer", visualFolder
+                        , JsonTransforms.SortProperties
+                        , JsonTransforms.NormalizeNumbers
+                        , JsonTransforms.RemoveProperties("queryHash")); // TODO Make transforms configurable
                 }
 
-                jSection.Save("section", sectionFolder, JsonTransforms.SortProperties, JsonTransforms.NormalizeNumbers); // TODO Consider removing 'objectId' as it changes with every import and seems to be optional (not emitted by PBI Desktop)
+                jSection.Save("section", sectionFolder
+                    , JsonTransforms.SortProperties
+                    , JsonTransforms.NormalizeNumbers
+                    , JsonTransforms.RemoveProperties("objectId"));
             }
 
-            jReport.Save("report", reportFolder, JsonTransforms.SortProperties); // resourcePackage ids tend to change when exporting from powerbi.com
+            jReport.Save("report", reportFolder
+                , JsonTransforms.SortProperties
+                , JsonTransforms.RemoveProperties("objectId")); // resourcePackage ids tend to change when exporting from powerbi.com
         }
 
         public void ExtractVersion()

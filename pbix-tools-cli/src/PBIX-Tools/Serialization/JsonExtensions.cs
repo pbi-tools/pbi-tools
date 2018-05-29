@@ -92,19 +92,6 @@ namespace PbixTools.Serialization
                 return token;
         }
 
-        ///// <summary>
-        ///// Sorts the properties of this and any nested json objects alphabetically.
-        ///// </summary>
-        //public static JObject SortObjectProperties(this JObject obj)
-        //{
-        //    var prop = obj.Properties().ToList();
-        //    obj.RemoveAll();
-        //    foreach (var property in prop.OrderBy(p => p.Name))
-        //    {
-        //        obj.Add(property.Name, property.Value.SortProperties());
-        //    }
-        //    return obj;
-        //}
 
         public static JToken NormalizeNumbers(this JToken token)
         {
@@ -113,6 +100,23 @@ namespace PbixTools.Serialization
             else if (token.Type == JTokenType.Float && Math.Abs(token.Value<float>() - token.Value<int>()) <= 0.0001)
                 return token.Value<int>();
             else return token;
+        }
+
+        public static Func<JToken, JToken> RemoveProperties(params string[] propertyNames)
+        {
+            return token =>
+            {
+                if (token is JObject obj && propertyNames != null)
+                {
+                    foreach (var propertyName in propertyNames)
+                    {
+                        if (obj.ContainsKey(propertyName))
+                            obj.Remove(propertyName);
+                    }
+                }
+
+                return token;
+            };
         }
     }
 }
