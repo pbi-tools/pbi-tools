@@ -56,11 +56,12 @@ namespace PbixTools
         [ArgActionMethod, ArgShortcut("info"), ArgDescription("Collects diagnostic information about the local system and writes a JSON object to StdOut.")]
         public void Info()
         {
-            _appSettings.LevelSwitch.MinimumLevel = LogEventLevel.Warning;
+            _appSettings.LevelSwitch.MinimumLevel = LogEventLevel.Warning; // Suppresses Informational logs
             
             var pbiInstalls = PowerBILocator.FindInstallations();
             var json = new JObject
             {
+                { "build", AssemblyVersionInformation.AssemblyFileVersion },
                 { "effectivePowerBiFolder", _dependenciesResolver.GetEffectivePowerBiInstallDir() },
                 { "pbiInstalls", JArray.Parse(JsonConvert.SerializeObject(pbiInstalls)) }
             };
