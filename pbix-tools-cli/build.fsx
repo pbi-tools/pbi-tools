@@ -50,6 +50,7 @@ let tags = "powerbi, pbix, source-control, automation"
 
 // File system information
 let solutionFile  = "PBIX-TOOLS.sln"
+let distProject = "src/*/PBIX-Tools.csproj"
 
 // Pattern specifying assemblies to be tested using xUnit
 let testAssemblies = "tests/**/bin/**/*Tests*.dll"
@@ -71,6 +72,8 @@ let gitRaw = environVarOrDefault "gitRaw" ("https://raw.github.com/" + gitOwner)
 // --------------------------------------------------------------------------------------
 
 let buildDir = ".build"
+let outDir = buildDir @@ "out"
+let distDir = buildDir @@ "dist"
 let tempDir = ".temp"
 let buildMergedDir = buildDir @@ "merged"
 let paketFile = buildMergedDir @@ "paket.exe"
@@ -167,12 +170,19 @@ Target "CleanDocs" (fun _ ->
 // Including 'Restore' target addresses issue: https://github.com/fsprojects/Paket/issues/2697
 // Previously, msbuild would fail not being able to find **\obj\project.assets.json
 Target "Build" (fun _ ->
+    // !! distProject
     !! solutionFile
-    |> MSBuildReleaseExt buildDir [
+    |> MSBuildReleaseExt outDir [
             "VisualStudioVersion" , "15.0"
             "ToolsVersion"        , "15.0"
+            // "SolutionDir"         , __SOURCE_DIRECTORY__
     ] "Restore;Rebuild"
     |> ignore
+
+    // Could not get Fody to do its thing unless when building the entire solution, so we're grabbing the dist files here explicitly
+    !! (outDir @@ "pbix-tools.*")
+    -- (outDir @@ "*test*")
+    |> CopyFiles distDir
 )
 
 let assertExitCodeZero x = 
