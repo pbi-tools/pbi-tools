@@ -33,6 +33,10 @@
       <HintPath>C:\Program Files\Microsoft Power BI Desktop\bin\Microsoft.Mashup.Document.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="Microsoft.MashupEngine">
+      <HintPath>C:\Program Files\Microsoft Power BI Desktop\bin\Microsoft.MashupEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="Microsoft.PowerBI.Client.Windows">
       <HintPath>C:\Program Files\Microsoft Power BI Desktop\bin\Microsoft.PowerBI.Client.Windows.dll</HintPath>
       <Private>false</Private>

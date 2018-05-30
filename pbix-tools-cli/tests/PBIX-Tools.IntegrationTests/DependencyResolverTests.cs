@@ -53,7 +53,8 @@ namespace PbixTools.IntegrationTests
                     "Mashup",
                     "Package",
                     "Formulas",
-                    "Section1.m")));
+                    "Section1.m",
+                    "Query1.m")));
             }
         }
 

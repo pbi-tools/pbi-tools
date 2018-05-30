@@ -8,21 +8,107 @@ using System.Text;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 using Microsoft.Mashup.Client.Packaging.SerializationObjectModel;
+using Microsoft.Mashup.Engine.Interface;
+using Microsoft.Mashup.Host.Document;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using PbixTools.FileSystem;
 using PbixTools.Utils;
+using Serilog;
 
 namespace PbixTools.Serialization
 {
     public class MashupSerializer
     {
+        private static readonly ILogger Log = Serilog.Log.ForContext<MashupSerializer>();
+
         private readonly IProjectFolder _folder; /* './Mashup/' */
 
         public MashupSerializer(IProjectFolder folder)
         {
             _folder = folder ?? throw new ArgumentNullException(nameof(folder));
         }
+
+        #region Package
+
+        public void SerializePackage(ZipArchive archive)
+        {
+            var packageFolder = _folder.GetSubfolder("Package");
+            foreach (var entry in archive.Entries)
+            {
+                if (Path.GetExtension(entry.FullName) == ".xml")
+                {
+                    var xml = XDocument.Load(entry.Open());  // XmlException
+                    packageFolder.Write(xml, entry.FullName);
+                }
+                else if (Path.GetExtension(entry.FullName) == ".m")
+                {
+                    if (TryExtractSectionMembers(entry.Open(), out var exports))
+                    {
+                        foreach (var export in exports)
+                        {
+                            //                              /Formulas/Section1.m/Query1.m
+                            packageFolder.Write(export.Value, $"{entry.FullName}/{EscapeItemPathSegment(export.Key)}.m");
+                        }
+                    }
+                    else
+                    {
+                        // Fallback: Just extract the plain file
+                        packageFolder.WriteFile(entry.FullName, stream =>
+                        {
+                            entry.Open().CopyTo(stream);
+                        });
+                    }
+                }
+                else
+                {
+                    packageFolder.WriteFile(entry.FullName, stream =>
+                    {
+                        entry.Open().CopyTo(stream);
+                    });
+                }
+            }
+        }
+
+        internal static bool TryExtractSectionMembers(Stream mStream, out IDictionary<string, string> members)
+        {
+            try
+            {
+                string m;
+                using (var reader = new StreamReader(mStream))
+                {
+                    m = reader.ReadToEnd();
+                }
+
+                IEngine engine = Engines.Version1;
+                var tokens = engine.Tokenize(m);
+                var doc = engine.Parse(tokens, new TextDocumentHost(m), error => Log.Debug("MashupEngine parser error: {Message}", error.Message));
+
+                if (doc is ISectionDocument sectionDocument)
+                {
+                    members = sectionDocument.Section.Members.ToDictionary(
+                        export => export.Name.Name,
+                        export => tokens.GetText(export.Range.Start, export.Range.End).ToString());
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "An error occurred trying to extract exports from a M SectionDocument.");
+            }
+            members = null;
+            return false;
+        }
+
+        public bool TryDeserializePackage(out ZipArchive archive)
+        {
+            throw new NotImplementedException();
+        }
+        
+
+        #endregion
+
+        #region Metadata
 
         public void SerializeMetadata(XDocument xmlMetdata)
         {
@@ -184,7 +270,9 @@ namespace PbixTools.Serialization
         {
             throw new NotImplementedException();
         }
+        
 
+        #endregion
         public static void ExtractMashup(IProjectFolder folder, string prefix, string base64MashupPackage)
         {
             var mashup = Convert.FromBase64String(base64MashupPackage);  // FormatException

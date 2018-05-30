@@ -137,32 +137,9 @@ namespace PbixTools.Actions
              *   --/permissions.json
              */
 
-            using (var package = _pbixReader.ReadMashupPackage())
+            using (var archive = _pbixReader.ReadMashupPackage())
             {
-                var packageFolder = _rootFolder.GetFolder("Mashup/Package");
-                foreach (var entry in package.Entries)
-                {
-                    if (Path.GetExtension(entry.FullName) == ".xml")
-                    {
-                        var xml = XDocument.Load(entry.Open());  // XmlException
-                        packageFolder.Write(xml, entry.FullName);
-                    }
-                    else if (Path.GetExtension(entry.FullName) == ".m")
-                    {
-                        // TODO Check if we need to replace escape sequences
-                        packageFolder.WriteFile(entry.FullName, stream =>
-                        {
-                            entry.Open().CopyTo(stream);
-                        });
-                    }
-                    else
-                    {
-                        packageFolder.WriteFile(entry.FullName, stream =>
-                        {
-                            entry.Open().CopyTo(stream);
-                        });
-                    }
-                }
+                mashupSerializer.SerializePackage(archive);
             }
 
             var contents = _pbixReader.ReadMashupContent();

@@ -24,6 +24,7 @@ namespace PbixTools.ProjectSystem
          *     - all PBIX parts extracted
          *     - '/Mashup/Package/Formulas/Section1.m' rather than '/Mashup/Section1.m' (package fully extracted)
          * 0.3 - '/Mashup/Metadata/**' (instead of '/Mashup/metadata.xml')
+         *     - extract exports (queries) from mashup package into individual .m files
          *     - excluding Report/visualContainers/queryHash, Report/section/objectId, Report/report/objectId to eliminate insignificant noise in source controlled files
          */
 
