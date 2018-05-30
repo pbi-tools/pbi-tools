@@ -1,61 +1,65 @@
 {
-    "name": "pbix-tools",
+    "name": "vscode-pbixtools",
     "displayName": "PBIX Tools",
-    "description": "My first vscode extension",
-    "version": "0.0.1",
+    "description": "Tools for Power BI Developers",
+    "version": "0.4.0",
+    "preview": true,
+    "author": {
+        "name": "Mathias Thierbach"
+    },
     "publisher": "mthierba",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/pbix-tools/pbix-tools.git"
+    },
     "engines": {
         "vscode": "^1.21.0"
     },
+    "os": [
+        "win32"
+    ],
+    "cpu": [
+        "x64"
+    ],
     "categories": [
         "Other"
     ],
+    "keywords": [
+        "Power BI",
+        "pbix",
+        "pbit"
+    ],
     "activationEvents": [
-        "onView:pbixExplorer"
+        "workspaceContains:**/.pbixproj.json",
+        "workspaceContains:**/*.pbi*",
+        "onLanguage:pbix"
     ],
     "main": "./out/extension",
     "contributes": {
         "commands": [
             {
-                "command": "extension.sayHello",
-                "title": "Hello World"
-            },
-            {
-                "command": "extension.openJsonSelection",
-                "title": "Open Json"
-            },
-            {
-                "command": "pbixTools.openInPbixExplorer",
-                "title": "Open in PBIX Explorer"
+                "command": "pbixTools.extractPbixHere",
+                "title": "Extract PBIX/PBIT here..."
             }
         ],
-        "views": {
-            "explorer": [
-                {
-                    "id": "pbixExplorer",
-                    "name": "PBIX Explorer"
-                }
-            ]
-        }, 
         "menus": {
-            "view/item/context": [
-                {
-                    "command": "extension.openJsonSelection",
-                    "when": "viewItem == containersRootNode"
-                }
-            ],
             "explorer/context": [
                 {
-                    "when": "resourceExtname == .pbix || resourceExtname == .pbit",
-                    "command": "pbixTools.openInPbixExplorer",
-                    "group": "navigation@+1"
+                    "when": "resourceExtname =~ /\\.pbi(x|t)/ ",
+                    "command": "pbixTools.extractPbixHere",
+                    "group": "0_pbixtools"
                 }
-            ],
-            "view/title": [
             ]
-        }, 
+        },
         "configuration":[
-        ]
+        ],
+        "languages": [{
+            "id": "pbix",
+            "extensions": [
+                ".pbix",
+                ".pbit"
+            ]
+        }]
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",
