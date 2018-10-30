@@ -17,7 +17,7 @@ namespace PbixTools.Serialization
     /// <remarks>Methods for deserialization to be added in a future version.</remarks>
     public class TabularModelSerializer
     {
-        private readonly IProjectFolder _folder;
+        private readonly IProjectFolder _folder; /* './Model/' */
 
         public TabularModelSerializer(IProjectFolder folder)
         {

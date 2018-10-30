@@ -41,7 +41,7 @@ namespace PbixTools.PowerBI
             if (dependenciesResolver.TryFindMsmdsrv(out var path))
                 _asToolPath = path;
             else
-                throw new Exception("'msmdsrv.exe' not found");
+                throw new Exception("'msmdsrv.exe' not found"); // TODO Make specific exception?
 
             Log.Information("MSMDSRV.EXE found at {ASTOOLPATH}", _asToolPath);
             Log.Information("Working directory: {WorkingDirectory}", _tempPath);

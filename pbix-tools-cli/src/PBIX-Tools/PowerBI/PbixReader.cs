@@ -23,6 +23,10 @@ using Serilog;
 
 namespace PbixTools.PowerBI
 {
+    /// <summary>
+    /// Reads the contents of PBIX files and converts each of their parts into generic (non-PowerBI) data formats (like JObject, XDocument, ZipArchive).
+    /// Each instance handles one file only.
+    /// </summary>
     public class PbixReader : IDisposable
     {
         private static readonly ILogger Log = Serilog.Log.ForContext<PbixReader>();
@@ -124,6 +128,19 @@ namespace PbixTools.PowerBI
         #region Mashup
 
         // Mashup is NOT optional
+
+        /* Mashup structure
+           - PowerBIPackage.DataMashup (Microsoft.PowrBI.Packaging)
+             converts to: PackageComponents (Microsoft.Mashup.Client.Packaging)
+             - PartsBytes
+               -> ZipArchive
+             - PermissionBytes
+               -> JObject (PermissionsSerializer)
+             - MetadataBytes
+               -> XDocument (PackageMetadataSerializer)
+               -> JArray (QueriesMetadataSerializer)
+               -> ZipArchive (PackageMetadataSerializer--contentStorageBytes)
+         */
 
         private PackageComponents _packageComponents;
         private static readonly XmlSerializer PackageMetadataXmlSerializer = new XmlSerializer(typeof(SerializedPackageMetadata));

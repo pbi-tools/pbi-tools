@@ -12,7 +12,7 @@ namespace PbixTools.ProjectSystem
         private static readonly ILogger Log = Serilog.Log.ForContext<PbixProject>();
 
         public static readonly string Filename = ".pbixproj.json";
-        public static readonly Version CurrentVersion = new Version(0, 3);
+        public static readonly Version CurrentVersion = Version.Parse("0.3");
 
         /*
          * PBIXPROJ Change Log
