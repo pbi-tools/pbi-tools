@@ -292,6 +292,25 @@ namespace PbixTools.Serialization
         //     /hierarchies
         // /expressions (extract into *.m files)
 
+
+        public bool TryDeserialize(out JObject database)
+        {
+            database = null;
+
+            // handle: no /Model folder
+
+            //   database.json -- model/relationships,model/annotations ++ tables,dataSources
+            //   tables/{name}/{name}.json -- columns,*partitions*,annotations
+            //   tables/{name}/measures/{measure}.xml -- Expression,FormatString,Annotation
+            //   tables/{name}/measures/{measure}.json
+            //   tables/{name}/hierarchies/{hierarchy}.json
+            // **dataSources/{name}/dataSource.json -- Provider,Location
+            // **dataSources/{name}/mashup/** (ZipArchive)
+
+            return false;
+        }
+
+        // TODO place AAS conversions into TabularModelConversion.ToAASModel(JObject db, JObject extensions)
     }
 
     public static class XmlExtensions
