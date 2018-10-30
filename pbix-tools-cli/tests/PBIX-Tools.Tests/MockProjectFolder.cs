@@ -53,11 +53,22 @@ namespace PbixTools.Tests
             return false;
         }
 
+        public bool ContainsFile(string path)
+        {
+            return ContainsPath(path);
+        }
+
+        public void DeleteFile(string path)
+        {
+        }
+
         public void WriteFile(string path, Action<Stream> onStreamAvailable)
         {
             using (var stream = new MemoryStream())
             {
                 onStreamAvailable(stream);
+
+                stream.Seek(0, SeekOrigin.Begin);
 
                 using (var reader = new StreamReader(stream))
                 {

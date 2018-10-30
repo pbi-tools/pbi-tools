@@ -27,6 +27,10 @@ namespace PbixTools.FileSystem
         /// Provides access to the <see cref="Stream"/> of a file if it exists.
         /// </summary>
         bool TryGetFile(string path, out Stream stream);
+
+        bool ContainsFile(string path);
+
+        void DeleteFile(string path);
         
         /// <summary>
         /// Writes a binary file at the specified path by providing a <see cref="Stream"/> to write to.
@@ -81,6 +85,7 @@ namespace PbixTools.FileSystem
 
         public string BasePath { get; }
 
+        private string GetFullPath(string path) => new FileInfo(Path.Combine(BasePath, SanitizePath(path))).FullName;
 
         public IProjectFolder GetSubfolder(params string[] segments)
         {
@@ -92,7 +97,7 @@ namespace PbixTools.FileSystem
 
         public bool TryGetFile(string path, out Stream stream)
         {
-            var fullPath = Path.Combine(BasePath, path);
+            var fullPath = GetFullPath(path);
             if (File.Exists(fullPath))
             {
                 stream = File.OpenRead(fullPath);
@@ -103,6 +108,19 @@ namespace PbixTools.FileSystem
                 stream = null;
                 return false;
             }
+        }
+
+        public bool ContainsFile(string path)
+        {
+            var fullPath = GetFullPath(path);
+            return File.Exists(fullPath);
+        }
+
+        public void DeleteFile(string path)
+        {
+            var fullPath = GetFullPath(path);
+            File.Delete(fullPath);
+            Log.Information("Removed file: {Path}", fullPath);
         }
 
         public void WriteFile(string path, Action<Stream> onStreamAvailable)
@@ -117,7 +135,7 @@ namespace PbixTools.FileSystem
 
         private void WriteFile<T>(string path, Func<string, T> factory, Action<T> callback) where T : IDisposable
         {
-            var fullPath = new FileInfo(Path.Combine(BasePath, SanitizePath(path))).FullName;
+            var fullPath = GetFullPath(path);
             Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
 
             Log.Verbose("Writing file: {Path}", fullPath);
@@ -301,6 +319,7 @@ namespace PbixTools.FileSystem
                 }
             });
         }
+
         public static void Write(this IProjectFile file, JToken json)
         {
             file.WriteText(writer =>
