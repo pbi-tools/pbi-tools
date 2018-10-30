@@ -34,38 +34,52 @@ namespace PbixTools.Serialization
         public void SerializePackage(ZipArchive archive)
         {
             var packageFolder = _folder.GetSubfolder("Package");
+
             foreach (var entry in archive.Entries)
             {
-                if (Path.GetExtension(entry.FullName) == ".xml")
+                using (var entryStream = entry.Open())
                 {
-                    var xml = XDocument.Load(entry.Open());  // XmlException
-                    packageFolder.Write(xml, entry.FullName);
-                }
-                else if (Path.GetExtension(entry.FullName) == ".m")
-                {
-                    if (TryExtractSectionMembers(entry.Open(), out var exports))
+                    if (Path.GetExtension(entry.FullName) == ".xml")
                     {
-                        foreach (var export in exports)
+                        var xml = XDocument.Load(entryStream);  // XmlException
+                        packageFolder.Write(xml, entry.FullName);
+                    }
+                    else if (Path.GetExtension(entry.FullName) == ".m")
+                    {
+                        using (var streamClone = new MemoryStream(entryStream.ReadAllBytes()))
                         {
-                            //                              /Formulas/Section1.m/Query1.m
-                            packageFolder.Write(export.Value, $"{entry.FullName}/{EscapeItemPathSegment(export.Key)}.m");
+                            if (TryExtractSectionMembers(streamClone, out var exports))
+                            {
+                                // Ensure we can create folder "Section1.m" if file with same name already exists
+                                if (packageFolder.ContainsFile(entry.FullName))
+                                    packageFolder.DeleteFile(entry.FullName);
+
+                                foreach (var export in exports)
+                                {
+                                    //                              /Formulas/Section1.m/Query1.m
+                                    packageFolder.Write(export.Value,
+                                        $"{entry.FullName}/{EscapeItemPathSegment(export.Key)}.m");
+                                }
+                            }
+                            else
+                            {
+                                // Resetting stream here since we've already read from it above
+                                streamClone.Seek(0, SeekOrigin.Begin);
+
+                                // Fallback: Just extract the plain file
+                                // ReSharper disable once AccessToDisposedClosure
+                                packageFolder.WriteFile(entry.FullName, stream => { streamClone.CopyTo(stream); });
+                            }
                         }
                     }
                     else
                     {
-                        // Fallback: Just extract the plain file
                         packageFolder.WriteFile(entry.FullName, stream =>
                         {
-                            entry.Open().CopyTo(stream);
+                            // ReSharper disable once AccessToDisposedClosure
+                            entryStream.CopyTo(stream);
                         });
                     }
-                }
-                else
-                {
-                    packageFolder.WriteFile(entry.FullName, stream =>
-                    {
-                        entry.Open().CopyTo(stream);
-                    });
                 }
             }
         }
@@ -75,7 +89,7 @@ namespace PbixTools.Serialization
             try
             {
                 string m;
-                using (var reader = new StreamReader(mStream))
+                using (var reader = new StreamReader(mStream, Encoding.UTF8, true, 1024, leaveOpen: true))
                 {
                     m = reader.ReadToEnd();
                 }
@@ -89,7 +103,7 @@ namespace PbixTools.Serialization
                     members = sectionDocument.Section.Members.ToDictionary(
                         export => export.Name.Name,
                         export => tokens.GetText(export.Range.Start, export.Range.End).ToString());
-                    return true;
+                    return members.Count > 0;
                 }
             }
             catch (Exception ex)
@@ -146,7 +160,7 @@ namespace PbixTools.Serialization
                 if (item.Entries == null || item.Entries.Length == 0)
                     entry.Replace(JValue.CreateNull());
 
-                foreach (var metadataEntry in item.Entries)
+                foreach (var metadataEntry in item.Entries.OrderBy(x => x.Type))
                 {
                     // QueryGroups entry is being serialized into 'queryGroups.json'
                     if (metadataEntry.Type == "QueryGroups" && item.ItemLocation.ItemType == SerializedPackageItemType.AllFormulas)
@@ -261,6 +275,7 @@ namespace PbixTools.Serialization
             }
             catch (JsonException)
             {
+                // TODO Log Warning
             }
 
             return metadataEntry.StringValue;
@@ -273,6 +288,14 @@ namespace PbixTools.Serialization
         
 
         #endregion
+
+        /// <summary>
+        /// Extracts the mashup blob from a Power BI OleDb connection string into the given location of a ProjectFolder.
+        /// Used by TabularModelSerializer to extract a mashup package into <c>Model/dataSources/{..}/mashup</c>
+        /// </summary>
+        /// <param name="folder"></param>
+        /// <param name="prefix"></param>
+        /// <param name="base64MashupPackage"></param>
         public static void ExtractMashup(IProjectFolder folder, string prefix, string base64MashupPackage)
         {
             var mashup = Convert.FromBase64String(base64MashupPackage);  // FormatException
@@ -281,6 +304,7 @@ namespace PbixTools.Serialization
                 foreach (var zipEntry in zip.Entries)
                 {
                     var path = Path.Combine(prefix, zipEntry.FullName).Replace('/', '\\');
+
                     // M files - handle escape sequences
                     if (Path.GetExtension(zipEntry.Name).Equals(".m", StringComparison.OrdinalIgnoreCase))
                     {
@@ -293,10 +317,11 @@ namespace PbixTools.Serialization
                             });
                         }
                     }
+                    // Format all XML files (except '[Content_Types].xml')
                     else if (Path.GetExtension(zipEntry.Name).Equals(".xml", StringComparison.OrdinalIgnoreCase)
                         && zipEntry.Name != "[Content_Types].xml")
                     {
-                        var xml = XDocument.Load(zipEntry.Open());  // XmlException
+                        var xml = XDocument.Load(zipEntry.Open());  // TODO Handle XmlException
                         folder.Write(xml, path);
                     }
                     else // any other files written as-is
@@ -312,5 +337,6 @@ namespace PbixTools.Serialization
                 }
             }
         }
+
     }
 }

@@ -1,5 +1,10 @@
-﻿using System.Xml.Linq;
+﻿using System;
+using System.IO;
+using System.IO.Compression;
+using System.Xml.Linq;
+using Moq;
 using Newtonsoft.Json.Linq;
+using PbixTools.FileSystem;
 using PbixTools.Serialization;
 using Xunit;
 using static PbixTools.Utils.Resources;
@@ -130,5 +135,66 @@ namespace PbixTools.Tests
             Assert.Equal(JValue.CreateNull(), json["Formulas"]["Section1/Sample File/Source"]);
         }
 
+        [Fact]
+        public void MashupPackage__Extracts_empty_section_document()
+        {
+            using (var archive = new ZipArchive(new MemoryStream(TestData.MinimalMashupPackageBytes)))
+            {
+                _serializer.SerializePackage(archive);
+
+                Assert.Equal("section Section1;", _folder.GetAsString("Package/Formulas/Section1.m"));
+            }
+        }
+
+        [Fact]
+        public void SerializePackage__Deletes_section_file_before_writing_to_section_folder()
+        {
+            var mockFolder = new Mock<IProjectFolder>();
+            mockFolder.Setup(folder => folder.ContainsFile("Formulas/Section1.m")).Returns(true);
+            mockFolder.Setup(folder => folder.WriteText(It.IsAny<string>(), It.IsAny<Action<TextWriter>>()))
+                .Callback<string, Action<TextWriter>>((_, onWriter) => // this is necessary to avoid NRE in test code
+                {
+                    using (var writer = new StringWriter())
+                    {
+                        onWriter(writer);
+                    }
+                });
+            mockFolder.Setup(folder => folder.GetSubfolder(It.IsAny<string[]>())).Returns(mockFolder.Object);
+
+            var serializer = new MashupSerializer(mockFolder.Object);
+
+            using (var stream = new MemoryStream())
+            {
+                using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true))
+                {
+                    var packageXml = archive.CreateEntry("Config/Package.xml");
+                    using (var writer = new StreamWriter(packageXml.Open()))
+                    {
+                        writer.Write(@"<?xml version=""1.0"" encoding=""utf-8""?><Package xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""><Version>2.55.5010.641</Version><MinVersion>1.5.3296.0</MinVersion><Culture>en-GB</Culture></Package>");
+                    }
+
+                    var contentTypesXml = archive.CreateEntry("[Content_Types].xml"); // must have written previous entry before opening new one, see https://stackoverflow.com/a/37533305/736263
+                    using (var writer = new StreamWriter(contentTypesXml.Open()))
+                    {
+                        writer.Write(@"<?xml version=""1.0"" encoding=""utf-8""?><Types xmlns=""http://schemas.openxmlformats.org/package/2006/content-types""><Default Extension=""xml"" ContentType=""text/xml"" /><Default Extension=""m"" ContentType=""application/x-ms-m"" /></Types>");
+                    }
+
+                    var section1 = archive.CreateEntry("Formulas/Section1.m");
+                    using (var writer = new StreamWriter(section1.Open()))
+                    {
+                        writer.Write("section Section1;\n\nshared Version = \"1.0\";");
+                    }
+                }
+
+                stream.Position = 0;
+
+                using (var archive = new ZipArchive(stream))
+                {
+                    serializer.SerializePackage(archive);
+                }
+            }
+
+            mockFolder.Verify(folder => folder.DeleteFile("Formulas/Section1.m"));
+        }
     }
 }
