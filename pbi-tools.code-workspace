@@ -1,10 +1,10 @@
 {
 	"folders": [
 		{
-			"path": "pbix-tools-cli"
+			"path": "pbi-tools-cli"
 		},
 		{
-			"path": "pbix-tools-vscode"
+			"path": "vscode-pbitools"
 		},
 		{
 			"path": ".", 

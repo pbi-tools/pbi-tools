@@ -1,6 +1,6 @@
 {
     "files.exclude": {
-        "pbix-tools-cli": true,
-        "pbix-tools-vscode": true
+        "pbi-tools-cli": true,
+        "vscode-pbitools": true
     }
 }
