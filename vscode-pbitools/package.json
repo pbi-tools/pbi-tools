@@ -1,6 +1,6 @@
 {
-    "name": "vscode-pbixtools",
-    "displayName": "PBIX Tools",
+    "name": "vscode-pbitools",
+    "displayName": "PBI Tools",
     "description": "Tools for Power BI Developers",
     "version": "0.4.0",
     "preview": true,
@@ -10,7 +10,7 @@
     "publisher": "mthierba",
     "repository": {
         "type": "git",
-        "url": "https://github.com/pbix-tools/pbix-tools.git"
+        "url": "https://github.com/pbi-tools/pbi-tools.git"
     },
     "engines": {
         "vscode": "^1.21.0"
@@ -38,7 +38,7 @@
     "contributes": {
         "commands": [
             {
-                "command": "pbixTools.extractPbixHere",
+                "command": "pbiTools.extractPbixHere",
                 "title": "Extract PBIX/PBIT here..."
             }
         ],
@@ -46,8 +46,8 @@
             "explorer/context": [
                 {
                     "when": "resourceExtname =~ /\\.pbi(x|t)/ ",
-                    "command": "pbixTools.extractPbixHere",
-                    "group": "0_pbixtools"
+                    "command": "pbiTools.extractPbixHere",
+                    "group": "0_pbitools"
                 }
             ]
         },

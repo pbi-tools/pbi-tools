@@ -11,11 +11,11 @@ export function activate(context: vscode.ExtensionContext) {
     
     // Use the console to output diagnostic information (console.log) and errors (console.error)
     // This line of code will only be executed once when your extension is activated
-    console.log('Extension "pbix-tools" activated');
+    console.log('Extension "pbi-tools" activated');
 
     // TODO Check OS/CPU and disable extension if unsupported
 
-    const channel = vscode.window.createOutputChannel("pbix-tools");
+    const channel = vscode.window.createOutputChannel("pbi-tools");
     context.subscriptions.push(channel);
 
     // const pbixExplorerProvider = new PbixExplorerProvider(context);
@@ -33,7 +33,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     // context.subscriptions.push(disposable);
 
-    context.subscriptions.push(vscode.commands.registerCommand('pbixTools.extractPbixHere', (uri: vscode.Uri) => {
+    context.subscriptions.push(vscode.commands.registerCommand('pbiTools.extractPbixHere', (uri: vscode.Uri) => {
         channel.clear();
         channel.show(true);
         // channel.appendLine(`File clicked: ${uri.fsPath}`);
@@ -42,7 +42,7 @@ export function activate(context: vscode.ExtensionContext) {
         // redirect output to extension channel (open window)
         // channel.appendLine(`extensionPath: ${context.extensionPath}`);
 
-        const exePath = context.asAbsolutePath('bin/pbix-tools.exe');
+        const exePath = context.asAbsolutePath('bin/pbi-tools.exe');
 
         if (fs.existsSync(exePath)) {
             const start = hrtime();
