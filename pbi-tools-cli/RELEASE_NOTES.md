@@ -1,4 +1,7 @@
 
+#### 0.5.0 - 2018-11-02
+* Rebranding to "PBI Tools" (pbi-tools.exe) to leave scope for more general Power BI tooling that's not directly tied to PBIX files only
+
 #### 0.4.0 - 2018-10-30
 * PBIXPROJ format 0.3
   * Mashup metadata now being extracted into folder structure rather than a single xml file
