@@ -7,7 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-namespace KuduHandles
+namespace PbiTools.Win32
 {
     public enum HandleType
     {

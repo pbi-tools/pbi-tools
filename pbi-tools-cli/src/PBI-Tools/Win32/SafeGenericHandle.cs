@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.Win32.SafeHandles;
 
-namespace KuduHandles
+namespace PbiTools.Win32
 {
     class SafeGenericHandle : SafeHandleZeroOrMinusOneIsInvalid
     {

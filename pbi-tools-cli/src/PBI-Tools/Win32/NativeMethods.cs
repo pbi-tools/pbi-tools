@@ -4,7 +4,7 @@ using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace KuduHandles
+namespace PbiTools.Win32
 {
     enum NTSTATUS : uint
     {

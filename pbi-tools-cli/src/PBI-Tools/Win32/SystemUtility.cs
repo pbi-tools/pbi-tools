@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace KuduHandles
+namespace PbiTools.Win32
 {
     class SystemUtility
     {
