@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace PbiTools.Win32
 {
     class SystemUtility
     {
-        public static IEnumerable<Handle> GetHandles(int processId)
+        public static IEnumerable<FileHandle> GetHandles(int[] processIds)
         {
+            var longProcIds = processIds.Select(Convert.ToUInt64).OrderBy(x => x).ToArray();
             uint length = 0x10000;
             IntPtr ptr = IntPtr.Zero;
             try
@@ -46,12 +48,10 @@ namespace PbiTools.Win32
                         (SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX)Marshal.PtrToStructure(
                         IntPtr.Add(ptr, offset), typeof(SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX));
 
-                    if ((uint) handleEntry.UniqueProcessId == processId)
+                    if (Array.BinarySearch(longProcIds, handleEntry.UniqueProcessId) > -1 
+                        && FileHandle.TryCreate(handleEntry.UniqueProcessId, handleEntry.HandleValue, handleEntry.ObjectTypeIndex, out var fileHandle))
                     {
-                        yield return new Handle(
-                            handleEntry.UniqueProcessId,
-                            handleEntry.HandleValue,
-                            handleEntry.ObjectTypeIndex);
+                        yield return fileHandle;
                     }
 
                     offset += size;
@@ -64,27 +64,5 @@ namespace PbiTools.Win32
             }
         }
 
-        public static void CloseHandle(uint processId, Handle fileHandle)
-        {
-            SafeGenericHandle inProcessSafeHandle;
-            using (var sourceProcessHandle =
-               NativeMethods.OpenProcess(PROCESS_ACCESS_RIGHTS.PROCESS_DUP_HANDLE, true,
-                   processId))
-            {
-                // To read info about a handle owned by another process we must duplicate it into ours
-                if (!NativeMethods.DuplicateHandle(sourceProcessHandle,
-                    (IntPtr)fileHandle.RawHandleValue,
-                    NativeMethods.GetCurrentProcess(),
-                    out inProcessSafeHandle,
-                    0,
-                    false,
-                    DUPLICATE_HANDLE_OPTIONS.DUPLICATE_CLOSE_SOURCE))
-                {
-                    return;
-                }
-                NativeMethods.CloseHandle(inProcessSafeHandle.DangerousGetHandle());
-                inProcessSafeHandle.SetHandleAsInvalid();
-            }
-        }
     }
 }
