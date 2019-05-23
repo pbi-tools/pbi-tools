@@ -35,16 +35,25 @@ namespace PbiTools.Serialization
             else return new T[0];
         }
 
-        public static IEnumerable<T> ArrayAs<T>(this JObject parent, string property)
+        /// <summary>
+        /// Removes the named property containing an array from the Json object, and returns the array elements as an <see cref="IEnumerable{T}"/>.
+        /// Returns an empty enumeration if the property does not exist, but it will fail if the property does not contain an array.
+        /// Any array elements that are not of type <see cref="T"/> will be skipped.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="parent"></param>
+        /// <param name="property"></param>
+        /// <returns></returns>
+        public static IEnumerable<T> RemoveArrayAs<T>(this JObject parent, string property)
         {
             var array = parent[property]?.Value<JArray>();
             parent.Remove(property);
-            if (array != null) return array.OfType<T>();
-            else return new T[0];
+
+            return array != null ? array.OfType<T>() : new T[0];
         }
 
         /// <summary>
-        /// Parses a string-encoded json token out of a property on a json object.
+        /// Parses a string-encoded json token out of a json object property, removes the property, and optionally saves the token in the <see cref="IProjectFolder"/>.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="parent"></param>
@@ -65,7 +74,7 @@ namespace PbiTools.Serialization
         }
 
         /// <summary>
-        /// Saves the <see cref="JToken"/> to the <see cref="IProjectFolder"/> using the <see cref="name"/> provided.
+        /// Saves the <see cref="JToken"/> to the <see cref="IProjectFolder"/> using the <see cref="name"/> provided, applying all transforms (if any) in specified order.
         /// </summary>
         public static void Save(this JToken token, string name, IProjectFolder folder, params Func<JToken, JToken>[] transforms)
         {
@@ -74,49 +83,5 @@ namespace PbiTools.Serialization
             folder.Write(token, $"{name}.json");
         }
 
-    }
-
-    public static class JsonTransforms
-    {
-        /// <summary>
-        /// Sorts the properties of any nested json object alphabetically.
-        /// </summary>
-        public static JToken SortProperties(this JToken token)
-        {
-            if (token is JObject obj)
-                //return obj.SortObjectProperties();
-                return new JObject(obj.Properties().OrderBy(x => x.Name).Select(x => new JProperty(x.Name, x.Value.SortProperties())));
-            else if (token is JArray arr)
-                return new JArray(arr.Select(SortProperties));
-            else
-                return token;
-        }
-
-
-        public static JToken NormalizeNumbers(this JToken token)
-        {
-            if (token is JObject obj)
-                return new JObject(obj.Properties().Select(x => new JProperty(x.Name, x.Value.NormalizeNumbers())));
-            else if (token.Type == JTokenType.Float && Math.Abs(token.Value<float>() - token.Value<int>()) <= 0.0001)
-                return token.Value<int>();
-            else return token;
-        }
-
-        public static Func<JToken, JToken> RemoveProperties(params string[] propertyNames)
-        {
-            return token =>
-            {
-                if (token is JObject obj && propertyNames != null)
-                {
-                    foreach (var propertyName in propertyNames)
-                    {
-                        if (obj.ContainsKey(propertyName))
-                            obj.Remove(propertyName);
-                    }
-                }
-
-                return token;
-            };
-        }
     }
 }

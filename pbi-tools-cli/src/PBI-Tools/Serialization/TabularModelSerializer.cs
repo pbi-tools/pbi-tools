@@ -8,6 +8,7 @@ using System.Xml;
 using System.Xml.Linq;
 using Newtonsoft.Json.Linq;
 using PbiTools.FileSystem;
+using Serilog;
 
 namespace PbiTools.Serialization
 {
@@ -15,20 +16,29 @@ namespace PbiTools.Serialization
     /// Serializes a tabular database (represented as TMSL/json) into a <see cref="IProjectFolder"/>.
     /// </summary>
     /// <remarks>Methods for deserialization to be added in a future version.</remarks>
-    public class TabularModelSerializer
+    public class TabularModelSerializer : IPowerBIPartSerializer<JObject>
     {
-        private readonly IProjectFolder _folder; /* './Model/' */
+        // TODO Support different serialization formats (compatibility with Tabular Editor)
 
-        public TabularModelSerializer(IProjectFolder folder)
+        private static readonly ILogger Log = Serilog.Log.ForContext<TabularModelSerializer>();
+
+        public static string FolderName => "Model";
+        private readonly IProjectFolder _folder;
+        private readonly IDictionary<string, string> _queries;
+
+        public TabularModelSerializer(IProjectRootFolder rootFolder, IDictionary<string, string> queries)
         {
-            _folder = folder ?? throw new ArgumentNullException(nameof(folder));
+            if (rootFolder == null) throw new ArgumentNullException(nameof(rootFolder));
+            _queries = queries ?? throw new ArgumentNullException(nameof(queries));
+            _folder = rootFolder.GetFolder(FolderName);
         }
 
-        public void Serialize(JObject db, IDictionary<string, string> queries)
+        public void Serialize(JObject db)
         {
-            var dataSources = db.SelectToken("model.dataSources") as JArray ?? new JArray();
+            if (db == null) return;
 
-            var idCache = new TabularModelIdCache(dataSources, queries);
+            var dataSources = db.SelectToken("model.dataSources") as JArray ?? new JArray();
+            var idCache = new TabularModelIdCache(dataSources, _queries);
 
             // 
             // model
@@ -43,9 +53,12 @@ namespace PbiTools.Serialization
                        expressions { name, kind=m, expression } ==> {name}.m  [~~not relevant for PBI~~]
             */
 
+            // TODO - Ignore PBIT timestamps:
+            // modifiedTime, refreshedTime, lastProcessed, structureModifiedTime, lastUpdate, lastSchemaUpdate, createdTimestamp
+
             db = ProcessDataSources(db, _folder, idCache);
             db = ProcessTables(db, _folder, idCache);
-            // TODO ProcessExpressions()
+            // TODO ProcessExpressions() ???
 
             SaveDatabase(db, _folder);
         }
@@ -241,11 +254,47 @@ namespace PbiTools.Serialization
                     }
 
                     // Any other properties
-                    foreach (var prop in json.Values<JProperty>().Where(p => !(new[] { "name", "expression", "annotations" }).Contains(p.Name)))
+                    foreach (var prop in json.Values<JProperty>().Where(p => !(new[] { "name", "expression", "annotations", "extendedProperties" }).Contains(p.Name)))
                     {
                         xml.WriteStartElement(prop.Name.ToPascalCase());
                         xml.WriteValue(prop.Value.Value<string>());
                         xml.WriteEndElement();
+                    }
+
+                    // ExtendedProperties
+                    if (json["extendedProperties"] is JArray extendedProperties)
+                    {
+                        foreach (var extendedProperty in extendedProperties)
+                        {
+                            xml.WriteStartElement("ExtendedProperty");
+                            // if (extendedProperty is JObject extPropObj)
+                            // {
+                            //     // Write attributes first, then objects & arrays
+                            //     foreach (var prop in extPropObj.Properties().Where(p => p.Value is JValue))
+                            //     {
+                            //         xml.WriteAttributeString(prop.Name.ToPascalCase(), prop.Value.Value<string>());
+                            //     }
+
+                            //     foreach (var prop in extPropObj.Properties().Where(p => !(p.Value is JValue)))
+                            //     {
+                            //         if (prop.Value is JObject jObj)
+                            //         {
+                            //             xml.WriteStartElement(prop.Name.ToPascalCase());
+                            //             foreach (var innerProp in jObj.Properties())
+                            //             {
+                            //                 xml.WriteElementString(innerProp.Name.ToPascalCase(), innerProp.Value.Value<string>());
+                            //             }
+                            //             xml.WriteEndElement();
+                            //         }
+                            //         // not handling arrays here
+                            //     }
+                            // }
+                            // else
+                            {
+                                xml.WriteCData(extendedProperty.ToString());
+                            }
+                            xml.WriteEndElement();
+                        }
                     }
 
                     // Annotations

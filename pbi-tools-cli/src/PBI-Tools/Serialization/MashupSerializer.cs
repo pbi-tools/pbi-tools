@@ -13,27 +13,36 @@ using Microsoft.Mashup.Host.Document;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using PbiTools.FileSystem;
+using PbiTools.Model;
 using PbiTools.Utils;
 using Serilog;
 
 namespace PbiTools.Serialization
 {
-    public class MashupSerializer
+    // ReSharper disable IdentifierTypo
+    public class MashupSerializer : IPowerBIPartSerializer<MashupParts>
     {
         private static readonly ILogger Log = Serilog.Log.ForContext<MashupSerializer>();
 
-        private readonly IProjectFolder _folder; /* './Mashup/' */
+        // ReSharper disable once StringLiteralTypo
+        public static string FolderName => "Mashup";
+        internal IProjectFolder Folder { get; }
+    
 
-        public MashupSerializer(IProjectFolder folder)
+        private static readonly XmlSerializer PackageMetadataSerializer = new XmlSerializer(typeof(SerializedPackageMetadata));
+
+        public MashupSerializer(IProjectRootFolder rootFolder)
         {
-            _folder = folder ?? throw new ArgumentNullException(nameof(folder));
+            if (rootFolder == null) throw new ArgumentNullException(nameof(rootFolder));
+            Folder = rootFolder.GetFolder(FolderName);
         }
+
 
         #region Package
 
-        public void SerializePackage(ZipArchive archive)
+        internal void SerializePackage(ZipArchive archive)
         {
-            var packageFolder = _folder.GetSubfolder("Package");
+            var packageFolder = Folder.GetSubfolder("Package");
 
             foreach (var entry in archive.Entries)
             {
@@ -50,7 +59,7 @@ namespace PbiTools.Serialization
                         {
                             if (TryExtractSectionMembers(streamClone, out var exports))
                             {
-                                // Ensure we can create folder "Section1.m" if file with same name already exists
+                                // Ensure we can create FOLDER "Section1.m" if FILE with same name already exists
                                 if (packageFolder.ContainsFile(entry.FullName))
                                     packageFolder.DeleteFile(entry.FullName);
 
@@ -114,32 +123,25 @@ namespace PbiTools.Serialization
             return false;
         }
 
-        public bool TryDeserializePackage(out ZipArchive archive)
-        {
-            throw new NotImplementedException();
-        }
-        
-
         #endregion
 
         #region Metadata
 
-        public void SerializeMetadata(XDocument xmlMetdata)
+        internal void SerializeMetadata(XDocument xmlMetadata)
         {
-            var metadataFolder = _folder.GetSubfolder("Metadata");
+            var metadataFolder = Folder.GetSubfolder("Metadata");
 
-            var serializer = new XmlSerializer(typeof(SerializedPackageMetadata));
-            var metadata = (SerializedPackageMetadata)serializer.Deserialize(xmlMetdata.CreateReader());
+            var metadata = (SerializedPackageMetadata)PackageMetadataSerializer.Deserialize(xmlMetadata.CreateReader());
 
-            var json = new JObject();
+            var metadataJson = new JObject();
 
             JObject CreateEntry(string section, string path = null)
             {
                 JObject jSection;
-                if (json.TryGetValue(section, out JToken token))
+                if (metadataJson.TryGetValue(section, out JToken token))
                     jSection = (JObject) token;
                 else
-                    json.Add(section, jSection = new JObject());
+                    metadataJson.Add(section, jSection = new JObject());
 
                 if (path == null)
                     return jSection;
@@ -149,17 +151,25 @@ namespace PbiTools.Serialization
                 return jEntry;
             };
 
-            foreach (var item in metadata.Items)
+            foreach (SerializedPackageItemMetadata item in metadata.Items)
             {
                 var sectionName = item.ItemLocation.ItemType == SerializedPackageItemType.Formula
                     ? "Formulas"
                     : item.ItemLocation.ItemType.ToString();
 
+                // Creates new JObject '"AllFormulas": { .. }' or '"Formulas": { "Section1/Query1": { .. } }' to be populated with item entries
                 var entry = CreateEntry(sectionName, String.IsNullOrEmpty(item.ItemLocation.ItemPath) ? null : WebUtility.UrlDecode(item.ItemLocation.ItemPath));
 
+                // emit 'null' if there are no entries
                 if (item.Entries == null || item.Entries.Length == 0)
                     entry.Replace(JValue.CreateNull());
 
+                // Handling of item entries:
+                // - Property name: entry.Type
+                // - Skip 'AllFormulas/QueryGroups" as that is being serialized separately
+                // - Special handling of 'LastAnalysisServicesFormulaText'
+                //   - Extract 'RootFormulaText' into separate *.m file
+                //   - Extract 'ReferencedQueriesFormulaText' into separate 'ReferencedQueries\*.m' files
                 foreach (var metadataEntry in item.Entries.OrderBy(x => x.Type))
                 {
                     // QueryGroups entry is being serialized into 'queryGroups.json'
@@ -195,7 +205,7 @@ namespace PbiTools.Serialization
                 }
             }
 
-            metadataFolder.Write(json, "metadata.json");
+            metadataFolder.Write(metadataJson, "metadata.json");
 
             /*
 /Mashup/Metadata <= ProjectFolder
@@ -222,9 +232,10 @@ namespace PbiTools.Serialization
             */
 
             // convert ItemPath to valid folder ('%20' > ' ')
-            // convert values (l,f,s,c,d)
-            // convert JOBject, JArray
+            // convert values (l,f,s,c,d) -- isContentID, isDateTime
+            // convert JObject, JArray
             // extract RootFormulaText, ReferencedQueriesFormulaText ("IncludesReferencedQueries": true)
+            // skip QueryGroups
         }
 
         private static readonly Dictionary<char, string> FilenameCharReplace = "\"<>|:*?/\\".ToCharArray().ToDictionary(c => c, c => $"%{((int)c):X}");
@@ -273,17 +284,12 @@ namespace PbiTools.Serialization
                 if (metadataEntry.StringValue.StartsWith("[") || metadataEntry.StringValue.StartsWith("{"))
                     return JToken.Parse(metadataEntry.StringValue);
             }
-            catch (JsonException)
+            catch (JsonException ex)
             {
-                // TODO Log Warning
+                Log.Warning(ex, "Failed to convert entry value to Json token. {StringValue}", metadataEntry.StringValue);
             }
 
             return metadataEntry.StringValue;
-        }
-
-        public bool TryDeserializeMetadata(out XDocument xmlMetadata)
-        {
-            throw new NotImplementedException();
         }
         
 
@@ -338,5 +344,76 @@ namespace PbiTools.Serialization
             }
         }
 
+
+        public void Serialize(MashupParts content)
+        {
+            /*
+             *   /Mashup
+             *   --/Package/
+             *   -----/Config/Package.xml
+             *   -----/Formulas/Section1.m/Query1.m
+             *   --/Contents/
+             *   --/Metadata/                    {metadataFolder}
+             *   -----/metadata.json
+             *   -----/queryGroups.json          [MashupParts.QueryGroups]
+             *   -----/Section1/
+             *   --------/Query1/                {itemFolder}
+             *   --------/RootFormulaText.m
+             *   --------/ReferencedQueries/     {queriesFolder}
+             *   -----------/Query2.m
+             *   --/permissions.json
+             */
+
+            if (content.Package != null)
+            {
+                using (var zip = new ZipArchive(content.Package, ZipArchiveMode.Read, leaveOpen: true))
+                {
+                    this.SerializePackage(zip);
+                }
+            }
+
+            if (content.Metadata != null)
+            {
+                this.SerializeMetadata(content.Metadata);
+            }
+
+            var contents = content.Content;
+            if (contents != null)
+            {
+                var contentsFolder = Folder.GetSubfolder("Contents");
+                using (var zip = new ZipArchive(contents, ZipArchiveMode.Read, leaveOpen: true))
+                {
+                    foreach (var entry in zip.Entries)
+                    {
+                        contentsFolder.WriteFile(entry.FullName, stream =>
+                        {
+                            entry.Open().CopyTo(stream);
+                        });
+                    }
+                }
+            }
+
+            if (content.QueryGroups != null)
+            {
+                Folder.Write(content.QueryGroups, "Metadata/queryGroups.json");
+            }
+
+            if (content.Permissions != null)
+            {
+                Folder.Write(content.Permissions, "permissions.json");
+            }
+        }
+
+        public bool TryDeserialize(out MashupParts part)
+        {
+            /*
+                public MemoryStream Package { get; set; }
+                public JObject Permissions { get; set; }
+                public XDocument Metadata { get; set; }
+                public JArray QueryGroups { get; set; }
+                public MemoryStream Content { get; set; }
+             */
+            throw new NotImplementedException();
+        }
     }
 }
