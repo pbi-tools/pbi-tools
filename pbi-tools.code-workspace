@@ -16,6 +16,7 @@
 		"compounds": []
 	},
 	"settings": {
-		// Add workspace settings here
+		"editor.tabSize": 2,
+		"editor.detectIndentation": false
 	}
 }
