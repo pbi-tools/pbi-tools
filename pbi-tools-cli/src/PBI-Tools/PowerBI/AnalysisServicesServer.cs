@@ -154,18 +154,18 @@ namespace PbiTools.PowerBI
                 Console.Error.WriteLine("Port Detection Timeout"); // TODO Throw instead?
         }
 
-        public void LoadPbixModel(IPowerBIPackage package, string id, string name)
+        public void LoadPbixModel(IStreamablePowerBIPackagePartContent part, string id, string name)
         {
             if (!IsRunning) throw new Exception("Server not running");
 
             using (var server = new TOM.Server())
             {
-                if (package.DataModel == null)
+                if (part == null)
                     throw new Exception("PBIX file does not contain a model.");
 
                 server.Connect(ConnectionString); // must be PowerPivot/SharePoint (mode 1) instance
 
-                server.ImageLoad(name, id, package.DataModel.GetStream());
+                server.ImageLoad(name, id, part.GetStream());
                 server.Refresh();
 
                 Log.Information("Model image from PBIX loaded successfully.");
