@@ -1,4 +1,9 @@
 
+#### 0.6.0 - 2019-03-15
+* PBIXPROJ format 0.3.1
+  * Tabular model measure 'extendedProperties' are now supported (extraction previously failed)
+* Major rewrite of internal serialization infrastructure
+
 #### 0.5.0 - 2018-11-02
 * Rebranding to "PBI Tools" (pbi-tools.exe) to leave scope for more general Power BI tooling that's not directly tied to PBIX files only
 
@@ -6,7 +11,7 @@
 * PBIXPROJ format 0.3
   * Mashup metadata now being extracted into folder structure rather than a single xml file
   * Mashup (package) formulas extracted into folder structure instead of single "Section1.m"
-* Report extraction improvements: git diffs are now a lot less noisy as json documents are transformed to come out in a predictable shape
+* Report extraction improvements: git diffs are now a lot less noisy as json documents are transformed to come out in a predictable format
   * Json properties are always sorted alphabetically, Numbers are converted from float to int where possible; 'queryHash' and 'objectId' properties removed
 * CLI usage improved
 
