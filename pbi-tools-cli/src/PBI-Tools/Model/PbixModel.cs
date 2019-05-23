@@ -1,25 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO.Compression;
-using System.IO.Packaging;
 using System.Xml.Linq;
 using Newtonsoft.Json.Linq;
 using PbiTools.PowerBI;
+using PbiTools.ProjectSystem;
 using PbiTools.Utils;
 using Serilog;
 
 namespace PbiTools.Model
 {
+    /// <summary>
+    /// An in-memory representation of the contents of a PBIX file.
+    /// </summary>
     public interface IPbixModel
     {
         JObject Connections { get; }
         JObject DataModel { get; }
-        ZipArchive MashupPackage { get; }
-        JObject MashupPermissions { get; }
-        XDocument MashupMetadata { get; }
-        ZipArchive MashupContent { get; }
+        MashupParts Mashup { get; }
         JObject Report { get; }
         JObject DiagramViewState { get; }
+        JObject DiagramLayout { get; }
         XDocument LinguisticSchema { get; }
         JObject ReportMetadata { get; }
         JObject ReportSettings { get; }
@@ -28,7 +28,8 @@ namespace PbiTools.Model
         IDictionary<string, byte[]> CustomVisuals { get; }
         IDictionary<string, byte[]> StaticResources { get; }
 
-        JObject PbixProj { get; }
+        PbixProject PbixProj { get; }
+        PbixModelType Type { get; }
     }
 
     /* Workflow: Extract PBIX
@@ -52,17 +53,18 @@ namespace PbiTools.Model
         public PbixModelType Type { get; private set; }
         public string SourcePath { get; private set; }
 
-        public static PbixModel FromPbix(string path, IDependenciesResolver dependenciesResolver)
+        private PbixModel()
+        {
+        }
+
+        public static PbixModel FromFile(string path, IDependenciesResolver dependenciesResolver)
         {
             var pbixModel = new PbixModel { Type = PbixModelType.File, SourcePath = path };
 
             using (var reader = new PbixReader(path, dependenciesResolver))
             {
                 pbixModel.Connections = reader.ReadConnections();
-                pbixModel.MashupPackage = reader.ReadMashupPackage();
-                pbixModel.MashupPermissions = reader.ReadMashupPermissions();
-                pbixModel.MashupMetadata = reader.ReadMashupMetadata();
-                pbixModel.MashupContent = reader.ReadMashupContent();
+                pbixModel.Mashup = reader.ReadMashup();
                 pbixModel.Report = reader.ReadReport();
                 pbixModel.DiagramViewState = reader.ReadDiagramViewState();
                 pbixModel.LinguisticSchema = reader.ReadLinguisticSchema();
@@ -75,11 +77,16 @@ namespace PbiTools.Model
                 pbixModel.DataModel = reader.ReadDataModel();  // will fire up SSAS instance if PBIX has embedded model
             }
 
+            pbixModel.PbixProj = new PbixProject();  // TODO Init 'Queries'?
+
             return pbixModel;
         }
 
         public static PbixModel FromFolder(string path)
         {
+            // PBIXPROJ(folder) <==> Serializer <=|PbixModel|=> PbixReader|Writer[Converter] <==> PBIX(file)
+            //                       ##########                 ############################
+
             throw new NotImplementedException();
         }
 
@@ -107,30 +114,33 @@ namespace PbiTools.Model
             throw new NotImplementedException();
         }
 
+        public static void ToFile(string path)
+        {
+            throw new NotImplementedException();
+        }
+
         #region IPbixModel
 
         public JObject Connections { get; private set; }
         public JObject DataModel { get; private set; }
-        public ZipArchive MashupPackage { get; private set; }
-        public JObject MashupPermissions { get; private set; }
-        public XDocument MashupMetadata { get; private set; }
-        public ZipArchive MashupContent { get; private set; }
+        public MashupParts Mashup { get; private set; }
         public JObject Report { get; private set; }
         public JObject DiagramViewState { get; private set; }
+        public JObject DiagramLayout { get; private set; }
         public XDocument LinguisticSchema { get; private set; }
         public JObject ReportMetadata { get; private set; }
         public JObject ReportSettings { get; private set; }
         public string Version { get; private set; }
         public IDictionary<string, byte[]> CustomVisuals { get; private set; }
         public IDictionary<string, byte[]> StaticResources { get; private set; }
-        public JObject PbixProj { get; private set; }
+
+        public PbixProject PbixProj { get; private set; }
 
         #endregion
 
         public void Dispose()
         {
-            (MashupPackage as IDisposable)?.Dispose();
-            MashupContent?.Dispose();
+            // TODO is that needed?
         }
     }
 }
