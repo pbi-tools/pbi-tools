@@ -27,5 +27,5 @@ group Build
   #nuget FSharp.Formatting prerelease
   #nuget ILRepack
   
-  github fsharp/FAKE modules/Octokit/Octokit.fsx
+  #github fsharp/FAKE modules/Octokit/Octokit.fsx
   
