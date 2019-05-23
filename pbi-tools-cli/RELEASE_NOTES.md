@@ -1,4 +1,7 @@
 
+#### 0.7.0 - 2019-05-23
+* Addresses breaking API change in May 2019 release of Power BI Desktop (i.e., this version is incompatible with earlier versions)
+
 #### 0.6.0 - 2019-03-15
 * PBIXPROJ format 0.3.1
   * Tabular model measure 'extendedProperties' are now supported (extraction previously failed)
