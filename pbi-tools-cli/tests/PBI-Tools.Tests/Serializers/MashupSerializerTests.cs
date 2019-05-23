@@ -18,11 +18,11 @@ namespace PbiTools.Tests
 
         public MashupSerializerTests()
         {
-            _folder = new MockProjectFolder();
-            _serializer = new MashupSerializer(_folder);
+            _serializer = new MashupSerializer(new MockRootFolder());
+            _folder = _serializer.Folder as MockProjectFolder;
         }
 
-        private JObject SerializeFromResource(string name)
+        private JObject SerializeMetadataFromResource(string name)
         {
             var xml = GetEmbeddedResource(name, XDocument.Load);
             _serializer.SerializeMetadata(xml);
@@ -32,28 +32,28 @@ namespace PbiTools.Tests
         [Fact]
         public void Emits_empty_items_as_null()
         {
-            var json = SerializeFromResource("MashupMetadata_Simple.xml");
+            var json = SerializeMetadataFromResource("MashupMetadata_Simple.xml");
             Assert.Equal(JTokenType.Null, json["Formulas"]["Section1/Query1/Source"].Type);
         }
 
         [Fact]
         public void Emits_long_values_as_JValue_long()
         {
-            var json = SerializeFromResource("MashupMetadata_Simple.xml");
+            var json = SerializeMetadataFromResource("MashupMetadata_Simple.xml");
             Assert.Equal(new JValue(0L), json["Formulas"]["Section1/Query1"]["IsPrivate"]);
         }
 
         [Fact]
         public void Emits_simple_string_values_as_JValue_string()
         {
-            var json = SerializeFromResource("MashupMetadata_Simple.xml");
+            var json = SerializeMetadataFromResource("MashupMetadata_Simple.xml");
             Assert.Equal(new JValue("Table"), json["Formulas"]["Section1/Query1"]["ResultType"]);
         }
 
         [Fact]
         public void Skips_QueryGroups()
         {
-            var json = SerializeFromResource("MashupMetadata_WithQueryGroups.xml");
+            var json = SerializeMetadataFromResource("MashupMetadata_WithQueryGroups.xml");
             Assert.Null(json["AllFormulas"]["QueryGroups"]);
             Assert.NotNull(json["AllFormulas"]["Relationships"]);
         }
@@ -61,7 +61,7 @@ namespace PbiTools.Tests
         [Fact]
         public void Detects_and_emits_JArray()
         {
-            var json = SerializeFromResource("MashupMetadata_Simple.xml");
+            var json = SerializeMetadataFromResource("MashupMetadata_Simple.xml");
             Assert.Equal(JTokenType.Array, json["Formulas"]["Section1/Query1"]["FillColumnNames"].Type);
             Assert.Equal(new [] {"ID","Label"}, json["Formulas"]["Section1/Query1"]["FillColumnNames"].ToObject<string[]>());
         }
@@ -69,7 +69,7 @@ namespace PbiTools.Tests
         [Fact]
         public void Detects_and_emits_JObject()
         {
-            var json = SerializeFromResource("MashupMetadata_Simple.xml");
+            var json = SerializeMetadataFromResource("MashupMetadata_Simple.xml");
             Assert.Equal(JTokenType.Object, json["Formulas"]["Section1/Query1"]["RelationshipInfoContainer"].Type);
             Assert.Equal(2, json["Formulas"]["Section1/Query1"]["RelationshipInfoContainer"].Value<int>("columnCount"));
         }
@@ -77,7 +77,7 @@ namespace PbiTools.Tests
         [Fact]
         public void Extracts_RootFormulaText_into_file()
         {
-            SerializeFromResource("MashupMetadata_Simple.xml");
+            SerializeMetadataFromResource("MashupMetadata_Simple.xml");
 
             Assert.True(_folder.ContainsPath("Metadata/Section1/Query1/RootFormulaText.m"));
             Assert.Equal("let\n    Source = #table(type table[ID = number, Label = text], {\n    { 1, \"Foo\" },\n    { 2, \"Bar\" }\n})\nin\n    Source"
@@ -87,7 +87,7 @@ namespace PbiTools.Tests
         [Fact]
         public void Removes__RootFormulaText_and_ReferencedQueriesFormulaText__from_LastAnalysisServicesFormulaText_entry()
         {
-            var json = SerializeFromResource("MashupMetadata_Simple.xml");
+            var json = SerializeMetadataFromResource("MashupMetadata_Simple.xml");
 
             var lastAnalysisServicesFormulaText = json["Formulas"]["Section1/Query1"]["LastAnalysisServicesFormulaText"] as JObject;
             Assert.Single(lastAnalysisServicesFormulaText.Properties());
@@ -97,7 +97,7 @@ namespace PbiTools.Tests
         [Fact]
         public void Escapes_invalid_directoryname_characters()
         {
-            SerializeFromResource("MashupMetadata_LastAnalysisServicesFormulaText.xml");
+            SerializeMetadataFromResource("MashupMetadata_LastAnalysisServicesFormulaText.xml");
 
             // Section1/Change%20Log
             Assert.True(_folder.ContainsPath("Metadata/Section1/Change Log/RootFormulaText.m"));
@@ -110,7 +110,7 @@ namespace PbiTools.Tests
         [Fact]
         public void Extracts_ReferencedQueries()
         {
-            SerializeFromResource("MashupMetadata_LastAnalysisServicesFormulaText.xml");
+            SerializeMetadataFromResource("MashupMetadata_LastAnalysisServicesFormulaText.xml");
 
             // Section1/Revenue/Added%20%5BRevenue%20Type%5D%20%28Recognized%29
             Assert.True(_folder.ContainsPath("Metadata/Section1/Revenue/Added [Revenue Type] (Recognized)/ReferencedQueries/Query0.m"));
@@ -120,7 +120,7 @@ namespace PbiTools.Tests
         [Fact]
         public void Escapes_invalid_filename_characters_in_ReferencedQueries()
         {
-            SerializeFromResource("MashupMetadata_LastAnalysisServicesFormulaText.xml");
+            SerializeMetadataFromResource("MashupMetadata_LastAnalysisServicesFormulaText.xml");
 
             // &quot;Has / Special \u0026 Characters&quot;
             Assert.True(_folder.ContainsPath("Metadata/Section1/Change Log/ReferencedQueries/Has %2F Special & Characters.m"));
@@ -129,9 +129,9 @@ namespace PbiTools.Tests
         [Fact]
         public void Replaces_escape_sequences_in_ItemPaths()
         {
-            var json = SerializeFromResource("MashupMetadata_Simple.xml");
+            var json = SerializeMetadataFromResource("MashupMetadata_Simple.xml");
 
-            Assert.Equal(JTokenType.Object, json["Formulas"]["Section1/Sample File"].Type);
+            Assert.Equal(JTokenType.Object, json["Formulas"]["Section1/Sample File"].Type);     // original path is: "Section1/Sample%20File"
             Assert.Equal(JValue.CreateNull(), json["Formulas"]["Section1/Sample File/Source"]);
         }
 
@@ -161,7 +161,7 @@ namespace PbiTools.Tests
                 });
             mockFolder.Setup(folder => folder.GetSubfolder(It.IsAny<string[]>())).Returns(mockFolder.Object);
 
-            var serializer = new MashupSerializer(mockFolder.Object);
+            var serializer = new MashupSerializer(new MockRootFolder(() => mockFolder.Object));
 
             using (var stream = new MemoryStream())
             {

@@ -8,6 +8,40 @@ using PbiTools.FileSystem;
 
 namespace PbiTools.Tests
 {
+    public class MockRootFolder : IProjectRootFolder
+    {
+        private readonly Func<IProjectFolder> _createMockFolder;
+
+        public MockRootFolder() : this(() => new MockProjectFolder())
+        {
+        }
+
+        public MockRootFolder(Func<IProjectFolder> createMockFolder)
+        {
+            _createMockFolder = createMockFolder;
+        }
+
+        public void Dispose()
+        {
+        }
+
+        public IProjectFolder GetFolder(string name)
+        {
+            return _createMockFolder();
+        }
+
+        public IProjectFile GetFile(string relativePath)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+
+
+    /// <summary>
+    /// A mock implementation of <see cref="IProjectFolder"/> that stores all file contents in memory, and provides additional methods to retrieve the contents later.
+    /// For testing purposes only.
+    /// </summary>
     public class MockProjectFolder : IProjectFolder
     {
         private readonly MockProjectFolder _root;
