@@ -12,7 +12,7 @@ namespace PbiTools.ProjectSystem
         private static readonly ILogger Log = Serilog.Log.ForContext<PbixProject>();
 
         public static readonly string Filename = ".pbixproj.json";
-        public static readonly Version CurrentVersion = Version.Parse("0.3");
+        public static readonly Version CurrentVersion = Version.Parse("0.3.1");
 
         /*
          * PBIXPROJ Change Log
@@ -27,18 +27,18 @@ namespace PbiTools.ProjectSystem
          *     - extract exports (queries) from mashup package into individual .m files
          *       - '/Mashup/Package/Formulas/Section1.m/*.m' (instead of '/Mashup/Package/Formulas/Section1.m')
          *     - excluding Report/visualContainers/queryHash, Report/section/objectId, Report/report/objectId to eliminate insignificant noise in source controlled files
+         * 0.3.1 - Supports /Model/tables[]/measures: { "extendedProperties": [] }
          */
 
         /* Entries to add later: */
-        // Settings
+        // Settings (Serialization)
         // Deployments
+        // CustomProperties
+
+        #region Version
 
         [JsonProperty("version")]
         public string VersionString { get; set; }
-        
-        [JsonProperty("queries")]
-        public IDictionary<string, string> Queries { get; set; }
-
 
         [JsonIgnore]
         public Version Version
@@ -46,6 +46,12 @@ namespace PbiTools.ProjectSystem
             get => Version.TryParse(VersionString, out var version) ? version : CurrentVersion;
             set => this.VersionString = value.ToString();
         }
+
+        #endregion
+
+        [JsonProperty("queries")]
+        public IDictionary<string, string> Queries { get; set; }
+
 
         public PbixProject()
         {
