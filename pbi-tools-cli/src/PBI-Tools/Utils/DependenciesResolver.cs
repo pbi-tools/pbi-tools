@@ -39,13 +39,15 @@ namespace PbiTools.Utils
 
         private readonly Lazy<PowerBIDesktopInstallation> _pbiInstall = new Lazy<PowerBIDesktopInstallation>(GetPBIInstall);
 
-        public DependenciesResolver()
+        public DependenciesResolver() //TODO Initialize with PbixProj reference (which has settings)
         {
-            AppDomain.CurrentDomain.AssemblyResolve += AssemblyResolve;
+            AppDomain.CurrentDomain.AssemblyResolve += AssemblyResolve(this);
         }
 
         private static PowerBIDesktopInstallation GetPBIInstall()
         {
+            // TODO Refactor this to allow user to specify preferred PBI location
+
             var install = PowerBILocator.FindInstallations()
                 .Where(x => x.Is64Bit)                    // TODO Support 32-bit in a future version
                 .OrderByDescending(x => x.ProductVersion) // Use highest version installed
@@ -57,28 +59,33 @@ namespace PbiTools.Utils
             return install;
         }
 
-        private Assembly AssemblyResolve(object sender, ResolveEventArgs args)
+        private ResolveEventHandler AssemblyResolve(object token)
         {
-            // args.Name like: 'Microsoft.Mashup.Client.Packaging, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'
-            Log.Verbose("Attempting to resolve assembly: {AssemblyName}", args.Name);
+            return (sender, args) =>
+            {
+                if (!Equals(this, token)) return null;
 
-            var dllName = args.Name.Split(',')[0];
-            var path = Path.Combine(_pbiInstall.Value.InstallDir, $"{dllName}.dll");
-            if (File.Exists(path))
-            {
-                Log.Debug("Assembly '{AssemblyName}' found at {Path}", args.Name, path);
-                return Assembly.LoadFile(path);
-            }
-            else
-            {
-                Log.Debug("Could not resolve assembly: {AssemblyName}", args.Name);
-                return null;
-            }
+                // args.Name like: 'Microsoft.Mashup.Client.Packaging, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'
+                Log.Verbose("Attempting to resolve assembly: {AssemblyName}", args.Name);
+
+                var dllName = args.Name.Split(',')[0];
+                var path = Path.Combine(_pbiInstall.Value.InstallDir, $"{dllName}.dll");
+                if (File.Exists(path))
+                {
+                    Log.Debug("Assembly '{AssemblyName}' found at {Path}", args.Name, path);
+                    return Assembly.LoadFile(path);
+                }
+                else
+                {
+                    Log.Debug("Could not resolve assembly: {AssemblyName}", args.Name);
+                    return null;
+                }
+            };
         }
 
         private static string GetShadowCopyDir(string winAppHandle) => Path.Combine(
             Environment.ExpandEnvironmentVariables(LOCALAPPDATA),
-            "pbix-tools",
+            "pbi-tools", // TODO make platform specific (x64/x86)
             winAppHandle);
 
         private static string GetWinAppHandle(string path) => path.Split(Path.DirectorySeparatorChar)
@@ -87,7 +94,7 @@ namespace PbiTools.Utils
         public bool TryFindMsmdsrv(out string path)
         {
             // a standard user has no execute permissions for msmdsrv.exe in the Windows Store install dir
-            // need to shadow-copy MSDMSRV and dependencies into LOCALAPPDATA
+            // need to shadow-copy MSDMSRV and dependencies into %LOCALAPPDATA%
 
             path = Path.Combine(
                 _pbiInstall.Value.InstallDir, // "C:\\Program Files\\WindowsApps\\Microsoft.MicrosoftPowerBIDesktop_2.56.5023.0_x64__8wekyb3d8bbwe\\bin"
@@ -129,9 +136,9 @@ namespace PbiTools.Utils
             var basePath = Path.GetDirectoryName(path);
 
             var files = new HashSet<string>();
-            foreach (var p in MsmdsrvCopyInclude)
+            foreach (var pattern in MsmdsrvCopyInclude)
             {
-                foreach (var file in Directory.EnumerateFiles(basePath, p, SearchOption.AllDirectories))
+                foreach (var file in Directory.EnumerateFiles(basePath, pattern, SearchOption.AllDirectories))
                 {
                     files.Add(file);
                 }
@@ -205,7 +212,7 @@ namespace PbiTools.Utils
             }
         }
 
-        private static readonly string[] InstallerKeys =
+        private static readonly string[] InstallerKeys = // TODO 32/64?
         {
             @"SOFTWARE\Microsoft\Microsoft Power BI Desktop\Installer",
             @"SOFTWARE\WOW6432Node\Microsoft\Microsoft Power BI Desktop\Installer",
