@@ -1,0 +1,29 @@
+[
+  {
+    "name": "SalesAmount average per Country",
+    "expression": [
+      "",
+      "AVERAGEX(",
+      "\tKEEPFILTERS(VALUES('Sales'[Country])),",
+      "\tCALCULATE(SUM('Sales'[SalesAmount]))",
+      ")"
+    ],
+    "formatString": "\\$#,0.00;(\\$#,0.00);\\$#,0.00",
+    "extendedProperties": [
+      {
+        "type": "json",
+        "name": "MeasureTemplate",
+        "value": {
+          "version": 0,
+          "daxTemplateName": "AveragePerCategory"
+        }
+      }
+    ],
+    "annotations": [
+      {
+        "name": "Format",
+        "value": "<Format Format=\"CurrencyCustom\" Accuracy=\"2\" ThousandSeparator=\"True\"><Currency LCID=\"1033\" DisplayName=\"$ English (United States)\" Symbol=\"$\" PositivePattern=\"0\" NegativePattern=\"0\" /></Format>"
+      }
+    ]
+  }
+]
