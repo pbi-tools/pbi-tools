@@ -30,7 +30,9 @@ namespace PbiTools.Utils
             //   #(#)
             //   #(000D)
             //   #(0000000D)
-            return m.Replace("#(lf)", "\n").Replace("#(tab)", "\t");
+            return m
+                .Replace("#(lf)", "\n")
+                .Replace("#(tab)", "\t");
         }
     }
 }

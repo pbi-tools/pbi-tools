@@ -104,6 +104,12 @@ namespace PbiTools
 
              */
         }
+
+        /* Further actions to add
+         * - ClearCache (%LOCALAPPDATA%\pbi-tools)
+         * - DownloadPBIDesktop -targetDir -removePriorVersions
+         * - Compile|Write
+         */
     }
 
 }
