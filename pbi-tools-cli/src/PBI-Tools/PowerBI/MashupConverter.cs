@@ -43,7 +43,7 @@ namespace PbiTools.PowerBI
                 Package = new MemoryStream(packageComponents.PartsBytes),
             };
 
-            var permissions = PermissionsSerializer.Deserialize(packageComponents.PermissionBytes);
+            var permissions = PermissionsSerializer.Deserialize(packageComponents.PermissionBytes, out var _);
             mashupParts.Permissions = JObject.FromObject(permissions, CamelCaseSerializer);
 
             if (PackageMetadataSerializer.TryDeserialize(packageComponents.MetadataBytes, out SerializedPackageMetadata packageMetadata, out var contentStorageBytes))
