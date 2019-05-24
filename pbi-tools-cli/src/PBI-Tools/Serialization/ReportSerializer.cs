@@ -80,7 +80,7 @@ namespace PbiTools.Serialization
                 jSection.Save("section", sectionFolder
                     , ReportJsonTransforms.SortProperties
                     , ReportJsonTransforms.NormalizeNumbers
-                    , ReportJsonTransforms.RemoveProperties("objectId"));
+                    , ReportJsonTransforms.RemoveProperties("objectId", "id"));
             }
 
             content.Save("report", _reportFolder
