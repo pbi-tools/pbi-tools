@@ -1,3 +1,6 @@
+#### 0.8.0 - 2019-05-24
+* PBIXPROJ format 0.4
+  * Excluding Report/section/id (field is volatile and 'name' is already a unique identifier for sections)
 
 #### 0.7.0 - 2019-05-23
 * Addresses breaking API change in May 2019 release of Power BI Desktop (i.e., this version is incompatible with earlier versions)
