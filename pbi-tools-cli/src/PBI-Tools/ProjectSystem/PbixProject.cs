@@ -12,7 +12,7 @@ namespace PbiTools.ProjectSystem
         private static readonly ILogger Log = Serilog.Log.ForContext<PbixProject>();
 
         public static readonly string Filename = ".pbixproj.json";
-        public static readonly Version CurrentVersion = Version.Parse("0.4");
+        public static readonly Version CurrentVersion = Version.Parse("0.4.1");
 
         /*
          * PBIXPROJ Change Log
@@ -29,6 +29,7 @@ namespace PbiTools.ProjectSystem
          *       - excluding Report/visualContainers/queryHash, Report/section/objectId, Report/report/objectId to eliminate insignificant noise in source controlled files
          * 0.3.1 - Supports /Model/tables[]/measures: { "extendedProperties": [] }
          * 0.4   - excluding Report/section/id (field is volatile and 'name' is already a unique identifier for sections)
+         * 0.4.1 - Measure names are url-encoded to account for characters not allowed in paths
          */
 
         /* Entries to add later: */

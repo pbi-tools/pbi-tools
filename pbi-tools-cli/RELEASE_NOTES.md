@@ -1,3 +1,7 @@
+#### 0.8.1 - 2019-06-24
+* PBIXPROJ format 0.4.1
+  * FIX: Url-encode measure names when serializing to file system to allow for illegal path characters
+
 #### 0.8.0 - 2019-05-24
 * PBIXPROJ format 0.4
   * Excluding Report/section/id (field is volatile and 'name' is already a unique identifier for sections)
