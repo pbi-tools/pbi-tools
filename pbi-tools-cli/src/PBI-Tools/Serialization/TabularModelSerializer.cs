@@ -103,7 +103,7 @@ namespace PbiTools.Serialization
                 var name = measure["name"]?.Value<string>();
                 if (name == null) continue;
 
-                folder.WriteText(Path.Combine(pathPrefix, "measures", $"{name}.xml"), WriteMeasureXml(measure));
+                folder.WriteText(Path.Combine(pathPrefix, "measures", $"{name.SanitizeFilename()}.xml"), WriteMeasureXml(measure));
             }
 
             table = new JObject(table);
@@ -370,5 +370,10 @@ namespace PbiTools.Serialization
             if (sb.Length > 0) sb[0] = Char.ToUpper(s[0]);
             return sb.ToString();
         }
+    }
+
+    public static class PathExtensions
+    {
+        public static string SanitizeFilename(this string filename) => System.Net.WebUtility.UrlEncode(filename).Replace('+', ' ');
     }
 }
