@@ -158,6 +158,7 @@ Target "Build" (fun _ ->
     // Could not get Fody to do its thing unless when building the entire solution, so we're grabbing the dist files here explicitly
     !! (outDir @@ "pbi-tools.*")
     -- (outDir @@ "*test*")
+    -- (outDir @@ "*.runtimeconfig.*")
     |> CopyFiles distDir
 )
 
