@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using Microsoft.Mashup.Client.Packaging.BinarySerialization;
 using Microsoft.PowerBI.Packaging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
