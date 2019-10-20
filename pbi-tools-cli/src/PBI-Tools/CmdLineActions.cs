@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -64,7 +65,8 @@ namespace PbiTools
             {
                 { "build", AssemblyVersionInformation.AssemblyFileVersion },
                 { "effectivePowerBiFolder", _dependenciesResolver.GetEffectivePowerBiInstallDir() },
-                { "pbiInstalls", JArray.Parse(JsonConvert.SerializeObject(pbiInstalls)) }
+                { "pbiInstalls", JArray.Parse(JsonConvert.SerializeObject(pbiInstalls)) },
+                { "amoVersion", typeof(Microsoft.AnalysisServices.Tabular.Server).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion }
             };
             using (var writer = new JsonTextWriter(Console.Out))
             {
