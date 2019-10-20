@@ -1,3 +1,10 @@
+#### 0.9.0 - 2019-10-20
+* Upgraded AMO library to 18.0 so that latest tabular features are recognized by serializer (Specifically, measure/dataCategory)
+* Addresses breaking API change in Oct 2019 release (2.74) of Power BI Desktop
+  * Pre 2.74, IBinarySerializable was defined in Microsoft.Mashup.Client.Packaging.dll (implemented by ReportSettings, ReportMetadata, QueryGroupMetadata)
+  * Since 2.74, that interface has been moved to Microsoft.PowerBI.Packaging.dll
+* [info] action: Added 'amoVersion' property, returning the product version of the AMO library in use
+
 #### 0.8.1 - 2019-06-24
 * PBIXPROJ format 0.4.1
   * FIX: Url-encode measure names when serializing to file system to allow for illegal path characters
@@ -22,7 +29,9 @@
   * Mashup metadata now being extracted into folder structure rather than a single xml file
   * Mashup (package) formulas extracted into folder structure instead of single "Section1.m"
 * Report extraction improvements: git diffs are now a lot less noisy as json documents are transformed to come out in a predictable format
-  * Json properties are always sorted alphabetically, Numbers are converted from float to int where possible; 'queryHash' and 'objectId' properties removed
+  * Json properties are always sorted alphabetically
+  * Numbers are converted from float to int where possible
+  * 'queryHash' and 'objectId' properties removed
 * CLI usage improved
 
 #### 0.3.0 - 2018-05-22
