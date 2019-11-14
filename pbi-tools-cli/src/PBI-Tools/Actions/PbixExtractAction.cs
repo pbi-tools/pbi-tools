@@ -57,7 +57,7 @@ namespace PbiTools.Actions
             Log.Information("DiagramViewState extracted");
 
             this.ExtractDiagramLayout();
-            Log.Information("DiagramViewState extracted");
+            Log.Information("DiagramLayout extracted");
 
             this.ExtractLinguisticSchema();
             Log.Information("LinguisticSchema extracted");
