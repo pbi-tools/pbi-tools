@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using Microsoft.Mashup.Host.Document;
 using Microsoft.PowerBI.Packaging;
 using PbiTools.FileSystem;
 using PbiTools.PowerBI;
@@ -13,6 +14,15 @@ namespace PbiTools.Actions
     public class PbixExtractAction : IDisposable
     {
         private static readonly ILogger Log = Serilog.Log.ForContext<PbixExtractAction>();
+
+        static PbixExtractAction()
+        {
+            var ioc = DependencyInjectionService.Get();
+            if (!ioc.IsRegistered<IFeatureSwitchManager>())
+            {
+                ioc.RegisterInstance<IFeatureSwitchManager>(new NoOpFeatureSwitchManager());
+            }
+        }
 
         private readonly IProjectRootFolder _rootFolder;
         private readonly PbixReader _pbixReader;
