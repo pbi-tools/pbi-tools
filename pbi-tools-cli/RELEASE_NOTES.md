@@ -1,3 +1,9 @@
+#### 0.10.0 - 2019-11-14
+* Upgraded AMO library to 18.2
+* Addresses breaking API change in Nov 2019 release (2.75) of Power BI Desktop. Modification is backwards-compatible, however, so will still work with the Oct release.
+  * Details: `ReportMetadata` now has a dependency on <IFeatureSwitchManager> (also added DirectQueryResources, QueryDependencyGraph - for v3 report model)
+* Fixed duplicated "DiagramViewState extracted" message 
+
 #### 0.9.0 - 2019-10-20
 * Upgraded AMO library to 18.0 so that latest tabular features are recognized by serializer (Specifically, measure/dataCategory)
 * Addresses breaking API change in Oct 2019 release (2.74) of Power BI Desktop
