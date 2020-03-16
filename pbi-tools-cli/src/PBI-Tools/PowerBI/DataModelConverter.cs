@@ -21,8 +21,10 @@ namespace PbiTools.PowerBI
             using (var msmdsrv = new AnalysisServicesServer(new ASInstanceConfig
             {
                 DeploymentMode = DeploymentMode.SharePoint, // required for PBI Desktop
+                // EnableMEngineIntegration = true,
                 DisklessModeRequested = true,
                 EnableDisklessTMImageSave = true,
+                // Language = 1033,
                 // Dirs will be set automatically
             }, _resolver))
             {
@@ -51,7 +53,7 @@ namespace PbiTools.PowerBI
 
         public IStreamablePowerBIPackagePartContent ToPackagePart(JObject content)
         {
-            // TODO
+            // TODO Create empty Database, deploy TMSL...
             throw new NotImplementedException();
         }
     }

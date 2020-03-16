@@ -7,3 +7,4 @@ System.ValueTuple
 Polly
 StreamJsonRpc
 Costura.Fody
+Moq

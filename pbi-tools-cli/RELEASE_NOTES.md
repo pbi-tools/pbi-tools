@@ -1,3 +1,6 @@
+
+#### 0.11.0 - 2020-03-11
+
 #### 0.10.0 - 2019-11-14
 * Upgraded AMO library to 18.2
 * Addresses breaking API change in Nov 2019 release (2.75) of Power BI Desktop. Modification is backwards-compatible, however, so will still work with the Oct release.

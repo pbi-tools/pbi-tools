@@ -118,11 +118,13 @@ namespace PbiTools.Utils
             "msmdsrv*",
             "ms*.dll",
             "Microsoft.AnalysisServices.*",
-            "msa*.dll",
             "tm*.dll",
             "x*.dll",
             "tbb*.dll",
-            "FlightRecorderTraceDef.xml"
+            "FlightRecorderTraceDef.xml",
+            "Microsoft.Data*",
+            "Microsoft.Mashup*",
+            "PowerBIExtensions*"
         };
 
         public string ShadowCopyMsmdsrv(string path)

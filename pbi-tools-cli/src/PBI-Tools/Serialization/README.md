@@ -45,17 +45,43 @@ Contains specific serializers for the various PowerBIPackage parts (Mashup, Mode
   - *PowerBIPackage* impementation: Pass from existing file
   - *PbixProj* implementation: Convert from sources
   - Parts:
-    - [ ] 1 Mashup (TODO)
+    - [x] 1 Mashup (~~no longer needed for V3~~)
     - [ ] 2 DataModel, DataModelSchema (mostly done)
     - [x] 3 Version, 4 Connections, 5 LinguisticSchema (easy)
-    - [x] 6 ReportSettings, 7 ReportMetadata (easy)
+    - [x] 6 ReportSettings (easy)
+    - [x] 7 ReportMetadata (easy)
     - [ ] 8 ReportDocument (TODO)
     - [ ] 9 CustomVisuals, 10 StaticResources (easy)
-    - [x] 11 DiagramViewState, 
-	- [ ] 12 DiagramLayout
+    - [x] 11 DiagramViewState
+	  - [ ] 12 DiagramLayout (easy)
 - `PbixCompileAction` - Generates a new PBIX/T file from PbixProj sources
   - format:pbix|pbit
 - `PbixMergeAction` - Updates a PBIX/T file from PbixProj sources (use to refresh PBIX working copy from repo ... TODO test feasibility)
   - partSource: pbix|folder|pipe
   - dest: *PBIX path*
   - include|excludeParts
+
+- Three different repesentations of PBIX file
+  1. Original PBIX (IPowerBIPackage)
+  2. In-Memory: PbixModel
+  3. File system: PbixProj
+
+| ------------------ | ---------------------- | ----------------------- |
+| PowerBIPackagePart |  PowerBIPartConverter  |  PowerBIPartSerializer  |
+| ------------------ | ---------------------- | ----------------------- |
+| Connections        | Json                   | JsonPartSerializer      |
+| DataMashup         | Mashup : MashupParts   | MashupSerializer        |
+| DataModel          | DataModel : Json       | TabularModelSerializer  |
+| DataModelSchema    | Json                   | TabularModelSerializer  |
+| DiagramViewState   | Json                   | JsonPartSerializer      |
+| DiagramLayout      | Json                   | JsonPartSerializer      |
+| ReportDocument     | Json                   | ReportSerializer        |
+| LinguisticSchema   | Xml                    | XmlPartSerializer       |
+|                    | Json (V3)              | JsonPartSerializer      |
+| ReportMetadata     | Binary<ReportMetadata> | JsonPartSerializer      |
+|                    | Json (V3)              | JsonPartSerializer      |
+| ReportSettings     | Binary<ReportSettings> | JsonPartSerializer      |
+|                    | Json (V3)              | JsonPartSerializer      |
+| Version            | StringPartConverter    | StringPartSerializer    |
+| CustomVisuals      | BytesPartConverter     | ResourcesSerializer     |
+| StaticResources    | BytesPartConverter     | ResourcesSerializer     |

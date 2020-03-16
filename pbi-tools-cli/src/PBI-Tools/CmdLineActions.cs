@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 using System.Threading;
 using Newtonsoft.Json;
@@ -21,6 +23,7 @@ namespace PbiTools
 
         private readonly IDependenciesResolver _dependenciesResolver = new DependenciesResolver(); // TODO allow to init this with a set path from config
         private readonly AppSettings _appSettings;
+        private readonly Stopwatch _stopWatch = Stopwatch.StartNew();
 
         public CmdLineActions() : this(Program.AppSettings)
         {
@@ -51,28 +54,61 @@ namespace PbiTools
                 extractor.ExtractAll();
             }
 
-            Console.WriteLine("Completed.");
+            Console.WriteLine($"Completed in {_stopWatch.Elapsed}.");
         }
 
+        [ArgActionMethod, ArgShortcut("export-bim"), ArgDescription("Converts the Model artifacts to a TMSL/BIM file.")]
+        public void ExportBim(
+            [ArgRequired, ArgExistingDirectory, ArgDescription("The PbixProj folder to export the BIM file from.")] string folder,
+            [ArgDescription("")] bool generateDataSources
+        )
+        {
+            using (var rootFolder = new FileSystem.ProjectRootFolder(folder))
+            {
+                var serializer = new Serialization.TabularModelSerializer(rootFolder);
+                if (serializer.TryDeserialize(out var db))
+                {
+                    if (generateDataSources)
+                    {
+                        var dataSources = TabularModel.TabularModelConversions.GenerateDataSources(db);
+                        db["model"]["dataSources"] = dataSources;
+                    }
+
+                    var path = Path.GetFullPath(Path.Combine(folder, "..", $"{Path.GetFileName(folder)}.bim"));
+                    using (var writer = new JsonTextWriter(File.CreateText(path)))
+                    {
+                        writer.Formatting = Formatting.Indented;
+                        db.WriteTo(writer);
+                    }
+
+                    Console.WriteLine($"BIM file written to: {path}");
+                }
+                else
+                {
+                    Console.WriteLine("A BIM file could not be exported.");
+                }
+            }
+        }
 
         [ArgActionMethod, ArgShortcut("info"), ArgDescription("Collects diagnostic information about the local system and writes a JSON object to StdOut.")]
         public void Info()
         {
-            _appSettings.LevelSwitch.MinimumLevel = LogEventLevel.Warning; // Suppresses Informational logs
-            
-            var pbiInstalls = PowerBILocator.FindInstallations();
-            var json = new JObject
+            using (_appSettings.SetScopedLogLevel(LogEventLevel.Warning))  // Suppresses Informational logs
             {
-                { "build", AssemblyVersionInformation.AssemblyFileVersion },
-                { "effectivePowerBiFolder", _dependenciesResolver.GetEffectivePowerBiInstallDir() },
-                { "pbiInstalls", JArray.Parse(JsonConvert.SerializeObject(pbiInstalls)) },
-                { "amoVersion", typeof(Microsoft.AnalysisServices.Tabular.Server).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion }
-            };
-            using (var writer = new JsonTextWriter(Console.Out))
-            {
-                writer.Formatting = Environment.UserInteractive ? Formatting.Indented : Formatting.None;
-                json.WriteTo(writer);
-            }
+                var pbiInstalls = PowerBILocator.FindInstallations();
+                var json = new JObject
+                {
+                    { "build", AssemblyVersionInformation.AssemblyFileVersion },
+                    { "effectivePowerBiFolder", _dependenciesResolver.GetEffectivePowerBiInstallDir() },
+                    { "pbiInstalls", JArray.Parse(JsonConvert.SerializeObject(pbiInstalls)) },
+                    { "amoVersion", typeof(Microsoft.AnalysisServices.Tabular.Server).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion }
+                };
+                using (var writer = new JsonTextWriter(Console.Out))
+                {
+                    writer.Formatting = Environment.UserInteractive ? Formatting.Indented : Formatting.None;
+                    json.WriteTo(writer);
+                }
+            }            
         }
 
         [ArgActionMethod, ArgShortcut("start-server"), HideFromUsage]

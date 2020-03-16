@@ -16,11 +16,11 @@ namespace PbiTools.Model
     {
         JObject Connections { get; }
         JObject DataModel { get; }
-        MashupParts Mashup { get; }
+        // MashupParts Mashup { get; }          // TODO Drop in V3?
         JObject Report { get; }
         JObject DiagramViewState { get; }
         JObject DiagramLayout { get; }
-        XDocument LinguisticSchema { get; }
+        JObject LinguisticSchema { get; }  // TODO Change to Json in V3?
         JObject ReportMetadata { get; }
         JObject ReportSettings { get; }
         string Version { get; }
@@ -29,7 +29,7 @@ namespace PbiTools.Model
         IDictionary<string, byte[]> StaticResources { get; }
 
         PbixProject PbixProj { get; }
-        PbixModelType Type { get; }
+        PbixModelSource Type { get; }
     }
 
     /* Workflow: Extract PBIX
@@ -39,10 +39,10 @@ namespace PbiTools.Model
      * 2.2 Replace query ids accordingly
      */
 
-    public enum PbixModelType
+    public enum PbixModelSource
     {
-        File,
-        Folder,
+        PowerBIPackage,
+        PbixProjFolder,
         LiveSession
     }
 
@@ -50,7 +50,7 @@ namespace PbiTools.Model
     {
         private static readonly ILogger Log = Serilog.Log.ForContext<PbixModel>();
 
-        public PbixModelType Type { get; private set; }
+        public PbixModelSource Type { get; private set; }
         public string SourcePath { get; private set; }
 
         private PbixModel()
@@ -59,17 +59,17 @@ namespace PbiTools.Model
 
         public static PbixModel FromFile(string path, IDependenciesResolver dependenciesResolver)
         {
-            var pbixModel = new PbixModel { Type = PbixModelType.File, SourcePath = path };
+            var pbixModel = new PbixModel { Type = PbixModelSource.PowerBIPackage, SourcePath = path };
 
             using (var reader = new PbixReader(path, dependenciesResolver))
             {
                 pbixModel.Connections = reader.ReadConnections();
-                pbixModel.Mashup = reader.ReadMashup();
+                // pbixModel.Mashup = reader.ReadMashup();
                 pbixModel.Report = reader.ReadReport();
                 pbixModel.DiagramViewState = reader.ReadDiagramViewState();
-                pbixModel.LinguisticSchema = reader.ReadLinguisticSchema();
-                pbixModel.ReportMetadata = reader.ReadReportMetadata();
-                pbixModel.ReportSettings = reader.ReadReportSettings();
+                pbixModel.LinguisticSchema = reader.ReadLinguisticSchemaV3();
+                pbixModel.ReportMetadata = reader.ReadReportMetadataV3();
+                pbixModel.ReportSettings = reader.ReadReportSettingsV3();
                 pbixModel.Version = reader.ReadVersion();
                 pbixModel.CustomVisuals = reader.ReadCustomVisuals();
                 pbixModel.StaticResources = reader.ReadStaticResources();
@@ -96,19 +96,22 @@ namespace PbiTools.Model
             // read PbixProj (for format version and query ids)
 
             /*
-               ./Mashup
+               ./Mashup/
                       ./Section1.m
-                      ./Package
+                      ./Package/
                               ./Formulas
                                        ./Section1.m
                       ./Permissions.json
                       ./Metadata.xml
-                      ./Content
-               ./Report
-               ./Model
+                      ./Content/
+               ./Report/
+               ./Model/
+                   ./queries/
+                   ./tables/
+                   ./database.json
                ./connections.json
                ./version.txt
-               ./pbixproj.json
+               ./.pbixproj.json
             */
 
             throw new NotImplementedException();
@@ -123,11 +126,11 @@ namespace PbiTools.Model
 
         public JObject Connections { get; private set; }
         public JObject DataModel { get; private set; }
-        public MashupParts Mashup { get; private set; }
+        // public MashupParts Mashup { get; private set; }
         public JObject Report { get; private set; }
         public JObject DiagramViewState { get; private set; }
         public JObject DiagramLayout { get; private set; }
-        public XDocument LinguisticSchema { get; private set; }
+        public JObject LinguisticSchema { get; private set; }
         public JObject ReportMetadata { get; private set; }
         public JObject ReportSettings { get; private set; }
         public string Version { get; private set; }

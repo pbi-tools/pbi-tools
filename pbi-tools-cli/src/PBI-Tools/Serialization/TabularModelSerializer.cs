@@ -18,18 +18,21 @@ namespace PbiTools.Serialization
     /// <remarks>Methods for deserialization to be added in a future version.</remarks>
     public class TabularModelSerializer : IPowerBIPartSerializer<JObject>
     {
-        // TODO Support different serialization formats (compatibility with Tabular Editor)
 
         private static readonly ILogger Log = Serilog.Log.ForContext<TabularModelSerializer>();
 
         public static string FolderName => "Model";
+
         private readonly IProjectFolder _folder;
         private readonly IDictionary<string, string> _queries;
 
-        public TabularModelSerializer(IProjectRootFolder rootFolder, IDictionary<string, string> queries)
+        // TODO Support SerializerSettings, providing control over extraction format (Raw, Default, TabularEditor)
+        //      Persist settings in .pbixproj.json
+
+        public TabularModelSerializer(IProjectRootFolder rootFolder, IDictionary<string, string> queries = null)
         {
             if (rootFolder == null) throw new ArgumentNullException(nameof(rootFolder));
-            _queries = queries ?? throw new ArgumentNullException(nameof(queries));
+            _queries = queries ?? new Dictionary<string, string>();
             _folder = rootFolder.GetFolder(FolderName);
         }
 
@@ -56,14 +59,31 @@ namespace PbiTools.Serialization
             // TODO - Ignore PBIT timestamps:
             // modifiedTime, refreshedTime, lastProcessed, structureModifiedTime, lastUpdate, lastSchemaUpdate, createdTimestamp
 
-            db = ProcessDataSources(db, _folder, idCache);
-            db = ProcessTables(db, _folder, idCache);
-            // TODO ProcessExpressions() ???
+            db = SerializeDataSources(db, _folder, idCache);
+            db = SerializeTables(db, _folder, idCache);
+            db = SerializeExpressions(db, _folder);
+            // TODO QueryGroups
+
+            /* model.queryGroups:
+
+    "queryGroups": [
+      {
+        "folder": "Group 1"
+      }
+    ]
+
+               table.partitions:
+        "partitions": [
+          {
+            "name": "Contacts-2e6aebda-3dcf-4569-9b6f-536c2a6592b4",
+            "queryGroup": "Group 1",
+
+            */
 
             SaveDatabase(db, _folder);
         }
 
-        internal static JObject ProcessTables(JObject db, IProjectFolder folder, IQueriesLookup idCache)
+        internal static JObject SerializeTables(JObject db, IProjectFolder folder, IQueriesLookup idCache)
         {
             // hierarchies
             // measures
@@ -80,20 +100,19 @@ namespace PbiTools.Serialization
                 if (name == null) continue;
 
                 // TODO Come up with a more elegant API
-                var _table = ProcessMeasures(table, folder, $@"tables\{name}");
-                _table = ProcessHierarchies(_table, folder, $@"tables\{name}");
-                _table = ProcessTablePartitions(_table, idCache);
+                var _table = SerializeMeasures(table, folder, $@"tables\{name}");
+                _table = SerializeHierarchies(_table, folder, $@"tables\{name}");
+                _table = SerializeTablePartitions(_table, folder, idCache);
 
-                folder.Write(_table, $@"tables\{name}\{name}.json"); // TODO rename to 'table.json'?
+                folder.Write(_table, $@"tables\{name}\table.json");
             }
 
-            db.Value<JObject>("model").Remove("tables");
+            tables.Parent.Remove();
 
             return db;
-
         }
 
-        internal static JObject ProcessMeasures(JObject table, IProjectFolder folder, string pathPrefix)
+        internal static JObject SerializeMeasures(JObject table, IProjectFolder folder, string pathPrefix)
         {
             var measures = table["measures"]?.Value<JArray>();
             if (measures == null) return table;
@@ -111,7 +130,7 @@ namespace PbiTools.Serialization
             return table;
         }
 
-        internal static JObject ProcessHierarchies(JObject table, IProjectFolder folder, string pathPrefix)
+        internal static JObject SerializeHierarchies(JObject table, IProjectFolder folder, string pathPrefix)
         {
             // TODO Remove code duplication (measures, tables, dataSources)
             var hierarchies = table["hierarchies"]?.Value<JArray>();
@@ -130,20 +149,57 @@ namespace PbiTools.Serialization
             return table;
         }
 
-        internal static JObject ProcessTablePartitions(JObject table, IQueriesLookup idCache)
+        /// <summary>
+        /// Converts an M expression from a TMSL payload into a single string, accounting for both single and multi-line expressions.
+        /// </summary>
+        internal static string ConvertExpression(JToken j) => (j is JArray)
+            ? String.Join(Environment.NewLine, j.ToObject<string[]>())
+            : j.Value<string>();
+
+        /// <summary>
+        /// Converts an M expression into a TMSL payload, accounting for both, single and multi-line, expressions.
+        /// </summary>
+        private static JToken ConvertExpression(string expression)
+        {
+            var lines = (expression ?? "").Split(new[] { Environment.NewLine}, StringSplitOptions.None);
+            if (lines.Length == 1)
+                return new JValue(lines[0]);
+            return new JArray(lines);
+        }
+
+        internal static JObject SerializeTablePartitions(JObject table, IProjectFolder folder, IQueriesLookup idCache)
         {
             var _table = new JObject(table);
-            var dataSources = _table.SelectTokens("partitions[*].source.dataSource").OfType<JValue>();
 
+            /* Legacy models: Partition has source.dataSource */
+            var dataSources = _table.SelectTokens("partitions[*].source.dataSource").OfType<JValue>();
             foreach (var dataSource in dataSources)
             {
                 dataSource.Value = idCache.LookupOriginalDataSourceId(dataSource.Value<string>());
             }
 
+            /* V3 models: Partition has source.expression */
+            var mPartitions = _table.SelectTokens("partitions[?(@.source.type == 'm')]").OfType<JObject>().ToArray();
+            if (mPartitions.Length == 1)
+            {
+                folder.Write(
+                    ConvertExpression(mPartitions[0].SelectToken("source.expression")),
+                    Path.Combine("queries", $"{table.Value<string>("name").SanitizeFilename()}.m")
+                );
+                mPartitions[0].Remove();
+            }
+            // TODO Determine payload for Incremental Refresh partitions...
+
+            // Remove empty 'table.partitions'
+            if (_table.SelectToken("partitions") is JArray partitions && partitions.Count == 0)
+            {
+                partitions.Parent.Remove();
+            }
+
             return _table;
         }
 
-        internal static JObject ProcessDataSources(JObject db, IProjectFolder folder, IQueriesLookup idCache)
+        internal static JObject SerializeDataSources(JObject db, IProjectFolder folder, IQueriesLookup idCache)
         {
             // if Provider=PowerBI, strip out global pipe
             // if mashup, strip out & extract package
@@ -193,6 +249,30 @@ namespace PbiTools.Serialization
             }
 
             db.Value<JObject>("model").Remove("dataSources");
+
+            return db;
+        }
+
+        internal static JObject SerializeExpressions(JObject db, IProjectFolder folder)
+        {
+            if (!(db.SelectToken("model.expressions") is JArray expressions)) return db;
+
+            foreach (var expression in expressions.OfType<JObject>())
+            {
+                var name = expression["name"]?.Value<string>();
+                if (name == null) continue;
+
+                if (expression.Value<string>("kind") == "m")
+                {
+                    // TODO Account for queryfolders!
+                    folder.Write(
+                        ConvertExpression(expression.SelectToken("expression")),
+                        Path.Combine("queries", $"{name.SanitizeFilename()}.m")
+                    );
+
+                    expression.Remove("expression"); // keeps annotations and other metadata in place
+                }
+            }
 
             return db;
         }
@@ -267,29 +347,6 @@ namespace PbiTools.Serialization
                         foreach (var extendedProperty in extendedProperties)
                         {
                             xml.WriteStartElement("ExtendedProperty");
-                            // if (extendedProperty is JObject extPropObj)
-                            // {
-                            //     // Write attributes first, then objects & arrays
-                            //     foreach (var prop in extPropObj.Properties().Where(p => p.Value is JValue))
-                            //     {
-                            //         xml.WriteAttributeString(prop.Name.ToPascalCase(), prop.Value.Value<string>());
-                            //     }
-
-                            //     foreach (var prop in extPropObj.Properties().Where(p => !(p.Value is JValue)))
-                            //     {
-                            //         if (prop.Value is JObject jObj)
-                            //         {
-                            //             xml.WriteStartElement(prop.Name.ToPascalCase());
-                            //             foreach (var innerProp in jObj.Properties())
-                            //             {
-                            //                 xml.WriteElementString(innerProp.Name.ToPascalCase(), innerProp.Value.Value<string>());
-                            //             }
-                            //             xml.WriteEndElement();
-                            //         }
-                            //         // not handling arrays here
-                            //     }
-                            // }
-                            // else
                             {
                                 xml.WriteCData(extendedProperty.ToString());
                             }
@@ -307,7 +364,6 @@ namespace PbiTools.Serialization
                             var value = annotation?.Value<string>("value");
                             try
                             {
-                                //xml.WriteRaw(XElement.Parse(value).ToString());
                                 XElement.Parse(value).WriteTo(xml);
                             }
                             catch (XmlException)
@@ -341,25 +397,251 @@ namespace PbiTools.Serialization
         //     /hierarchies
         // /expressions (extract into *.m files)
 
-
         public bool TryDeserialize(out JObject database)
         {
             database = null;
+            if (!_folder.Exists()) return false;
+
+            if (_folder.GetSubfolder("dataSources").Exists())
+            {
+                throw new NotSupportedException("Legacy PBIX models cannot be deserialized. Please convert the project to the V3 Power BI metadata format first.");
+            }
 
             // handle: no /Model folder
 
             //   database.json -- model/relationships,model/annotations ++ tables,dataSources
-            //   tables/{name}/{name}.json -- columns,*partitions*,annotations
+            //   tables/{name}/table.json -- columns,*partitions*,annotations
             //   tables/{name}/measures/{measure}.xml -- Expression,FormatString,Annotation
             //   tables/{name}/measures/{measure}.json
             //   tables/{name}/hierarchies/{hierarchy}.json
             // **dataSources/{name}/dataSource.json -- Provider,Location
             // **dataSources/{name}/mashup/** (ZipArchive)
 
-            return false;
+            var db = _folder.GetFile("database.json").ReadJson();
+
+            var model = db.Value<JObject>("model");
+
+            // append tables (convert measures, partitions)
+            var tables = DeserializeTables(_folder);
+            model.Add("tables", tables);
+
+            // Legacy: datasources
+
+            // expressions (queries) -- exclude table (non shared) expressions
+            DeserializeExpressions(_folder, model);
+
+            database = db;
+            return true;
         }
 
+
+        internal static JArray DeserializeTables(IProjectFolder modelFolder)
+        {
+            var tables = new List<JObject>();
+            var tablesFolder = modelFolder.GetSubfolder("tables");
+            var queriesFolder = modelFolder.GetSubfolder("queries");
+
+            foreach (var tableFolder in tablesFolder.GetSubfolders("*"))
+            {
+                var tableFile = tableFolder.GetFile("table.json");
+                if (!tableFile.Exists()) continue;
+                var tableJson = tableFile.ReadJson();
+                var tableName = tableJson.Value<string>("name");
+
+                // partitions -- check if partition is already M partition -- need to escape query name: #"{name}"
+                if (tableJson.ContainsKey("partitions"))
+                {
+                    foreach (var partition in tableJson["partitions"] as JArray)
+                    {
+                        // Skips calculated and m partitions
+                        if (partition.SelectToken("source.query") != null)
+                        {
+                            partition["source"] = new JObject // overwrites existing QueryPartitionSource
+                            {
+                                { "type", "m" },
+                                { "expression", new JArray(new [] {
+                                    $"let",
+                                    $"    Source = #\"{tableJson.Value<string>("name")}\"",
+                                    $"in",
+                                    $"    Source"
+                                })} // TODO Must find correct query name!!! (get from annotation 'LinkedQueryName')
+                            };
+                        }
+                    }
+                }
+
+                // Get (single) query from /queries folder matching the current table's name
+                var tableQuery = queriesFolder.GetFiles($"{tableName.SanitizeFilename()}.m", SearchOption.AllDirectories).FirstOrDefault();
+                if (tableQuery != null)
+                {
+                    if (!tableJson.ContainsKey("partitions")) tableJson["partitions"] = new JArray();
+                    var partitionsJson = tableJson["partitions"] as JArray;
+
+                    partitionsJson.Add(new JObject
+                    {
+                        { "name", $"{tableName}-{Guid.NewGuid()}" },
+                        { "mode", "import" },
+                        // { "queryGroup", "TODO" },
+                        { "source", new JObject 
+                        {
+                            { "type", "m" },
+                            { "expression", ConvertExpression(tableQuery.ReadText()) }
+                        }}
+                    });
+                }
+
+                var measuresFolder = tableFolder.GetSubfolder("measures");
+                if (measuresFolder.Exists())
+                {
+                    tableJson.Add("measures", new JArray(
+                        measuresFolder.GetFiles("*.xml")
+                            .Select(file =>
+                            {
+                                Log.Verbose("Processing measure file: {Path}", file.Path);
+                                var xml = file.ReadXml();
+                                return ConvertMeasureXml(xml);
+                            })
+                            .Where(x => x != null)
+                    ));
+                }
+
+                // hierarchies
+                var hierarchiesFolder = tableFolder.GetSubfolder("hierarchies");
+                if (hierarchiesFolder.Exists())
+                {
+                    tableJson.Add("hierarchies", new JArray(
+                        hierarchiesFolder.GetFiles("*.json")
+                            .Select(file => 
+                            {
+                                Log.Verbose("Processing hierarchies file: {Path}", file.Path);
+                                return file.ReadJson();
+                            })
+                    ));
+                }
+
+                // TODO columns (if expanded)
+
+                tables.Add(tableJson);
+            }
+
+            return new JArray(tables);
+        }
+
+        internal static void DeserializeExpressions(IProjectFolder modelFolder, JObject modelJson)
+        {
+            var queriesFolder = modelFolder.GetSubfolder("queries");
+            if (!queriesFolder.Exists()) return;
+
+            var tableNames = modelFolder.GetSubfolder("tables").GetSubfolders("*")
+                .Select(f => Path.GetFileName(f.BasePath))
+                .ToArray();
+
+            // All *.m queries w/o a corresponding table: 
+            var sharedExpressions = queriesFolder.GetFiles("*.m", SearchOption.AllDirectories)
+                .Where(f => !tableNames.Contains(Path.GetFileNameWithoutExtension(f.Path)))
+                .ToArray();
+
+            if (sharedExpressions.Length == 0) return;
+
+            // Ensure model.expressions node:
+            var expressionsJson = modelJson["expressions"] as JArray;
+            if (expressionsJson == null)
+            {
+                modelJson.Add("expressions", new JArray());
+                expressionsJson = modelJson["expressions"] as JArray;
+            }
+
+            // Upsert each shared expression
+            foreach (var expressionFile in sharedExpressions)
+            {
+                var exprName = Path.GetFileNameWithoutExtension(expressionFile.Path).UnsanitizeFilename();
+                var exprJson = expressionsJson.SelectToken($"[?(@.kind == 'm' && @.name == '{exprName}')]") as JObject;
+                if (exprJson == null)
+                {
+                    exprJson = new JObject 
+                    {
+                        { "name", exprName },
+                        { "kind", "m" }
+                    };
+                    expressionsJson.Add(exprJson);
+                }
+
+                exprJson["expression"] = ConvertExpression(expressionFile.ReadText());
+            }
+        }
+
+        public static JObject ConvertMeasureXml(XDocument xml)
+        {
+            if (xml == null) return default(JObject);
+
+            var measure = new JObject {
+                { "name", xml.Root.Attribute("Name")?.Value }
+            };
+
+            string ToCamelCase(string s)
+            {
+                var sb = new StringBuilder(s);
+                if (sb.Length > 0) sb[0] = Char.ToLower(s[0]);
+                return sb.ToString();
+            };
+
+            foreach (var element in xml.Root.Elements())
+            {
+                if (element.Name == "Annotation")
+                {
+                    var sb = new StringBuilder();
+
+                    using (var writer = XmlWriter.Create(new StringWriter(sb), new XmlWriterSettings { Indent = false, OmitXmlDeclaration = true, ConformanceLevel = ConformanceLevel.Fragment }))
+                    {
+                        element.FirstNode.WriteTo(writer);
+                    }
+
+                    var annotation = new JObject {
+                        { "name", element.Attribute("Name")?.Value },
+                        { "value", sb.ToString() }
+                    };
+
+                    JArray GetOrInsertAnnotations()
+                    {
+                        if (measure["annotations"] is JArray array)
+                            return array;
+                        var newArray = new JArray();
+                        measure.Add("annotations", newArray);
+                        return newArray;
+                    };
+
+                    GetOrInsertAnnotations().Add(annotation);
+                }
+                else if (element.Name == "Expression")
+                {
+                    var expressionsArray = element.Value.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
+                    var token = expressionsArray.Length == 1 ? (JToken)expressionsArray[0] : new JArray(expressionsArray);
+                    measure.Add("expression", token);
+                }
+                else if (element.Name == "IsHidden" && Boolean.TryParse(element.Value, out var boolValue))
+                {
+                    measure.Add(ToCamelCase(element.Name.LocalName), boolValue);
+                }
+                //		else if (Int64.TryParse(element.Value, out var intValue))
+                //		{
+                //			measure.Add(ToCamelCase(element.Name.LocalName), intValue);
+                //		}
+                //		else if (Double.TryParse(element.Value, out var doubleValue))
+                //		{
+                //			measure.Add(ToCamelCase(element.Name.LocalName), doubleValue);
+                //		}
+                else
+                {
+                    measure.Add(ToCamelCase(element.Name.LocalName), element.Value);
+                }
+            }
+
+            return measure;
+        }
+
+
         // TODO place AAS conversions into TabularModelConversion.ToAASModel(JObject db, JObject extensions)
+
     }
 
     public static class XmlExtensions
@@ -374,6 +656,24 @@ namespace PbiTools.Serialization
 
     public static class PathExtensions
     {
-        public static string SanitizeFilename(this string filename) => System.Net.WebUtility.UrlEncode(filename).Replace('+', ' ');
+
+        private static readonly Dictionary<char, string> FilenameCharReplace = "\"<>|:*?/\\".ToCharArray().ToDictionary(c => c, c => $"%{((int)c):X}");
+        // Note - This can be reversed via WebUtility.UrlDecode()
+
+        public static string SanitizeFilename(this string name)
+        {
+            var sb = new StringBuilder();
+            foreach (var c in name)
+            {
+                if (FilenameCharReplace.TryGetValue(c, out var s))
+                    sb.Append(s);
+                else
+                    sb.Append(c);
+            }
+            return sb.ToString();
+        }
+
+        public static string UnsanitizeFilename(this string name) => System.Net.WebUtility.UrlDecode(name);
+
     }
 }

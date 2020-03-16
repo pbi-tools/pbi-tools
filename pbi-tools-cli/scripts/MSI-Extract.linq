@@ -5,9 +5,9 @@
 
 void Main()
 {
-	var msiPath = @"C:\Users\mthie\OneDrive\Workspaces\pbix-tools\PBIDesktop-Archive\2.64.5285-Nov 2018\PBIDesktop.msi";
-	var destDir = @"E:\temp\pbi_x86";
-	var logPath = @"E:\temp\pbi_x86.log";
+	var msiPath = @"C:\Users\mthie\OneDrive\Workspaces\pbix-tools\PBIDesktop-Archive\2.72.5556-Aug 2019\PBIDesktop-2019-08.msi";
+	var destDir = @"E:\temp\pbi_x86\2.72";
+	var logPath = @"E:\temp\pbi_x86_2.72.log";
 	Directory.CreateDirectory(destDir);
 	
 	var hwnd = IntPtr.Zero;
@@ -97,5 +97,3 @@ public enum INSTALLLOGATTRIBUTES // flag attributes for MsiEnableLog
 
 [DllImport("msi.dll", CharSet = CharSet.Auto, SetLastError = true)]
 public static extern UInt32 MsiEnableLog(INSTALLLOGMODE dwLogMode, string szLogFile, INSTALLLOGATTRIBUTES dwLogAttributes);
-
-

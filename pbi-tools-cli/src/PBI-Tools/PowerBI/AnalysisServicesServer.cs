@@ -16,6 +16,7 @@ using PbiTools.Utils;
 using Polly;
 using Serilog;
 using Serilog.Events;
+using AMO = Microsoft.AnalysisServices;
 using TOM = Microsoft.AnalysisServices.Tabular;
 using static PbiTools.Utils.Resources;
 
@@ -51,33 +52,17 @@ namespace PbiTools.PowerBI
 
         private void CreateConfig(ASInstanceConfig config)
         {
-            // TODO Reconsider generation of default ini
-
-            //// 1 - Generate default .ini file
-            //var procStartInfo = new ProcessStartInfo(_asToolPath, "-f -s .")
-            //{
-            //    CreateNoWindow = true,
-            //    WorkingDirectory = _tempPath,
-            //    WindowStyle = ProcessWindowStyle.Hidden,
-            //    UseShellExecute = false,
-            //};
-            //using (var proc = Process.Start(procStartInfo))
-            //{
-            //    proc?.WaitForExit();
-            //}
-
-            // 2 - Modify .ini file
-            //config.BackupDir = config.BackupDir ?? _tempPath;
-            //config.DataDir = config.DataDir ?? _tempPath;
-            //config.LogDir = config.LogDir ?? _tempPath;
-            //config.TempDir = config.TempDir ?? _tempPath;
-
             config.SetWorkingDir(_tempPath);
 
             var iniFilePath = Path.Combine(_tempPath, "msmdsrv.ini");
             var iniTemplate = GetEmbeddedResource("msmdsrv.ini.xml", XDocument.Load);
 
             ASIniFile.WriteConfig(config, iniTemplate, iniFilePath);
+
+            if (Log.IsEnabled(LogEventLevel.Verbose))
+            {
+                Log.Verbose(File.ReadAllText(iniFilePath));
+            }
         }
 
         public int Port { get; private set; }
@@ -280,7 +265,7 @@ namespace PbiTools.PowerBI
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     public class ASInstanceConfig  // TODO Add property docs
     {
-        public DeploymentMode DeploymentMode { get; set; } = DeploymentMode.Tabular;
+        public DeploymentMode DeploymentMode { get; set; } = DeploymentMode.SharePoint;
         public string DataDir { get; set; }
         public string TempDir { get; set; }
         public string LogDir { get; set; }
@@ -292,13 +277,14 @@ namespace PbiTools.PowerBI
         public string AllowedBrowsingFolders { get; set; }
         [Map("Log/FlightRecorder/Enabled")] public bool FlightRecorderEnabled { get; set; } = true;
         public bool InstanceVisible { get; set; }
-        public bool DisklessModeRequested { get; set; }
-        [Map("VertiPaq/EnableDisklessTMImageSave")] public bool EnableDisklessTMImageSave { get; set; }
+        public bool DisklessModeRequested { get; set; } = true;
+        [Map("VertiPaq/EnableDisklessTMImageSave")] public bool EnableDisklessTMImageSave { get; set; } = true;
         public int RecoveryModel { get; set; } = 1;
         [Map("DAX/DQ/EnableAllFunctions")] public bool EnableAllDaxFunctions { get; set; } = true;
-        [Map("DAX/DQ/EnableVariationNotation")] public bool EnableVariationNotation { get; set; } = true;
+        [Map("DAX/EnableVariationNotation")] public bool EnableVariationNotation { get; set; } = true;
         [Map("Network/ListenOnlyOnLocalConnections")] public bool ListenOnlyOnLocalConnections { get; set; } = true;
         [Map("TMCompatibilitySKU")] public bool EnableMEngineIntegration { get; set; } // Only compatible with DeploymentMode.Tabular and with SSDT distribution
+        [Map("Feature/MEngineTracingEnabled")] public bool MEngineTracingEnabled { get; set; }
     }
 
     // ReSharper disable once InconsistentNaming

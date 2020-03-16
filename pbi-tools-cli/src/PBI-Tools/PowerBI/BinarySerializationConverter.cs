@@ -18,10 +18,10 @@ namespace PbiTools.PowerBI
             if (part == null) return default(JObject);
             using (var reader = new BinarySerializationReader(part.GetStream()))
             {
-                var metadata = new T();
-                metadata.Deserialize(reader);
+                var obj = new T();
+                obj.Deserialize(reader);
 
-                return JObject.FromObject(metadata, CamelCaseSerializer);
+                return JObject.FromObject(obj, CamelCaseSerializer);
             }
         }
 

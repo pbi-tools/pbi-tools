@@ -21,12 +21,20 @@ namespace PbiTools.FileSystem
         /// </summary>
         string BasePath { get; }
 
+        bool Exists();
+
         IProjectFolder GetSubfolder(params string[] segments);
 
+        IEnumerable<IProjectFolder> GetSubfolders(string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly);
+
+        IEnumerable<IProjectFile> GetFiles(string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly);
+
+        IProjectFile GetFile(string relativePath);
+        
         /// <summary>
-        /// Provides access to the <see cref="Stream"/> of a file if it exists.
+        /// Provides access to the <see cref="Stream"/> of a project file if it exists.
         /// </summary>
-        bool TryGetFile(string path, out Stream stream);
+        bool TryGetFile(string path, Action<Stream> streamHandler);
 
         bool ContainsFile(string path);
 
@@ -53,6 +61,8 @@ namespace PbiTools.FileSystem
         /// Gets the full path of the file
         /// </summary>
         string Path { get; }
+
+        bool Exists();
 
         /// <summary>
         /// Provides access to the <see cref="Stream"/> of a file if it exists.
@@ -95,19 +105,19 @@ namespace PbiTools.FileSystem
                 : new ProjectFolder(_root, Path.Combine(this.BasePath, Path.Combine(segments)));
         }
 
-        public bool TryGetFile(string path, out Stream stream)
+        public bool TryGetFile(string path, Action<Stream> streamHandler)
         {
             var fullPath = GetFullPath(path);
             if (File.Exists(fullPath))
             {
-                stream = File.OpenRead(fullPath);
+                using (var stream = File.OpenRead(fullPath))
+                {
+                    streamHandler(stream);
+                }
                 return true;
             }
             else
-            {
-                stream = null;
                 return false;
-            }
         }
 
         public bool ContainsFile(string path)
@@ -153,6 +163,23 @@ namespace PbiTools.FileSystem
             if (path.StartsWith("/") || path.StartsWith("\\")) return path.Substring(1);
             return path;
         }
+
+        public bool Exists()
+        {
+            return Directory.Exists(this.BasePath);
+        }
+
+        public IEnumerable<IProjectFolder> GetSubfolders(string searchPattern, SearchOption searchOption) =>
+            Directory.EnumerateDirectories(this.BasePath, searchPattern, searchOption).Select(dir => this.GetSubfolder(Path.GetFileName(dir)));
+
+        public IProjectFile GetFile(string relativePath)
+        {
+            return new ProjectFile(this._root, GetFullPath(relativePath));
+        }
+
+        public IEnumerable<IProjectFile> GetFiles(string searchPattern, SearchOption searchOption) =>
+            Directory.EnumerateFiles(this.BasePath, searchPattern, searchOption).Select(path => new ProjectFile(this._root, path));
+
     }
 
     public class ProjectFile : IProjectFile
@@ -169,6 +196,9 @@ namespace PbiTools.FileSystem
         }
 
         public string Path { get; }
+
+        public bool Exists() => File.Exists(this.Path);
+        
 
         public bool TryGetFile(out Stream stream)
         {
@@ -210,6 +240,8 @@ namespace PbiTools.FileSystem
     {
         IProjectFolder GetFolder(string name);
         IProjectFile GetFile(string relativePath);
+
+        void Commit();
     }
 
 
@@ -217,6 +249,7 @@ namespace PbiTools.FileSystem
     {
         // central registry over all files written:
         private readonly HashSet<string> _filesWritten;
+        private bool _committed;
 
         public ProjectRootFolder(string basePath)
         {
@@ -247,6 +280,9 @@ namespace PbiTools.FileSystem
 
         public void Dispose()
         {
+            // Do not delete anything if an unhandled error has occurred
+            if (!_committed) return;
+
             if (_filesWritten.Count == 0)
             {
                 if (Directory.Exists(BasePath))
@@ -285,6 +321,10 @@ namespace PbiTools.FileSystem
             // ./ROOT/dir1/empty/ ***
         }
 
+        public void Commit()
+        {
+            _committed = true;
+        }
     }
 
     public static class ProjectFolderExtensions
@@ -320,6 +360,13 @@ namespace PbiTools.FileSystem
             });
         }
 
+
+    }
+
+    public static class ProjectFileExtensions
+    {
+        private static readonly ILogger Log = Serilog.Log.ForContext<ProjectFile>();
+
         public static void Write(this IProjectFile file, JToken json)
         {
             file.WriteText(writer =>
@@ -350,5 +397,58 @@ namespace PbiTools.FileSystem
             });
         }
 
+        public static JObject ReadJson(this IProjectFile file, JsonLoadSettings settings = null)
+        {
+            if (file.TryGetFile(out var stream))
+            {
+                using (var reader = new JsonTextReader(new StreamReader(stream)))
+                {
+                    try
+                    {
+                        return JObject.Load(reader, settings);
+                    }
+                    catch (JsonException e)
+                    {
+                        Log.Error(e, "Json file is invalid: {Path}", file.Path);
+                    }
+                }
+            }
+
+            return default(JObject);
+        }
+
+
+        public static XDocument ReadXml(this IProjectFile file, XmlReaderSettings readerSettings = null)
+        {
+            if (file.TryGetFile(out var stream))
+            {
+                using (var reader = XmlReader.Create(stream, readerSettings ?? new XmlReaderSettings { IgnoreWhitespace = true }))
+                {
+                    try
+                    {
+                        return XDocument.Load(reader);
+                    }
+                    catch (XmlException e)
+                    {
+                        Log.Error(e, "Xml file is invalid: {Path}", file.Path);
+                    }
+                }
+            }
+
+            return default(XDocument);
+        }
+
+        public static string ReadText(this IProjectFile file)
+        {
+            if (file.TryGetFile(out var stream))
+            {
+                using (var reader = new StreamReader(stream))
+                {
+                    return reader.ReadToEnd();
+                }
+            }
+
+            return default(string);
+        }
     }
 }

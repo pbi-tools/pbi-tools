@@ -77,8 +77,11 @@ namespace PbiTools.PowerBI
 
         public MashupParts ReadMashup()
         {
-            // Mashup is NOT optional
-            return _converters.DataMashup.FromPackagePart(_package.DataMashup);
+            if (_package.DataMashup != null)
+            {
+                return _converters.DataMashup.FromPackagePart(_package.DataMashup);
+            }
+            return default(MashupParts);
         }
 
         public JObject ReadReport()
@@ -101,14 +104,29 @@ namespace PbiTools.PowerBI
             return _converters.LinguisticSchema.FromPackagePart(_package.LinguisticSchema);
         }
 
+        public JObject ReadLinguisticSchemaV3()
+        {
+            return _converters.LinguisticSchemaV3.FromPackagePart(_package.LinguisticSchema);
+        }
+
         public JObject ReadReportMetadata()
         {
             return _converters.ReportMetadata.FromPackagePart(_package.ReportMetadata);
         }
 
+        public JObject ReadReportMetadataV3()
+        {
+            return _converters.ReportMetadataV3.FromPackagePart(_package.ReportMetadata);
+        }
+
         public JObject ReadReportSettings()
         {
             return _converters.ReportSettings.FromPackagePart(_package.ReportSettings);
+        }
+
+        public JObject ReadReportSettingsV3()
+        {
+            return _converters.ReportSettingsV3.FromPackagePart(_package.ReportSettings);
         }
 
         public string ReadVersion()
@@ -131,14 +149,14 @@ namespace PbiTools.PowerBI
         private IDictionary<string, byte[]> ReadResources(IDictionary<Uri, IStreamablePowerBIPackagePartContent> part)
         {
             return part?.Aggregate(
-                new Dictionary<string, byte[]>(), 
+                new Dictionary<string, byte[]>(),
                 (result, entry) =>
                 {
                     result.Add(entry.Key.ToString(), _converters.Resources.FromPackagePart(entry.Value));
                     return result;
                 });
         }
-        
+
 
         #endregion
 

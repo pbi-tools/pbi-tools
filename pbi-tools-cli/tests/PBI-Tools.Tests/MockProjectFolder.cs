@@ -34,6 +34,10 @@ namespace PbiTools.Tests
         {
             throw new NotImplementedException();
         }
+
+        public void Commit()
+        {
+        }
     }
 
 
@@ -142,5 +146,29 @@ namespace PbiTools.Tests
             return _root.FilesStore[NormalizePath(path)];
         }
 
+        public bool Exists()
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<IProjectFolder> GetSubfolders(string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<IProjectFile> GetFiles(string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IProjectFile GetFile(string relativePath)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool TryGetFile(string path, Action<Stream> streamHandler)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

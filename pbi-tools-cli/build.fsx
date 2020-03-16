@@ -109,7 +109,7 @@ let genCSAssemblyInfo (projectPath) =
       [ Attribute.Title (projectName)
         Attribute.Product project
         Attribute.Company (authors |> String.concat ", ")
-        Attribute.Copyright (sprintf "Copyright \u00A9 Mathias Thierbach %i" 2018)
+        Attribute.Copyright (sprintf "Copyright \u00A9 Mathias Thierbach 2018-%i" (DateTime.Today.Year))
         Attribute.Description summary
         Attribute.Version release.AssemblyVersion
         Attribute.FileVersion fileVersion

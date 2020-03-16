@@ -347,6 +347,8 @@ namespace PbiTools.Serialization
 
         public void Serialize(MashupParts content)
         {
+            if (content == null) return;
+            
             /*
              *   /Mashup
              *   --/Package/

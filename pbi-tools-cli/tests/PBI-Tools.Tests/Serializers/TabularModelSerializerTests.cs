@@ -26,7 +26,7 @@ namespace PbiTools.Tests
         ""relationships"": []
     }
 }");
-            var db2 = TabularModelSerializer.ProcessTables(db, folder, new MockQueriesLookup());
+            var db2 = TabularModelSerializer.SerializeTables(db, folder, new MockQueriesLookup());
 
             Assert.Null(db2.Value<JObject>("model").Property("tables"));
         }
@@ -44,7 +44,7 @@ namespace PbiTools.Tests
         ]
     }
 }");
-            TabularModelSerializer.ProcessTables(db, folder, new MockQueriesLookup());
+            TabularModelSerializer.SerializeTables(db, folder, new MockQueriesLookup());
 
             Assert.True(folder.ContainsPath(@"tables\table1\table1.json"));
             Assert.True(folder.ContainsPath(@"tables\table2\table2.json"));
@@ -61,7 +61,7 @@ namespace PbiTools.Tests
             var table = new JObject {};
             var folder = new MockProjectFolder();
             var result =
-                TabularModelSerializer.ProcessMeasures(table, folder, @"tables\table1\");
+                TabularModelSerializer.SerializeMeasures(table, folder, @"tables\table1\");
 
             Assert.Equal(table.ToString(), result.ToString());
             Assert.Equal(0, folder.NumberOfFilesWritten);
@@ -79,7 +79,7 @@ namespace PbiTools.Tests
     ]
 }");
             var folder = new MockProjectFolder();
-            TabularModelSerializer.ProcessMeasures(table, folder, @"tables\table1\");
+            TabularModelSerializer.SerializeMeasures(table, folder, @"tables\table1\");
 
             Assert.True(folder.ContainsPath(@"tables\table1\measures\measure1.xml"));
             Assert.True(folder.ContainsPath(@"tables\table1\measures\measure2.xml"));
@@ -98,7 +98,7 @@ namespace PbiTools.Tests
 }");
             var folder = new MockProjectFolder();
             var result =
-                TabularModelSerializer.ProcessMeasures(table, folder, @"tables\table1\");
+                TabularModelSerializer.SerializeMeasures(table, folder, @"tables\table1\");
 
             Assert.Null(result.Property("measure"));
         }
@@ -123,7 +123,7 @@ namespace PbiTools.Tests
     ]
 }");
             var folder = new MockProjectFolder();
-            TabularModelSerializer.ProcessMeasures(table, folder, @"tables\table1");
+            TabularModelSerializer.SerializeMeasures(table, folder, @"tables\table1");
 
             var xml = folder.GetAsXml(@"tables\table1\measures\measure1.xml");
             Assert.Equal("Text", xml.XPathSelectElement("Measure/Annotation[@Name='Format']/Format").Attribute("Format").Value);
@@ -148,7 +148,7 @@ namespace PbiTools.Tests
     ]
 }");
             var folder = new MockProjectFolder();
-            TabularModelSerializer.ProcessMeasures(table, folder, @"tables\table1");
+            TabularModelSerializer.SerializeMeasures(table, folder, @"tables\table1");
 
             var xml = folder.GetAsXml(@"tables\table1\measures\measure1.xml");
             var expression = xml.XPathSelectElement("Measure/Expression");
@@ -170,7 +170,7 @@ namespace PbiTools.Tests
     ]
 }");
             var folder = new MockProjectFolder();
-            TabularModelSerializer.ProcessMeasures(table, folder, @"tables\table1");
+            TabularModelSerializer.SerializeMeasures(table, folder, @"tables\table1");
 
             var xml = folder.GetAsXml(@"tables\table1\measures\measure1.xml");
             var expression = xml.XPathSelectElement("Measure/Expression").Value;
@@ -194,7 +194,7 @@ namespace PbiTools.Tests
     ]
 }");
             var folder = new MockProjectFolder();
-            TabularModelSerializer.ProcessHierarchies(table, folder, @"tables\table1\");
+            TabularModelSerializer.SerializeHierarchies(table, folder, @"tables\table1\");
 
             Assert.True(folder.ContainsPath(@"tables\table1\hierarchies\hierarchy1.json"));
             Assert.True(folder.ContainsPath(@"tables\table1\hierarchies\hierarchy2.json"));
@@ -237,7 +237,7 @@ namespace PbiTools.Tests
             public ProcessDataSources()
             {
                 _folder = new MockProjectFolder();
-                TabularModelSerializer.ProcessDataSources(_databaseJson, _folder, _queriesLookup);
+                TabularModelSerializer.SerializeDataSources(_databaseJson, _folder, _queriesLookup);
             }
 
             [Fact]

@@ -38,6 +38,12 @@
     <SkipXPress9CompressionSizeMB>0</SkipXPress9CompressionSizeMB>
     <CompositeModel>1</CompositeModel>
     <ManyToManyRelationship>1</ManyToManyRelationship>
+    <EnableIncrementalRefresh>1</EnableIncrementalRefresh>
+    <ASQLAggEnabled>0</ASQLAggEnabled>
+    <ASQLAggRLSEnabled>0</ASQLAggRLSEnabled>
+    <WholesaleDax>0</WholesaleDax>
+    <DataSourceReferenceEnabled>2</DataSourceReferenceEnabled>
+    <EnableMDQV3>1</EnableMDQV3>
   </Feature>
   <VertiPaq>
     <EnableProcessingSimplifiedLocks>1</EnableProcessingSimplifiedLocks>
@@ -45,6 +51,7 @@
   </VertiPaq>
   <DAX>
     <DQ>
+      <EnableAllFunctions>1</EnableAllFunctions>
       <SelectCartridgeUsingConnectionString>0</SelectCartridgeUsingConnectionString>
     </DQ>
   </DAX>

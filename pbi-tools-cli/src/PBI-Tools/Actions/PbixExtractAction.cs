@@ -14,6 +14,7 @@ namespace PbiTools.Actions
     public class PbixExtractAction : IDisposable
     {
         private static readonly ILogger Log = Serilog.Log.ForContext<PbixExtractAction>();
+        private static readonly Version V3ModelVersion = new Version(1, 19);
 
         static PbixExtractAction()
         {
@@ -45,8 +46,9 @@ namespace PbiTools.Actions
         {
             // TODO Change API: Convert to PbixModel, then model.SerializeToFolder()
 
-            this.ExtractVersion();
-            Log.Information("Version extracted");
+            var versionStr = this.ExtractVersion();
+            Log.Information($"Version extracted: {versionStr}");
+            var version = Version.Parse(versionStr);
 
             this.ExtractConnections();
             Log.Information("Connections extracted");
@@ -54,13 +56,13 @@ namespace PbiTools.Actions
             this.ExtractMashup();
             Log.Information("Mashup extracted");
 
-            this.ExtractReport(); // TODO
+            this.ExtractReport();
             Log.Information("Report extracted");
 
-            this.ExtractReportMetadata();
+            this.ExtractReportMetadata(version >= V3ModelVersion);
             Log.Information("ReportMetadata extracted");
 
-            this.ExtractReportSettings();
+            this.ExtractReportSettings(version >= V3ModelVersion);
             Log.Information("ReportSettings extracted");
 
             this.ExtractDiagramViewState();
@@ -69,7 +71,7 @@ namespace PbiTools.Actions
             this.ExtractDiagramLayout();
             Log.Information("DiagramLayout extracted");
 
-            this.ExtractLinguisticSchema();
+            this.ExtractLinguisticSchema(version >= V3ModelVersion);
             Log.Information("LinguisticSchema extracted");
 
             this.ExtractResources();
@@ -78,11 +80,13 @@ namespace PbiTools.Actions
 
             var pbixProj = PbixProject.FromFolder(_rootFolder);
 
-            this.ExtractModel(pbixProj); // TODO
+            this.ExtractModel(pbixProj);
             Log.Information("Model extracted");
 
             pbixProj.Version = PbixProject.CurrentVersion; // always set latest version on new pbixproj file
             pbixProj.Save(_rootFolder);
+
+            _rootFolder.Commit();
         }
 
         public void ExtractModel(PbixProject pbixProj)
@@ -120,10 +124,12 @@ namespace PbiTools.Actions
             serializer.Serialize(_pbixReader.ReadReport());
         }
 
-        public void ExtractVersion()
+        public string ExtractVersion()
         {
             var serializer = new StringPartSerializer(_rootFolder, nameof(IPowerBIPackage.Version));
-            serializer.Serialize(_pbixReader.ReadVersion());
+            var version = _pbixReader.ReadVersion();
+            serializer.Serialize(version);
+            return version;
         }
 
         public void ExtractConnections()
@@ -132,16 +138,16 @@ namespace PbiTools.Actions
             serializer.Serialize(_pbixReader.ReadConnections());
         }
 
-        public void ExtractReportMetadata()
+        public void ExtractReportMetadata(bool isV3)
         {
             var serializer = new JsonPartSerializer(_rootFolder, nameof(IPowerBIPackage.ReportMetadata));
-            serializer.Serialize(_pbixReader.ReadReportMetadata());
+            serializer.Serialize(isV3 ? _pbixReader.ReadReportMetadataV3() : _pbixReader.ReadReportMetadata());
         }
 
-        public void ExtractReportSettings()
+        public void ExtractReportSettings(bool isV3)
         {
             var serializer = new JsonPartSerializer(_rootFolder, nameof(IPowerBIPackage.ReportSettings));
-            serializer.Serialize(_pbixReader.ReadReportSettings());
+            serializer.Serialize(isV3 ? _pbixReader.ReadReportSettingsV3() : _pbixReader.ReadReportSettings());
         }
 
         public void ExtractDiagramViewState()
@@ -156,10 +162,18 @@ namespace PbiTools.Actions
             serializer.Serialize(_pbixReader.ReadDiagramLayout());
         }
 
-        private void ExtractLinguisticSchema()
+        private void ExtractLinguisticSchema(bool isV3)
         {
-            var serializer = new XmlPartSerializer(_rootFolder, nameof(IPowerBIPackage.LinguisticSchema));
-            serializer.Serialize(_pbixReader.ReadLinguisticSchema());
+            if (isV3)
+            {
+                var serializer = new JsonPartSerializer(_rootFolder, nameof(IPowerBIPackage.LinguisticSchema));
+                serializer.Serialize(_pbixReader.ReadLinguisticSchemaV3());
+            }
+            else
+            {
+                var serializer = new XmlPartSerializer(_rootFolder, nameof(IPowerBIPackage.LinguisticSchema));
+                serializer.Serialize(_pbixReader.ReadLinguisticSchema());
+            }
         }
 
 
