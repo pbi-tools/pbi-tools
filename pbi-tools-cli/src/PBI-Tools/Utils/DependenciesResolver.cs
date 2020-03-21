@@ -38,8 +38,20 @@ namespace PbiTools.Utils
         //};
 
         private readonly Lazy<PowerBIDesktopInstallation> _pbiInstall = new Lazy<PowerBIDesktopInstallation>(GetPBIInstall);
+        private static IDependenciesResolver _defaultInstance;
 
-        public DependenciesResolver() //TODO Initialize with PbixProj reference (which has settings)
+        public static IDependenciesResolver Default
+        {
+            get {
+                if (_defaultInstance == null) _defaultInstance = new DependenciesResolver();
+                return _defaultInstance;
+            }
+            set {
+                _defaultInstance = value;
+            }
+        }
+
+        public DependenciesResolver() // TODO Initialize with PbixProj reference (which has settings)
         {
             AppDomain.CurrentDomain.AssemblyResolve += AssemblyResolve(this);
         }

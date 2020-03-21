@@ -38,6 +38,11 @@ namespace PbiTools.Tests
         public void Commit()
         {
         }
+
+        public bool Exists()
+        {
+            throw new NotImplementedException();
+        }
     }
 
 
@@ -166,7 +171,7 @@ namespace PbiTools.Tests
             throw new NotImplementedException();
         }
 
-        public bool TryGetFile(string path, Action<Stream> streamHandler)
+        public bool TryReadFile(string path, Action<Stream> streamHandler)
         {
             throw new NotImplementedException();
         }

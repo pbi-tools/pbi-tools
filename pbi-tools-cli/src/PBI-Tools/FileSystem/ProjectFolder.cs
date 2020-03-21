@@ -34,7 +34,7 @@ namespace PbiTools.FileSystem
         /// <summary>
         /// Provides access to the <see cref="Stream"/> of a project file if it exists.
         /// </summary>
-        bool TryGetFile(string path, Action<Stream> streamHandler);
+        bool TryReadFile(string path, Action<Stream> streamHandler);
 
         bool ContainsFile(string path);
 
@@ -67,7 +67,7 @@ namespace PbiTools.FileSystem
         /// <summary>
         /// Provides access to the <see cref="Stream"/> of a file if it exists.
         /// </summary>
-        bool TryGetFile(out Stream stream);
+        bool TryReadFile(out Stream stream);
 
         /// <summary>
         /// Provides a <see cref="Stream"/> to write the file to.
@@ -105,7 +105,7 @@ namespace PbiTools.FileSystem
                 : new ProjectFolder(_root, Path.Combine(this.BasePath, Path.Combine(segments)));
         }
 
-        public bool TryGetFile(string path, Action<Stream> streamHandler)
+        public bool TryReadFile(string path, Action<Stream> streamHandler)
         {
             var fullPath = GetFullPath(path);
             if (File.Exists(fullPath))
@@ -200,7 +200,7 @@ namespace PbiTools.FileSystem
         public bool Exists() => File.Exists(this.Path);
         
 
-        public bool TryGetFile(out Stream stream)
+        public bool TryReadFile(out Stream stream)
         {
             if (File.Exists(Path))
             {
@@ -241,6 +241,7 @@ namespace PbiTools.FileSystem
         IProjectFolder GetFolder(string name);
         IProjectFile GetFile(string relativePath);
 
+        bool Exists();
         void Commit();
     }
 
@@ -260,7 +261,6 @@ namespace PbiTools.FileSystem
         }
 
         public string BasePath { get; }
-
 
         internal void FileWritten(string fullPath)
         {
@@ -325,6 +325,9 @@ namespace PbiTools.FileSystem
         {
             _committed = true;
         }
+
+        public bool Exists() => Directory.Exists(BasePath);
+        
     }
 
     public static class ProjectFolderExtensions
@@ -399,7 +402,7 @@ namespace PbiTools.FileSystem
 
         public static JObject ReadJson(this IProjectFile file, JsonLoadSettings settings = null)
         {
-            if (file.TryGetFile(out var stream))
+            if (file.TryReadFile(out var stream))
             {
                 using (var reader = new JsonTextReader(new StreamReader(stream)))
                 {
@@ -420,7 +423,7 @@ namespace PbiTools.FileSystem
 
         public static XDocument ReadXml(this IProjectFile file, XmlReaderSettings readerSettings = null)
         {
-            if (file.TryGetFile(out var stream))
+            if (file.TryReadFile(out var stream))
             {
                 using (var reader = XmlReader.Create(stream, readerSettings ?? new XmlReaderSettings { IgnoreWhitespace = true }))
                 {
@@ -440,7 +443,7 @@ namespace PbiTools.FileSystem
 
         public static string ReadText(this IProjectFile file)
         {
-            if (file.TryGetFile(out var stream))
+            if (file.TryReadFile(out var stream))
             {
                 using (var reader = new StreamReader(stream))
                 {

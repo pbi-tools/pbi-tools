@@ -21,6 +21,7 @@ namespace PbiTools.Serialization
             _file = folder.GetFile($"{label}.json");
         }
 
+        public string BasePath => _file.Path;
 
         public void Serialize(JObject content)
         {
@@ -30,7 +31,7 @@ namespace PbiTools.Serialization
 
         public bool TryDeserialize(out JObject part)
         {
-            if (_file.TryGetFile(out var stream))
+            if (_file.TryReadFile(out var stream))
             {
                 using (var reader = new JsonTextReader(new StreamReader(stream)))
                 {

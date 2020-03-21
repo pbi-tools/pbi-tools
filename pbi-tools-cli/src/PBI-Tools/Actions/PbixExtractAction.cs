@@ -14,14 +14,13 @@ namespace PbiTools.Actions
     public class PbixExtractAction : IDisposable
     {
         private static readonly ILogger Log = Serilog.Log.ForContext<PbixExtractAction>();
-        private static readonly Version V3ModelVersion = new Version(1, 19);
 
         static PbixExtractAction()
         {
-            var ioc = DependencyInjectionService.Get();
-            if (!ioc.IsRegistered<IFeatureSwitchManager>())
+            var DI = DependencyInjectionService.Get();
+            if (!DI.IsRegistered<IFeatureSwitchManager>())
             {
-                ioc.RegisterInstance<IFeatureSwitchManager>(new NoOpFeatureSwitchManager());
+                DI.RegisterInstance<IFeatureSwitchManager>(new NoOpFeatureSwitchManager());
             }
         }
 
@@ -35,20 +34,14 @@ namespace PbiTools.Actions
                 pbixPath ?? throw new ArgumentNullException(nameof(pbixPath)), 
                 resolver ?? throw new ArgumentNullException(nameof(resolver)));
 
-            var baseFolder =
-                // ReSharper disable once AssignNullToNotNullAttribute
-                Path.Combine(Path.GetDirectoryName(pbixPath),
-                    Path.GetFileNameWithoutExtension(pbixPath)); // TODO make this configurable
-            _rootFolder = new ProjectRootFolder(baseFolder);
+            _rootFolder = new ProjectRootFolder(PbixProject.GetProjectFolderForFile(pbixPath));
         }
 
         public void ExtractAll()
         {
-            // TODO Change API: Convert to PbixModel, then model.SerializeToFolder()
-
             var versionStr = this.ExtractVersion();
             Log.Information($"Version extracted: {versionStr}");
-            var version = Version.Parse(versionStr);
+            var isV3 = PbixReader.IsV3Version(versionStr);
 
             this.ExtractConnections();
             Log.Information("Connections extracted");
@@ -59,10 +52,10 @@ namespace PbiTools.Actions
             this.ExtractReport();
             Log.Information("Report extracted");
 
-            this.ExtractReportMetadata(version >= V3ModelVersion);
+            this.ExtractReportMetadata(isV3);
             Log.Information("ReportMetadata extracted");
 
-            this.ExtractReportSettings(version >= V3ModelVersion);
+            this.ExtractReportSettings(isV3);
             Log.Information("ReportSettings extracted");
 
             this.ExtractDiagramViewState();
@@ -71,7 +64,7 @@ namespace PbiTools.Actions
             this.ExtractDiagramLayout();
             Log.Information("DiagramLayout extracted");
 
-            this.ExtractLinguisticSchema(version >= V3ModelVersion);
+            this.ExtractLinguisticSchema(isV3);
             Log.Information("LinguisticSchema extracted");
 
             this.ExtractResources();

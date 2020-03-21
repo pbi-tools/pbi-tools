@@ -19,7 +19,8 @@ namespace PbiTools.Serialization
             _file = folder.GetFile($"{label}.txt");
         }
 
-
+        public string BasePath => _file.Path;
+        
         public void Serialize(string content)
         {
             if (content == null) return;
@@ -28,7 +29,7 @@ namespace PbiTools.Serialization
 
         public bool TryDeserialize(out string part)
         {
-            if (_file.TryGetFile(out var stream))
+            if (_file.TryReadFile(out var stream))
             {
                 using (var reader = new StreamReader(stream))
                 {

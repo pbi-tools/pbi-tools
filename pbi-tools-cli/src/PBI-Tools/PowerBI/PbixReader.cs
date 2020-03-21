@@ -18,6 +18,7 @@ namespace PbiTools.PowerBI
     public class PbixReader : IDisposable
     {
         private static readonly ILogger Log = Serilog.Log.ForContext<PbixReader>();
+        private static readonly Version V3ModelVersion = new Version(1, 19);
 
         private readonly Stream _pbixStream;
         private readonly IPowerBIPackage _package;
@@ -49,11 +50,9 @@ namespace PbiTools.PowerBI
 
         public PbixReader(IPowerBIPackage powerBIPackage, IDependenciesResolver resolver)
         {
-            _package = powerBIPackage ?? throw new ArgumentNullException(nameof(powerBIPackage)); // TODO Handle errors
+            _package = powerBIPackage ?? throw new ArgumentNullException(nameof(powerBIPackage));
             _converters = new PowerBIPartConverters(Guid.NewGuid().ToString(), resolver);
         }
-
-
 
 
         public JObject ReadConnections()
@@ -159,6 +158,15 @@ namespace PbiTools.PowerBI
 
 
         #endregion
+
+        public static bool IsV3Version(string versionString)
+        {
+            if (Version.TryParse(versionString, out var version))
+            {
+                return version >= V3ModelVersion;
+            }
+            return false;
+        }
 
         public void Dispose()
         {

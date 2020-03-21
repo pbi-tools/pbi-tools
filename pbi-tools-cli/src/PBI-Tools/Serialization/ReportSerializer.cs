@@ -16,6 +16,8 @@ namespace PbiTools.Serialization
             _reportFolder = rootFolder.GetFolder(FolderName);
         }
 
+        public string BasePath => _reportFolder.BasePath;
+
         public void Serialize(JObject content)
         {
             // report.json

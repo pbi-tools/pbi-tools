@@ -22,6 +22,8 @@ namespace PbiTools.Serialization
             _folder = folder.GetFolder(label);
         }
 
+        public string BasePath => _folder.BasePath;
+
         public void Serialize(IDictionary<string, byte[]> content)
         {
             if (content == null) return;
@@ -51,7 +53,30 @@ namespace PbiTools.Serialization
 
         public bool TryDeserialize(out IDictionary<string, byte[]> part)
         {
-            throw new NotImplementedException();
+            var result = new Dictionary<string, byte[]>();
+            var baseUri = new Uri(BasePath);
+
+            foreach (var file in _folder.GetFiles("*", SearchOption.AllDirectories))
+            {
+                if (file.TryReadFile(out var stream))
+                using (var buffer = new MemoryStream())
+                {
+                    var relResourcePath = baseUri.MakeRelativeUri(new Uri(file.Path)).ToString();
+                    stream.CopyTo(buffer);
+                    result.Add(relResourcePath, buffer.ToArray());
+                }
+            }
+
+            if (result.Count > 0)
+            {
+                part = result;
+                return true;
+            }
+            else
+            {
+                part = null;
+                return false;
+            }
         }
     }
 }

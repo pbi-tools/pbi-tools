@@ -1,26 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Xml.Linq;
 using Newtonsoft.Json.Linq;
+using PbiTools.FileSystem;
 using PbiTools.PowerBI;
 using PbiTools.ProjectSystem;
+using PbiTools.Serialization;
 using PbiTools.Utils;
 using Serilog;
 
 namespace PbiTools.Model
 {
     /// <summary>
-    /// An in-memory representation of the contents of a PBIX file.
+    /// Represents the contents of a PBIX file, held in various storage formats.
     /// </summary>
     public interface IPbixModel
     {
         JObject Connections { get; }
         JObject DataModel { get; }
-        // MashupParts Mashup { get; }          // TODO Drop in V3?
         JObject Report { get; }
         JObject DiagramViewState { get; }
         JObject DiagramLayout { get; }
-        JObject LinguisticSchema { get; }  // TODO Change to Json in V3?
+        JObject LinguisticSchema { get; }
         JObject ReportMetadata { get; }
         JObject ReportSettings { get; }
         string Version { get; }
@@ -57,27 +57,36 @@ namespace PbiTools.Model
         {
         }
 
-        public static PbixModel FromFile(string path, IDependenciesResolver dependenciesResolver)
+        public static PbixModel FromFile(string path, IDependenciesResolver dependenciesResolver = null)
         {
             var pbixModel = new PbixModel { Type = PbixModelSource.PowerBIPackage, SourcePath = path };
 
-            using (var reader = new PbixReader(path, dependenciesResolver))
+            using (var reader = new PbixReader(path, dependenciesResolver ?? DependenciesResolver.Default))
             {
+                pbixModel.Version = reader.ReadVersion();
+
+                if (!PbixReader.IsV3Version(pbixModel.Version))
+                {
+                    throw new NotSupportedException("The PBIX file does not contain a V3 model. This API only supports V3 PBIX files.");
+                }
+
                 pbixModel.Connections = reader.ReadConnections();
-                // pbixModel.Mashup = reader.ReadMashup();
                 pbixModel.Report = reader.ReadReport();
+                pbixModel.DiagramLayout = reader.ReadDiagramLayout();
                 pbixModel.DiagramViewState = reader.ReadDiagramViewState();
                 pbixModel.LinguisticSchema = reader.ReadLinguisticSchemaV3();
                 pbixModel.ReportMetadata = reader.ReadReportMetadataV3();
                 pbixModel.ReportSettings = reader.ReadReportSettingsV3();
-                pbixModel.Version = reader.ReadVersion();
                 pbixModel.CustomVisuals = reader.ReadCustomVisuals();
                 pbixModel.StaticResources = reader.ReadStaticResources();
 
                 pbixModel.DataModel = reader.ReadDataModel();  // will fire up SSAS instance if PBIX has embedded model
             }
 
-            pbixModel.PbixProj = new PbixProject();  // TODO Init 'Queries'?
+            using (var projectFolder = new ProjectRootFolder(PbixProject.GetProjectFolderForFile(path)))
+            {
+                pbixModel.PbixProj = PbixProject.FromFolder(projectFolder);
+            }
 
             return pbixModel;
         }
@@ -87,34 +96,61 @@ namespace PbiTools.Model
             // PBIXPROJ(folder) <==> Serializer <=|PbixModel|=> PbixReader|Writer[Converter] <==> PBIX(file)
             //                       ##########                 ############################
 
-            throw new NotImplementedException();
+            using (var projectFolder = new ProjectRootFolder(path))
+            {
+                var serializers = new PowerBIPartSerializers(projectFolder);
+                
+                var pbixModel = new PbixModel { Type = PbixModelSource.PbixProjFolder, SourcePath = path };
+
+                pbixModel.Version = serializers.Version.DeserializeSafe();
+                pbixModel.Connections = serializers.Connections.DeserializeSafe();
+                pbixModel.Report = serializers.ReportDocument.DeserializeSafe();
+                pbixModel.DiagramLayout = serializers.DiagramLayout.DeserializeSafe();
+                pbixModel.DiagramViewState = serializers.DiagramViewState.DeserializeSafe();
+                pbixModel.LinguisticSchema = serializers.LinguisticSchema.DeserializeSafe();
+                pbixModel.ReportMetadata = serializers.ReportMetadata.DeserializeSafe();
+                pbixModel.ReportSettings = serializers.ReportSettings.DeserializeSafe();
+                pbixModel.CustomVisuals = serializers.CustomVisuals.DeserializeSafe();
+                pbixModel.StaticResources = serializers.StaticResources.DeserializeSafe();                
+                pbixModel.DataModel = serializers.DataModel.DeserializeSafe();
+
+                pbixModel.PbixProj = PbixProject.FromFolder(projectFolder);
+
+                return pbixModel;
+            }
         }
 
-        public void ToFolder(string path)
+        public void ToFolder(string path = null)
         {
-            // get or create directory (ProjectRootFolder)
-            // read PbixProj (for format version and query ids)
+            var rootFolderPath = path ?? this.GetProjectFolder();
+            using (var projectFolder = new ProjectRootFolder(rootFolderPath))
+            {
+                var serializers = new PowerBIPartSerializers(projectFolder);
+                
+                serializers.Version.Serialize(this.Version);
+                Log.Information($"Version extracted: {this.Version} to: {{Path}}", serializers.Version.BasePath);
 
-            /*
-               ./Mashup/
-                      ./Section1.m
-                      ./Package/
-                              ./Formulas
-                                       ./Section1.m
-                      ./Permissions.json
-                      ./Metadata.xml
-                      ./Content/
-               ./Report/
-               ./Model/
-                   ./queries/
-                   ./tables/
-                   ./database.json
-               ./connections.json
-               ./version.txt
-               ./.pbixproj.json
-            */
+                serializers.Connections.Serialize(this.Connections);
+                Log.Information("Connections extracted to: {Path}", serializers.Connections.BasePath);
 
-            throw new NotImplementedException();
+                serializers.ReportDocument.Serialize(this.Report);
+                // TODO Log Info...
+                serializers.ReportMetadata.Serialize(this.ReportMetadata);
+                serializers.ReportSettings.Serialize(this.ReportSettings);
+                serializers.DiagramLayout.Serialize(this.DiagramLayout);
+                serializers.DiagramViewState.Serialize(this.DiagramViewState);
+                serializers.LinguisticSchema.Serialize(this.LinguisticSchema);
+                serializers.DataModel.Serialize(this.DataModel);
+                serializers.CustomVisuals.Serialize(this.CustomVisuals);
+                serializers.StaticResources.Serialize(this.StaticResources);
+
+                this.PbixProj.Version = PbixProject.CurrentVersion; // always set latest version on new pbixproj file
+                if (this.PbixProj.Created == default) this.PbixProj.Created = DateTimeOffset.Now;
+                this.PbixProj.LastModified = DateTimeOffset.Now;
+                this.PbixProj.Save(projectFolder);
+
+                projectFolder.Commit();
+            }
         }
 
         public static void ToFile(string path)
@@ -126,7 +162,6 @@ namespace PbiTools.Model
 
         public JObject Connections { get; private set; }
         public JObject DataModel { get; private set; }
-        // public MashupParts Mashup { get; private set; }
         public JObject Report { get; private set; }
         public JObject DiagramViewState { get; private set; }
         public JObject DiagramLayout { get; private set; }
@@ -140,6 +175,20 @@ namespace PbiTools.Model
         public PbixProject PbixProj { get; private set; }
 
         #endregion
+
+        public string GetProjectFolder()
+        {
+            switch (this.Type) 
+            {
+                case PbixModelSource.PbixProjFolder:
+                    return this.SourcePath;
+                case PbixModelSource.PowerBIPackage:
+                case PbixModelSource.LiveSession:
+                    return PbixProject.GetProjectFolderForFile(this.SourcePath);
+                default:
+                    throw new NotSupportedException();
+            }
+        }
 
         public void Dispose()
         {

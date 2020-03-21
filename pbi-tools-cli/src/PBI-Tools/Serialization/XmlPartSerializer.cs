@@ -21,6 +21,8 @@ namespace PbiTools.Serialization
             _file = folder.GetFile($"{label}.xml");
         }
 
+        public string BasePath => _file.Path;
+        
         public void Serialize(XDocument content)
         {
             if (content == null) return;
@@ -29,7 +31,7 @@ namespace PbiTools.Serialization
 
         public bool TryDeserialize(out XDocument part)
         {
-            if (_file.TryGetFile(out var stream))
+            if (_file.TryReadFile(out var stream))
             {
                 using (var reader = XmlReader.Create(new StreamReader(stream)))
                 {

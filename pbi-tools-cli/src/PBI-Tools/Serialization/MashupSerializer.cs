@@ -37,6 +37,7 @@ namespace PbiTools.Serialization
             Folder = rootFolder.GetFolder(FolderName);
         }
 
+        public string BasePath => Folder.BasePath;
 
         #region Package
 

@@ -33,10 +33,11 @@ namespace PbiTools
         /// </summary>
         public IDisposable SuppressConsoleLogs()
         {
+            var prevValue = this.ShouldSuppressConsoleLogs;
             this.ShouldSuppressConsoleLogs = true;
             return new Disposable(()=>
             {
-                this.ShouldSuppressConsoleLogs = false;
+                this.ShouldSuppressConsoleLogs = prevValue;
             });
         }
 

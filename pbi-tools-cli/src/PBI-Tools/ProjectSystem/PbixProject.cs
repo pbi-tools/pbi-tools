@@ -32,12 +32,20 @@ namespace PbiTools.ProjectSystem
          * 0.4.1 - Measure names are url-encoded to account for characters not allowed in paths
          * 0.5   - Support for V3 Model (Mar-2020 Release)
          *       - /Model/tables/{name}/{name}.json is now /Model/tables/{name}/table.json
+         *       - V3 models: /Mashup no longer serialized
+         *       - V3 models: /Model/queries folder added
+         *       - Added 'created' and 'lastModified' properties
          */
 
         /* Entries to add later: */
         // Settings (Serialization)
         // Deployments
         // CustomProperties
+
+        private static readonly JsonSerializerSettings DefaultJsonSerializerSettings = new JsonSerializerSettings {
+            DateFormatString = "yyyy-MM-ddTHH:mm:ssK",
+            Formatting = Formatting.Indented,
+        };
 
         #region Version
 
@@ -56,6 +64,12 @@ namespace PbiTools.ProjectSystem
         [JsonProperty("queries")]
         public IDictionary<string, string> Queries { get; set; }
 
+        [JsonProperty("created")]
+        public DateTimeOffset Created { get; set; }
+
+        [JsonProperty("lastModified")]
+        public DateTimeOffset LastModified { get; set; }
+
 
         public PbixProject()
         {
@@ -67,13 +81,13 @@ namespace PbiTools.ProjectSystem
         public static PbixProject FromFolder(IProjectRootFolder folder)
         {
             var file = folder.GetFile(Filename);
-            if (file.TryGetFile(out Stream stream))
+            if (file.TryReadFile(out Stream stream))
             {
                 using (var reader = new StreamReader(stream))
                 {
                     try
                     {
-                        return JsonConvert.DeserializeObject<PbixProject>(reader.ReadToEnd());
+                        return JsonConvert.DeserializeObject<PbixProject>(reader.ReadToEnd(), DefaultJsonSerializerSettings);
                         // at this stage we could perform version compatibility checks
                     }
                     catch (JsonReaderException e)
@@ -83,14 +97,23 @@ namespace PbiTools.ProjectSystem
                 }
             }
 
-            return new PbixProject();
+            return new PbixProject { Created = DateTimeOffset.UtcNow, Version = CurrentVersion };
         }
 
         public void Save(IProjectRootFolder folder)
         {
-            var json = JsonConvert.SerializeObject(this, Formatting.Indented); // don't use CamelCaseContractResolver as it will modify query names
+            var json = JsonConvert.SerializeObject(this, DefaultJsonSerializerSettings); // don't use CamelCaseContractResolver as it will modify query names
 
             folder.GetFile(Filename).Write(json);
         }
+
+
+        public static string GetProjectFolderForFile(string pbixPath) =>
+            // ReSharper disable once AssignNullToNotNullAttribute
+            Path.Combine(
+                Path.GetDirectoryName(pbixPath),
+                Path.GetFileNameWithoutExtension(pbixPath)
+            ); // TODO make this configurable
+
     }
 }

@@ -36,6 +36,8 @@ namespace PbiTools.Serialization
             _folder = rootFolder.GetFolder(FolderName);
         }
 
+        public string BasePath => _folder.BasePath;
+
         public void Serialize(JObject db)
         {
             if (db == null) return;

@@ -19,17 +19,22 @@ namespace PbiTools.PowerBI
             this.DataModel = new DataModelConverter(modelName, resolver);
         }
 
-        public IPowerBIPartConverter<string> Version { get; } = new StringPartConverter();
+        #region Legacy
+
         public IPowerBIPartConverter<JObject> ReportSettings { get; } = new BinarySerializationConverter<ReportSettings>();
-        public IPowerBIPartConverter<JObject> ReportSettingsV3 { get; } = new JsonPartConverter();
         public IPowerBIPartConverter<JObject> ReportMetadata { get; } = new BinarySerializationConverter<ReportMetadata>();
-        public IPowerBIPartConverter<JObject> ReportMetadataV3 { get; } = new JsonPartConverter();
+        public IPowerBIPartConverter<MashupParts> DataMashup { get; } = new MashupConverter();
         public IPowerBIPartConverter<XDocument> LinguisticSchema { get; } = new XmlPartConverter();
+        
+        #endregion
+
+        public IPowerBIPartConverter<string> Version { get; } = new StringPartConverter();
+        public IPowerBIPartConverter<JObject> ReportSettingsV3 { get; } = new JsonPartConverter();
+        public IPowerBIPartConverter<JObject> ReportMetadataV3 { get; } = new JsonPartConverter();
         public IPowerBIPartConverter<JObject> LinguisticSchemaV3 { get; } = new JsonPartConverter();
         public IPowerBIPartConverter<JObject> DiagramViewState { get; } = new JsonPartConverter();
         public IPowerBIPartConverter<JObject> DiagramLayout { get; } = new JsonPartConverter();
         public IPowerBIPartConverter<JObject> ReportDocument { get; } = new JsonPartConverter();
-        public IPowerBIPartConverter<MashupParts> DataMashup { get; } = new MashupConverter();
         public IPowerBIPartConverter<JObject> DataModelSchema { get; } = new JsonPartConverter();
         public IPowerBIPartConverter<JObject> DataModel { get; }
         public IPowerBIPartConverter<JObject> Connections { get; } = new JsonPartConverter(Encoding.UTF8); // TODO Verify encoding

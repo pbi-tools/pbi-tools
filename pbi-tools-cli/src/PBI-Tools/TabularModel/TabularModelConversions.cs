@@ -32,9 +32,6 @@ namespace PbiTools.TabularModel
             var tablePartitionExpr = database.SelectTokens("model.tables[*].partitions[?(@.source.type == 'm')]");
             var sharedExpr = database.SelectTokens("model.expressions[?(@.kind == 'm')]");
 
-            // var allExpressions = tablePartitionExpr.Select(TabularModelSerializer.ConvertExpression)
-            //     .Concat(sharedExpr.Select(TabularModelSerializer.ConvertExpression));
-
             var mBldr = new StringBuilder("section Section1;");
             foreach (var expr in tablePartitionExpr)
             {
@@ -86,6 +83,7 @@ namespace PbiTools.TabularModel
                 if (engine.TryCreateLocationFromResource(mashupDiscovery.Resource, true, out var location))
                 {
                     Log.Verbose(location.ToJson());
+                    
                     var name = $"{location.ResourceKind}/{location.FriendlyName}"; // TODO AAS seems to remove dots from server name .. shall we follow same pattern?
                     if (!dataSources.ContainsKey(name))
                     {
