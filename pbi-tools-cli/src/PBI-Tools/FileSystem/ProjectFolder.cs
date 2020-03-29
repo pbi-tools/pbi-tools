@@ -242,6 +242,10 @@ namespace PbiTools.FileSystem
         IProjectFile GetFile(string relativePath);
 
         bool Exists();
+
+        /// <summary>
+        /// Marks all modifications applied to the folder as successful, allowing for clean-up operations to run upon disposal.
+        /// </summary>
         void Commit();
     }
 

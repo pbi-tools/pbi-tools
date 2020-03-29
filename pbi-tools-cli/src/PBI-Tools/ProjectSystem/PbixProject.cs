@@ -107,7 +107,9 @@ namespace PbiTools.ProjectSystem
             folder.GetFile(Filename).Write(json);
         }
 
-
+        /// <summary>
+        /// Determines the default project folder location for the given PBIX file path.
+        /// </summary>
         public static string GetProjectFolderForFile(string pbixPath) =>
             // ReSharper disable once AssignNullToNotNullAttribute
             Path.Combine(
