@@ -61,7 +61,7 @@ namespace PbiTools.ProjectSystem
 
         #endregion
 
-        [JsonProperty("queries")]
+        [JsonProperty("queries", NullValueHandling = NullValueHandling.Ignore)] // Only needed for legacy models
         public IDictionary<string, string> Queries { get; set; }
 
         [JsonProperty("created")]
@@ -74,7 +74,6 @@ namespace PbiTools.ProjectSystem
         public PbixProject()
         {
             this.Version = CurrentVersion;
-            this.Queries = new Dictionary<string, string>();
         }
 
 
@@ -97,7 +96,7 @@ namespace PbiTools.ProjectSystem
                 }
             }
 
-            return new PbixProject { Created = DateTimeOffset.UtcNow, Version = CurrentVersion };
+            return new PbixProject { Created = DateTimeOffset.Now, Version = CurrentVersion };
         }
 
         public void Save(IProjectRootFolder folder)
