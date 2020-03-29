@@ -3,6 +3,10 @@ Serilog.Sinks.Console
 Microsoft.AnalysisServices.retail.amd64
 Newtonsoft.Json
 PowerArgs
-xunit
-xunit.runner.visualstudio
 Moq
+System.IO.Compression
+
+group Tests
+
+  xunit
+  xunit.runner.visualstudio

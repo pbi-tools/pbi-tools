@@ -1,31 +1,53 @@
-framework: auto-detect
+version 5.241.2
 
-source https://nuget.org/api/v2
-content: none
-
-nuget Serilog
-nuget Serilog.Sinks.Console
-nuget Microsoft.AnalysisServices.retail.amd64
-nuget Newtonsoft.Json
-nuget PowerArgs  < 3.0.0  // 3.x requires netstandard 2.0 (4.6.1+)
-nuget xunit
-nuget xunit.runner.visualstudio
-nuget Moq
-nuget System.ValueTuple
-nuget Polly
-nuget StreamJsonRpc
-nuget Costura.Fody
-
-
-group Build
+group Main
+  source https://api.nuget.org/v3/index.json
+  framework: net472
+  storage: none
   content: none
-  #framework >= net461
-  source https://nuget.org/api/v2
-  #source https://ci.appveyor.com/nuget/fsharp-formatting
-  
-  nuget FAKE
-  #nuget FSharp.Formatting prerelease
-  #nuget ILRepack
-  
-  #github fsharp/FAKE modules/Octokit/Octokit.fsx
-  
+
+  nuget Serilog
+  nuget Serilog.Sinks.Console
+  nuget Microsoft.AnalysisServices.retail.amd64
+  nuget Newtonsoft.Json
+  nuget PowerArgs  < 3.0.0  // 3.x requires netstandard 2.0 (4.6.1+)
+  nuget Moq
+  nuget System.ValueTuple
+  nuget Polly
+  nuget StreamJsonRpc
+  nuget Costura.Fody
+  nuget System.IO.Compression
+
+group Tests
+  source https://api.nuget.org/v3/index.json
+  framework: net472
+  storage: none
+  content: none
+
+  nuget xunit
+  nuget xunit.runner.visualstudio
+
+# dependencies used for retrieving FAKE and its modules
+group Fake-Build
+  source https://api.nuget.org/v3/index.json
+  framework: netstandard2.0
+  storage: none
+
+  nuget Fake.Api.GitHub
+  nuget Fake.Core.Environment
+  nuget Fake.Core.ReleaseNotes
+  nuget Fake.Core.Target
+  nuget Fake.Core.Xml
+  nuget Fake.DotNet.AssemblyInfoFile
+  nuget Fake.DotNet.Cli
+  nuget Fake.DotNet.MSBuild
+  nuget Fake.Dotnet.NuGet
+  nuget Fake.DotNet.Paket
+  nuget Fake.DotNet.Testing.XUnit2
+  nuget Fake.IO.FileSystem
+
+group Fake-Tools
+  source https://api.nuget.org/v3/index.json
+  storage: packages
+
+  nuget xunit.runner.console

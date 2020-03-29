@@ -1,22 +1,22 @@
-System.IO.Directory.SetCurrentDirectory __SOURCE_DIRECTORY__
+#r "paket: groupref fake-build //"
+#load "./.fake/build.fsx/intellisense.fsx"
+
+open Fake.Core
+open Fake.DotNet
+open Fake.DotNet.Testing
+open Fake.IO
+open Fake.IO.FileSystemOperators
+open Fake.IO.Globbing.Operators
+open System
+open System.IO
 
 // [x] clean
 // [x] assemblyinfo
 // [x] build
-// [ ] test
+// [x] test
 // [ ] docs (gh-pages)
 // [ ] package (nuget)
 // [ ] release (myget, chocolatey)
-
-#r @"packages/build/FAKE/tools/FakeLib.dll"
-#r "System.IO.Compression.FileSystem"
-
-open Fake
-open Fake.Git
-open Fake.AssemblyInfoFile
-open Fake.ReleaseNotesHelper
-open System
-open System.IO
 
 // --------------------------------------------------------------------------------------
 // START TODO: Provide project-specific details below
@@ -30,7 +30,7 @@ open System.IO
 
 // The name of the project
 // (used by attributes in AssemblyInfo, name of a NuGet package and directory in 'src')
-let project = "pbi-tools"
+let project = "pbi-tools-cli"
 
 // Short summary of the project
 // (used as description in AssemblyInfo and as a short summary for NuGet package)
@@ -48,10 +48,6 @@ let tags = "powerbi, pbix, source-control, automation"
 
 // File system information
 let solutionFile  = "PBI-TOOLS.sln"
-let distProject = "src/*/PBI-Tools.csproj"
-
-// Pattern specifying assemblies to be tested using xUnit
-let testAssemblies = "tests/**/bin/**/*Tests*.dll"
 
 // Git configuration (used for publishing documentation in gh-pages branch)
 // The profile where the project is posted
@@ -59,10 +55,10 @@ let gitOwner = "pbi-tools"
 let gitHome = "https://github.com/" + gitOwner
 
 // The name of the project on GitHub
-let gitName = "pbi-tools"
+let gitName = "cli"
 
 // The url for the raw files hosted
-let gitRaw = environVarOrDefault "gitRaw" ("https://raw.github.com/" + gitOwner)
+let gitRaw = Environment.environVarOrDefault "gitRaw" ("https://raw.github.com/" + gitOwner)
 
 
 // --------------------------------------------------------------------------------------
@@ -72,16 +68,18 @@ let gitRaw = environVarOrDefault "gitRaw" ("https://raw.github.com/" + gitOwner)
 let buildDir = ".build"
 let outDir = buildDir @@ "out"
 let distDir = buildDir @@ "dist"
+let testDir = buildDir @@ "test"
 let tempDir = ".temp"
 
-Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
+// Pattern specifying assemblies to be tested using xUnit
+let testAssemblies = outDir @@ "*Tests*.dll"
 
-System.Net.ServicePointManager.SecurityProtocol <- unbox 192 ||| unbox 768 ||| unbox 3072 ||| unbox 48
+System.Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 
 // Read additional information from the release notes document
 let releaseNotesData = 
     File.ReadAllLines "RELEASE_NOTES.md"
-    |> parseAllReleaseNotes
+    |> ReleaseNotes.parseAll
 
 let release = List.head releaseNotesData
 let assemblyVersion = sprintf "%i.%i.0.0" release.SemVer.Major release.SemVer.Minor
@@ -94,6 +92,8 @@ let fileVersion = sprintf "%i.%i.%s"
                    release.SemVer.Minor
                    timestampString
 
+Trace.logfn "Current Release:\n%O" release
+
 let stable = 
     match releaseNotesData |> List.tryFind (fun r -> r.NugetVersion.Contains("-") |> not) with
     | Some stable -> stable
@@ -105,18 +105,18 @@ let genCSAssemblyInfo (projectPath) =
     let folderName = System.IO.Path.GetDirectoryName(projectPath)
     let basePath = folderName @@ "Properties"
     let fileName = basePath @@ "AssemblyInfo.cs"
-    CreateCSharpAssemblyInfo fileName
-      [ Attribute.Title (projectName)
-        Attribute.Product project
-        Attribute.Company (authors |> String.concat ", ")
-        Attribute.Copyright (sprintf "Copyright \u00A9 Mathias Thierbach 2018-%i" (DateTime.Today.Year))
-        Attribute.Description summary
-        Attribute.Version release.AssemblyVersion
-        Attribute.FileVersion fileVersion
-        Attribute.InformationalVersion release.NugetVersion ]
+    AssemblyInfoFile.createCSharp fileName
+      [ AssemblyInfo.Title (projectName)
+        AssemblyInfo.Product project
+        AssemblyInfo.Company (authors |> String.concat ", ")
+        AssemblyInfo.Copyright (sprintf "Copyright \u00A9 Mathias Thierbach 2018-%i" (let today = DateTime.Today in today.Year)) // Avoids warning FS0052, see: https://github.com/fsharp/FAKE/issues/1803
+        AssemblyInfo.Description summary
+        AssemblyInfo.Version release.AssemblyVersion
+        AssemblyInfo.FileVersion fileVersion
+        AssemblyInfo.InformationalVersion release.NugetVersion ]
 
 // Generate assembly info files with the right version & up-to-date information
-Target "AssemblyInfo" (fun _ ->
+Target.create "AssemblyInfo" (fun _ ->
     let csProjs = !! "src/**/*.csproj" |> Seq.filter (fun s -> not <| s.Contains("preview"))
     csProjs |> Seq.iter genCSAssemblyInfo
 )
@@ -126,17 +126,17 @@ Target "AssemblyInfo" (fun _ ->
 // --------------------------------------------------------------------------------------
 // Clean build results
 
-Target "Clean" (fun _ ->
+Target.create "Clean" (fun _ ->
     !! "src/**/bin"
     ++ "tests/**/bin"
     ++ "src/**/obj"
     ++ "tests/**/obj"
     ++ buildDir 
     ++ tempDir
-    |> CleanDirs
+    |> Shell.cleanDirs
 
     !! "**/obj/**/*.nuspec"
-    |> DeleteFiles
+    |> File.deleteAll
 )
 
 
@@ -145,32 +145,38 @@ Target "Clean" (fun _ ->
 
 // Including 'Restore' target addresses issue: https://github.com/fsprojects/Paket/issues/2697
 // Previously, msbuild would fail not being able to find **\obj\project.assets.json
-Target "Build" (fun _ ->
-    // !! distProject
+Target.create "Build" (fun _ ->
     !! solutionFile
-    |> MSBuildReleaseExt outDir [
-            "VisualStudioVersion" , "15.0"
-            "ToolsVersion"        , "15.0"
-            // "SolutionDir"         , __SOURCE_DIRECTORY__
-    ] "Restore;Rebuild"
+    |> MSBuild.runRelease id outDir "Restore;Rebuild"
     |> ignore
 
     // Could not get Fody to do its thing unless when building the entire solution, so we're grabbing the dist files here explicitly
     !! (outDir @@ "pbi-tools.*")
     -- (outDir @@ "*test*")
     -- (outDir @@ "*.runtimeconfig.*")
-    |> CopyFiles distDir
+    |> Shell.copy distDir
 )
 
-Target "Help" DoNothing
+Target.create "Test" (fun _ ->
+    !! testAssemblies
+    |> XUnit2.run (fun p -> { p with HtmlOutputPath = Some (testDir @@ "xunit.html")
+                                     XmlOutputPath = Some (testDir @@ "xunit.xml") } )
+)
+
+Target.create "Help" (fun _ ->
+    Trace.traceError "Please specify a target to run."
+)
 
 // --------------------------------------------------------------------------------------
+
+open Fake.Core.TargetOperators
 
 "Clean"
   ==> "AssemblyInfo"
   ==> "Build"
+  ==> "Test"
 
 // --------------------------------------------------------------------------------------
-// Show help by default. Invoke 'build <Target>' to override
+// Show help by default. Invoke 'fake build -t <Target>' to override
 
-RunTargetOrDefault "Help"
+Target.runOrDefault "Help"
