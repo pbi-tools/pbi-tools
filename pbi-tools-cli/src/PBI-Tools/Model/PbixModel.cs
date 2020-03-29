@@ -50,40 +50,50 @@ namespace PbiTools.Model
     {
         private static readonly ILogger Log = Serilog.Log.ForContext<PbixModel>();
 
-        public PbixModelSource Type { get; private set; }
-        public string SourcePath { get; private set; }
+        public PbixModelSource Type { get; }
+        public string SourcePath { get; }
 
-        private PbixModel()
+        private PbixModel(string path, PbixModelSource type)
         {
+            this.SourcePath = path;
+            this.Type = type;
         }
 
         public static PbixModel FromFile(string path, IDependenciesResolver dependenciesResolver = null)
         {
-            var pbixModel = new PbixModel { Type = PbixModelSource.PowerBIPackage, SourcePath = path };
-
-            using (var reader = new PbixReader(path, dependenciesResolver ?? DependenciesResolver.Default))
+            using (var reader = new PbixReader(path ?? throw new ArgumentNullException(nameof(path)), dependenciesResolver ?? DependenciesResolver.Default))
             {
-                pbixModel.Version = reader.ReadVersion();
+                return FromReader(reader);
+            }
+        }
 
-                if (!PbixReader.IsV3Version(pbixModel.Version))
-                {
-                    throw new NotSupportedException("The PBIX file does not contain a V3 model. This API only supports V3 PBIX files.");
-                }
+        public static PbixModel FromReader(PbixReader reader)
+        {
+            if (reader is null) throw new ArgumentNullException(nameof(reader));
 
-                pbixModel.Connections = reader.ReadConnections();
-                pbixModel.Report = reader.ReadReport();
-                pbixModel.DiagramLayout = reader.ReadDiagramLayout();
-                pbixModel.DiagramViewState = reader.ReadDiagramViewState();
-                pbixModel.LinguisticSchema = reader.ReadLinguisticSchemaV3();
-                pbixModel.ReportMetadata = reader.ReadReportMetadataV3();
-                pbixModel.ReportSettings = reader.ReadReportSettingsV3();
-                pbixModel.CustomVisuals = reader.ReadCustomVisuals();
-                pbixModel.StaticResources = reader.ReadStaticResources();
+            var pbixModel = new PbixModel(reader.Path, PbixModelSource.PowerBIPackage)
+            { 
+                Version = reader.ReadVersion()
+            };
 
-                pbixModel.DataModel = reader.ReadDataModel();  // will fire up SSAS instance if PBIX has embedded model
+            if (!PbixReader.IsV3Version(pbixModel.Version))
+            {
+                throw new NotSupportedException("The PBIX file does not contain a V3 model. This API only supports V3 PBIX files.");
             }
 
-            using (var projectFolder = new ProjectRootFolder(PbixProject.GetProjectFolderForFile(path)))
+            pbixModel.Connections = reader.ReadConnections();
+            pbixModel.Report = reader.ReadReport();
+            pbixModel.DiagramLayout = reader.ReadDiagramLayout();
+            pbixModel.DiagramViewState = reader.ReadDiagramViewState();
+            pbixModel.LinguisticSchema = reader.ReadLinguisticSchemaV3();
+            pbixModel.ReportMetadata = reader.ReadReportMetadataV3();
+            pbixModel.ReportSettings = reader.ReadReportSettingsV3();
+            pbixModel.CustomVisuals = reader.ReadCustomVisuals();
+            pbixModel.StaticResources = reader.ReadStaticResources();
+
+            pbixModel.DataModel = reader.ReadDataModel();  // will fire up SSAS instance if PBIX has embedded model
+
+            using (var projectFolder = new ProjectRootFolder(PbixProject.GetProjectFolderForFile(pbixModel.SourcePath)))
             {
                 pbixModel.PbixProj = PbixProject.FromFolder(projectFolder);
             }
@@ -100,7 +110,7 @@ namespace PbiTools.Model
             {
                 var serializers = new PowerBIPartSerializers(projectFolder);
                 
-                var pbixModel = new PbixModel { Type = PbixModelSource.PbixProjFolder, SourcePath = path };
+                var pbixModel = new PbixModel(path, PbixModelSource.PbixProjFolder);
 
                 pbixModel.Version = serializers.Version.DeserializeSafe();
                 pbixModel.Connections = serializers.Connections.DeserializeSafe();
@@ -120,6 +130,10 @@ namespace PbiTools.Model
             }
         }
 
+        /// <summary>
+        /// Serializes the entire model to a file system folder.
+        /// </summary>
+        /// <param name="path"></param>
         public void ToFolder(string path = null)
         {
             var rootFolderPath = path ?? this.GetProjectFolder();
@@ -127,23 +141,42 @@ namespace PbiTools.Model
             {
                 var serializers = new PowerBIPartSerializers(projectFolder);
                 
-                serializers.Version.Serialize(this.Version);
-                Log.Information($"Version extracted: {this.Version} to: {{Path}}", serializers.Version.BasePath);
+                // **** Parts ****
+                if (serializers.Version.Serialize(this.Version))
+                    Log.Information("Version [{Version}] extracted to: {Path}", this.Version, serializers.Version.BasePath);
 
-                serializers.Connections.Serialize(this.Connections);
-                Log.Information("Connections extracted to: {Path}", serializers.Connections.BasePath);
+                if (serializers.Connections.Serialize(this.Connections))
+                    Log.Information("Connections extracted to: {Path}", serializers.Connections.BasePath);
 
-                serializers.ReportDocument.Serialize(this.Report);
-                // TODO Log Info...
-                serializers.ReportMetadata.Serialize(this.ReportMetadata);
-                serializers.ReportSettings.Serialize(this.ReportSettings);
-                serializers.DiagramLayout.Serialize(this.DiagramLayout);
-                serializers.DiagramViewState.Serialize(this.DiagramViewState);
-                serializers.LinguisticSchema.Serialize(this.LinguisticSchema);
-                serializers.DataModel.Serialize(this.DataModel);
-                serializers.CustomVisuals.Serialize(this.CustomVisuals);
-                serializers.StaticResources.Serialize(this.StaticResources);
+                if (serializers.ReportDocument.Serialize(this.Report))
+                    Log.Information("Report extracted to: {Path}", serializers.ReportDocument.BasePath);
 
+                if (serializers.ReportMetadata.Serialize(this.ReportMetadata))
+                    Log.Information("Metadata extracted to: {Path}", serializers.ReportMetadata.BasePath);
+
+                if (serializers.ReportSettings.Serialize(this.ReportSettings))
+                    Log.Information("Settings extracted to: {Path}", serializers.ReportSettings.BasePath);
+
+                if (serializers.DiagramLayout.Serialize(this.DiagramLayout))
+                    Log.Information("DiagramLayout extracted to: {Path}", serializers.DiagramLayout.BasePath);
+
+                if (serializers.DiagramViewState.Serialize(this.DiagramViewState))
+                    Log.Information("DiagramViewState extracted to: {Path}", serializers.DiagramViewState.BasePath);
+
+                if (serializers.LinguisticSchema.Serialize(this.LinguisticSchema))
+                    Log.Information("LinguisticSchema extracted to: {Path}", serializers.LinguisticSchema.BasePath);
+
+                if (serializers.DataModel.Serialize(this.DataModel))
+                    Log.Information("DataModel extracted to: {Path}", serializers.DataModel.BasePath);
+
+                if (serializers.CustomVisuals.Serialize(this.CustomVisuals))
+                    Log.Information("CustomVisuals extracted to: {Path}", serializers.CustomVisuals.BasePath);
+
+                if (serializers.StaticResources.Serialize(this.StaticResources))
+                    Log.Information("StaticResources extracted to: {Path}", serializers.StaticResources.BasePath);
+
+
+                // **** Metadata ****
                 this.PbixProj.Version = PbixProject.CurrentVersion; // always set latest version on new pbixproj file
                 if (this.PbixProj.Created == default) this.PbixProj.Created = DateTimeOffset.Now;
                 this.PbixProj.LastModified = DateTimeOffset.Now;
@@ -176,6 +209,9 @@ namespace PbiTools.Model
 
         #endregion
 
+        /// <summary>
+        /// Returns the default folder location for this instance.
+        /// </summary>
         public string GetProjectFolder()
         {
             switch (this.Type) 
@@ -192,7 +228,7 @@ namespace PbiTools.Model
 
         public void Dispose()
         {
-            // TODO is that needed?
+            // TODO Possibly only needed for live session models?
         }
     }
 }

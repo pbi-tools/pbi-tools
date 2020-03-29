@@ -33,6 +33,7 @@ namespace PbiTools.PowerBI
 
             _pbixStream = File.OpenRead(pbixPath);
             _package = PowerBIPackager.Open(_pbixStream); // TODO Handle errors
+            this.Path = pbixPath;
 
             const string
                 forbiddenCharacters =
@@ -41,7 +42,7 @@ namespace PbiTools.PowerBI
                 .Replace(" ", "")
                 .ToCharArray()
                 .Aggregate(
-                    Path.GetFileNameWithoutExtension(pbixPath),
+                    System.IO.Path.GetFileNameWithoutExtension(pbixPath),
                     (n, c) => n.Replace(c, '_')
                 );
 
@@ -54,6 +55,8 @@ namespace PbiTools.PowerBI
             _converters = new PowerBIPartConverters(Guid.NewGuid().ToString(), resolver);
         }
 
+
+        public string Path { get; }
 
         public JObject ReadConnections()
         {
