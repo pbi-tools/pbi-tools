@@ -6,6 +6,7 @@ using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using PbiTools.Actions;
+using PbiTools.PowerBI;
 using PbiTools.Rpc;
 using PbiTools.Utils;
 using PowerArgs;
@@ -21,7 +22,6 @@ namespace PbiTools
     public class CmdLineActions
     {
 
-        private readonly IDependenciesResolver _dependenciesResolver = new DependenciesResolver(); // TODO allow to init this with a set path from config
         private readonly AppSettings _appSettings;
         private readonly Stopwatch _stopWatch = Stopwatch.StartNew();
 
@@ -44,14 +44,37 @@ namespace PbiTools
 
         [ArgActionMethod, ArgShortcut("extract"), ArgDescription("Extracts the contents of a PBIX/PBIT file into a folder structure suitable for source control. By default, this will create a sub-folder in the directory of the *.pbix file with the same name without the extension.")]
         public void Extract(
-            [ArgRequired, ArgExistingFile, ArgDescription("The path to an existing PBIX file")] string path
+            [ArgRequired, ArgExistingFile, ArgDescription("The path to an existing PBIX file.")] string path,
+            [ArgDescription("The extraction mode."), ArgDefaultValue(ExtractActionCompatibilityMode.Auto)] ExtractActionCompatibilityMode mode
         )
         {
-            // TODO Print source file and destination folder to console (will display in vscode output panel)
             // TODO Support '-parts' parameter, listing specifc parts to extract only
-            using (var extractor = new PbixExtractAction(path, _dependenciesResolver))
+            using (var reader = new PbixReader(path, DependenciesResolver.Default))
             {
-                extractor.ExtractAll();
+                if (mode == ExtractActionCompatibilityMode.Legacy)
+                {
+                    using (var extractor = new PbixExtractAction(reader))
+                    {
+                        extractor.ExtractAll();
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        using (var model = Model.PbixModel.FromReader(reader))
+                        {
+                            model.ToFolder();
+                        }
+                    }
+                    catch (NotSupportedException) when (mode == ExtractActionCompatibilityMode.Auto)
+                    {
+                        using (var extractor = new PbixExtractAction(reader))
+                        {
+                            extractor.ExtractAll();
+                        }
+                    }
+                }
             }
 
             Console.WriteLine($"Completed in {_stopWatch.Elapsed}.");
@@ -99,7 +122,7 @@ namespace PbiTools
                 var json = new JObject
                 {
                     { "build", AssemblyVersionInformation.AssemblyFileVersion },
-                    { "effectivePowerBiFolder", _dependenciesResolver.GetEffectivePowerBiInstallDir() },
+                    { "effectivePowerBiFolder", DependenciesResolver.Default.GetEffectivePowerBiInstallDir() },
                     { "pbiInstalls", JArray.Parse(JsonConvert.SerializeObject(pbiInstalls)) },
                     { "amoVersion", typeof(Microsoft.AnalysisServices.Tabular.Server).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion }
                 };
@@ -150,4 +173,10 @@ namespace PbiTools
          */
     }
 
+    public enum ExtractActionCompatibilityMode
+    {
+        Auto, 
+        V3,
+        Legacy
+    }
 }

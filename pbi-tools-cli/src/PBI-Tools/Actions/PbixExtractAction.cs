@@ -1,12 +1,11 @@
 ﻿using System;
-using System.IO;
+using System.Collections.Generic;
 using Microsoft.Mashup.Host.Document;
 using Microsoft.PowerBI.Packaging;
 using PbiTools.FileSystem;
 using PbiTools.PowerBI;
 using PbiTools.ProjectSystem;
 using PbiTools.Serialization;
-using PbiTools.Utils;
 using Serilog;
 
 namespace PbiTools.Actions
@@ -28,13 +27,10 @@ namespace PbiTools.Actions
         private readonly PbixReader _pbixReader;
 
 
-        public PbixExtractAction(string pbixPath, IDependenciesResolver resolver)
+        public PbixExtractAction(PbixReader reader)
         {
-            _pbixReader = new PbixReader( // TODO Pass in IPbixReader for better testability
-                pbixPath ?? throw new ArgumentNullException(nameof(pbixPath)), 
-                resolver ?? throw new ArgumentNullException(nameof(resolver)));
-
-            _rootFolder = new ProjectRootFolder(PbixProject.GetProjectFolderForFile(pbixPath));
+            _pbixReader = reader ?? throw new ArgumentNullException(nameof(reader));
+            _rootFolder = new ProjectRootFolder(PbixProject.GetProjectFolderForFile(reader.Path));
         }
 
         public void ExtractAll()
@@ -84,6 +80,7 @@ namespace PbiTools.Actions
 
         public void ExtractModel(PbixProject pbixProj)
         {
+            if (pbixProj.Queries == null) pbixProj.Queries = new Dictionary<string, string>();
             var serializer = new TabularModelSerializer(_rootFolder, pbixProj.Queries);
             serializer.Serialize(_pbixReader.ReadDataModel());
         }
@@ -172,7 +169,6 @@ namespace PbiTools.Actions
 
         public void Dispose()
         {
-            _pbixReader.Dispose();
             _rootFolder.Dispose();
         }
 
