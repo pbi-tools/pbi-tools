@@ -2,13 +2,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFramework>net471</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
     <RuntimeIdentifier>win7-x64</RuntimeIdentifier>
     <AssemblyName>pbi-tools.integrationtests</AssemblyName>
     <RootNamespace>PbiTools.IntegrationTests</RootNamespace>
     <Platforms>x64</Platforms>
     <LangVersion>latest</LangVersion>
     <OutputPath>bin\$(Configuration)\</OutputPath>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="..\data\Simple.pbix" Link="Simple.pbix">
@@ -16,6 +17,10 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.PowerBI.Packaging">
+      <HintPath>C:\Program Files\Microsoft Power BI Desktop\bin\Microsoft.PowerBI.Packaging.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <ProjectReference Include="..\..\src\PBI-Tools\PBI-Tools.csproj" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />

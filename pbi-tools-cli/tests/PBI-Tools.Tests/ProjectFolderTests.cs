@@ -17,9 +17,11 @@ namespace PbiTools.Tests
             // BEFORE
             Assert.True(Directory.Exists(baseDir));
 
-            using (new ProjectRootFolder(baseDir))
+            using (var root = new ProjectRootFolder(baseDir))
             {
                 // Do nothing (not writing any files)
+
+                root.Commit();
             }
 
             // AFTER

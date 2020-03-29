@@ -46,8 +46,8 @@ namespace PbiTools.Tests
 }");
             TabularModelSerializer.SerializeTables(db, folder, new MockQueriesLookup());
 
-            Assert.True(folder.ContainsPath(@"tables\table1\table1.json"));
-            Assert.True(folder.ContainsPath(@"tables\table2\table2.json"));
+            Assert.True(folder.ContainsPath(@"tables\table1\table.json"));
+            Assert.True(folder.ContainsPath(@"tables\table2\table.json"));
         }
         
 

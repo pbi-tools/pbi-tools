@@ -41,7 +41,8 @@ namespace PbiTools.IntegrationTests
                     pbixSrc.CopyTo(dest);
                 }
 
-                using (var extractor = new PbixExtractAction(pbixPath, _fixture.DependenciesResolver))
+                using (var reader = new PowerBI.PbixReader(pbixPath, _fixture.DependenciesResolver))
+                using (var extractor = new PbixExtractAction(reader))
                 {
                     extractor.ExtractMashup(); // This one will require to load the Mashup.Packaging dll
                 }
