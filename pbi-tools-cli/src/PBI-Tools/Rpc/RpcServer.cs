@@ -71,7 +71,7 @@ namespace PbiTools.Rpc
         public void Shutdown()
         {
             // TODO Need to explicitly stop server here? This feels dodgy...
-            _onDisconnected(new JsonRpcDisconnectedEventArgs("Client requested server shutdown", DisconnectedReason.Unknown));
+            _onDisconnected(new JsonRpcDisconnectedEventArgs("Client requested server shutdown", DisconnectedReason.RemotePartyTerminated));
             // ??? Do it this way: ??
             (this as IDisposable).Dispose();
         }
