@@ -23,10 +23,11 @@ namespace PbiTools.Serialization
 
         public string BasePath => _file.Path;
 
-        public void Serialize(JObject content)
+        public bool Serialize(JObject content)
         {
-            if (content == null) return;
+            if (content == null) return false;
             _file.Write(content);
+            return true;
         }
 
         public bool TryDeserialize(out JObject part)

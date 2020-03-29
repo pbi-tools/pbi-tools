@@ -38,9 +38,9 @@ namespace PbiTools.Serialization
 
         public string BasePath => _folder.BasePath;
 
-        public void Serialize(JObject db)
+        public bool Serialize(JObject db)
         {
-            if (db == null) return;
+            if (db == null) return false;
 
             var dataSources = db.SelectToken("model.dataSources") as JArray ?? new JArray();
             var idCache = new TabularModelIdCache(dataSources, _queries);
@@ -64,7 +64,7 @@ namespace PbiTools.Serialization
             db = SerializeDataSources(db, _folder, idCache);
             db = SerializeTables(db, _folder, idCache);
             db = SerializeExpressions(db, _folder);
-            // TODO QueryGroups
+            // TODO *** QueryGroups ***
 
             /* model.queryGroups:
 
@@ -83,6 +83,8 @@ namespace PbiTools.Serialization
             */
 
             SaveDatabase(db, _folder);
+
+            return true;
         }
 
         internal static JObject SerializeTables(JObject db, IProjectFolder folder, IQueriesLookup idCache)

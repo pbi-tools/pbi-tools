@@ -346,9 +346,9 @@ namespace PbiTools.Serialization
         }
 
 
-        public void Serialize(MashupParts content)
+        public bool Serialize(MashupParts content)
         {
-            if (content == null) return;
+            if (content == null) return false;
             
             /*
              *   /Mashup
@@ -405,6 +405,8 @@ namespace PbiTools.Serialization
             {
                 Folder.Write(content.Permissions, "permissions.json");
             }
+
+            return true;
         }
 
         public bool TryDeserialize(out MashupParts part)

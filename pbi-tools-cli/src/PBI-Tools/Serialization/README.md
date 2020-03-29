@@ -46,14 +46,14 @@ Contains specific serializers for the various PowerBIPackage parts (Mashup, Mode
   - *PbixProj* implementation: Convert from sources
   - Parts:
     - [x] 1 Mashup (~~no longer needed for V3~~)
-    - [ ] 2 DataModel, DataModelSchema (mostly done)
-    - [x] 3 Version, 4 Connections, 5 LinguisticSchema (easy)
-    - [x] 6 ReportSettings (easy)
-    - [x] 7 ReportMetadata (easy)
-    - [ ] 8 ReportDocument (TODO)
-    - [ ] 9 CustomVisuals, 10 StaticResources (easy)
+    - [ ] 2 **DataModel**, DataModelSchema (mostly done)
+    - [x] 3 Version, 4 Connections, 5 LinguisticSchema
+    - [x] 6 ReportSettings
+    - [x] 7 ReportMetadata
+    - [ ] 8 **Report** (TODO)
+    - [x] 9 CustomVisuals, 10 StaticResources
     - [x] 11 DiagramViewState
-	  - [ ] 12 DiagramLayout (easy)
+	  - [x] 12 DiagramLayout
 - `PbixCompileAction` - Generates a new PBIX/T file from PbixProj sources
   - format:pbix|pbit
 - `PbixMergeAction` - Updates a PBIX/T file from PbixProj sources (use to refresh PBIX working copy from repo ... TODO test feasibility)

@@ -24,9 +24,9 @@ namespace PbiTools.Serialization
 
         public string BasePath => _folder.BasePath;
 
-        public void Serialize(IDictionary<string, byte[]> content)
+        public bool Serialize(IDictionary<string, byte[]> content)
         {
-            if (content == null) return;
+            if (content == null || content.Count == 0) return false;
             foreach (var entry in content)
             {
                 // Special handling of 'package.json' to make it readable
@@ -49,6 +49,8 @@ namespace PbiTools.Serialization
                     stream.Write(entry.Value, 0, entry.Value.Length);
                 });
             }
+        
+            return true;
         }
 
         public bool TryDeserialize(out IDictionary<string, byte[]> part)

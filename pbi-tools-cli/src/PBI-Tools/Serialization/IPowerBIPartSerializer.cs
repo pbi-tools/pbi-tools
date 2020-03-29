@@ -10,7 +10,7 @@ namespace PbiTools.Serialization
     // ReSharper disable once InconsistentNaming
     public interface IPowerBIPartSerializer<T>
     {
-        void Serialize(T content);
+        bool Serialize(T content);
         bool TryDeserialize(out T part);
 
         /// <summary>

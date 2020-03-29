@@ -18,7 +18,7 @@ namespace PbiTools.Serialization
 
         public string BasePath => _reportFolder.BasePath;
 
-        public void Serialize(JObject content)
+        public bool Serialize(JObject content)
         {
             // report.json
             // {
@@ -46,7 +46,7 @@ namespace PbiTools.Serialization
 
 
             // ReportDocument   [/Report/Layout]
-            if (content == null) return;
+            if (content == null) return false;
 
             content.ExtractObject("config", _reportFolder);
             content.ExtractArray("filters", _reportFolder);
@@ -88,6 +88,8 @@ namespace PbiTools.Serialization
             content.Save("report", _reportFolder
                 , ReportJsonTransforms.SortProperties
                 , ReportJsonTransforms.RemoveProperties("objectId")); // resourcePackage ids tend to change when exporting from powerbi.com
+
+            return true;
         }
 
         public bool TryDeserialize(out JObject part)
