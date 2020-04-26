@@ -9,11 +9,12 @@ namespace PbiTools
 {
     public class AppSettings
     {
+        public static string EnvPrefix => "PBITOOLS_";
 
         public AppSettings()
         {
             // The Console log level can optionally be configured vai an environment variable:
-            var envLogLevel = Environment.GetEnvironmentVariable("PBITOOLS_LogLevel");
+            var envLogLevel = Environment.GetEnvironmentVariable($"{EnvPrefix}LogLevel");
             var initialLogLevel = envLogLevel != null && Enum.TryParse<LogEventLevel>(envLogLevel, out var logLevel)
                 ? logLevel
                 : LogEventLevel.Information; // Default log level
