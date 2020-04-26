@@ -11,7 +11,7 @@
 
 * Visual Studio 2019
 * .Net Core SDK 3.x
-* Power BI Desktop x64 (Installed in default location: `C:\Program Files\Microsoft Power BI Desktop\`)
+* Power BI Desktop x64 (Must be installed in default location for development: `C:\Program Files\Microsoft Power BI Desktop\`)
 
 #### Run Tests
 
@@ -20,6 +20,10 @@
 #### Install Dependencies
 
     .\.paket\paket install
+
+#### Update Dependency to latest version (ex: AMO)
+
+    .\.paket\paket update Microsoft.AnalysisServices.retail.amd64
 
 #### Invoke Build script directly
 
