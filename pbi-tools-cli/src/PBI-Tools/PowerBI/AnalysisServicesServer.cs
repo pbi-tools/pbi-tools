@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Mathias Thierbach
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
+using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -67,6 +70,8 @@ namespace PbiTools.PowerBI
 
         public int Port { get; private set; }
         public string ConnectionString => $"localhost:{Port}";
+        public string OleDbConnectionString => $"Provider=MSOLAP;Data Source={this.ConnectionString};";
+        public string ToolPath => _asToolPath;
         public bool HideWindow { get; set; }
 
         private Process _proc;
