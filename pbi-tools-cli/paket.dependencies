@@ -17,6 +17,7 @@ group Main
   nuget StreamJsonRpc
   nuget Costura.Fody
   nuget System.IO.Compression
+  nuget HtmlAgilityPack
 
 group Tests
   source https://api.nuget.org/v3/index.json
