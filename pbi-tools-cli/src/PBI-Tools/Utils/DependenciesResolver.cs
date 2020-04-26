@@ -1,10 +1,14 @@
-﻿using System;
+﻿// Copyright (c) Mathias Thierbach
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Win32;
+using Newtonsoft.Json;
 using Serilog;
 
 namespace PbiTools.Utils
@@ -23,19 +27,6 @@ namespace PbiTools.Utils
 
         private static readonly ILogger Log = Serilog.Log.ForContext<DependenciesResolver>();
 
-        // Init singleton at app startup
-        // This is for runtime .. Still require static dll location for dev/compile
-        // Locate installs of PBI-Desktop, SSDT, SSAS Tabular
-
-        // Support three possible resolution targets:
-        // PowerBI.Packaging, msmdsrv, MashupEngine
-
-        // TODO Allow explicit path specified in settings
-        //private static readonly IDictionary<string, string> Paths = new Dictionary<string, string> {
-        //    { "PBI", @"C:\Program Files\Microsoft Power BI Desktop\bin\" },
-        //    { "SSDT-2017", @"C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\CommonExtensions\Microsoft\SSAS\LocalServer\" },
-        //    { "SSDT-2015", @"C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\IDE\PrivateAssemblies\Business Intelligence Semantic Model\LocalServer\" },
-        //};
 
         private readonly Lazy<PowerBIDesktopInstallation> _pbiInstall = new Lazy<PowerBIDesktopInstallation>(GetPBIInstall);
         private static IDependenciesResolver _defaultInstance;
@@ -58,11 +49,11 @@ namespace PbiTools.Utils
 
         private static PowerBIDesktopInstallation GetPBIInstall()
         {
-            // TODO Refactor this to allow user to specify preferred PBI location
+            // TODO Refactor this to allow user to specify preferred/custom PBI location
 
             var install = PowerBILocator.FindInstallations()
                 .Where(x => x.Is64Bit)                    // TODO Support 32-bit in a future version
-                .OrderByDescending(x => x.ProductVersion) // Use highest version installed
+                .OrderByDescending(x => x.Version)        // Use highest version installed
                 .FirstOrDefault();
             if (install == null) throw new Exception("No 64-bit Power BI Desktop installation found"); // TODO Make specific exception
 
@@ -96,8 +87,8 @@ namespace PbiTools.Utils
         }
 
         private static string GetShadowCopyDir(string winAppHandle) => Path.Combine(
-            Environment.ExpandEnvironmentVariables(LOCALAPPDATA),
-            "pbi-tools", // TODO make platform specific (x64/x86)
+            Environment.ExpandEnvironmentVariables(LOCALAPPDATA),  // TODO Refactor APPDATA folder into dedicated component
+            "pbi-tools",                                           // TODO make platform specific (x64/x86)
             winAppHandle);
 
         private static string GetWinAppHandle(string path) => path.Split(Path.DirectorySeparatorChar)
@@ -178,6 +169,8 @@ namespace PbiTools.Utils
     public class PowerBIDesktopInstallation
     {
         public string ProductVersion { get; set; }
+        [JsonIgnore]
+        public Version Version { get; set; }
         public bool Is64Bit { get; set; }
         public string InstallDir { get; set; }
     }
@@ -218,6 +211,7 @@ namespace PbiTools.Utils
                                     InstallDir = Path.GetDirectoryName(fileInfo.FileName),
                                     Is64Bit = fileInfo.FileName.Contains("x64"),
                                     ProductVersion = fileInfo.ProductVersion,
+                                    Version = ParseProductVersion(fileInfo.ProductVersion)
                                 };
                             }
                         }
@@ -247,9 +241,17 @@ namespace PbiTools.Utils
                         InstallDir = Path.GetDirectoryName(fileInfo.FileName),
                         Is64Bit = win64.Equals("yes", StringComparison.OrdinalIgnoreCase),
                         ProductVersion = fileInfo.ProductVersion,
+                        Version = ParseProductVersion(fileInfo.ProductVersion)
                     };
                 }
             }
+        }
+
+        internal static Version ParseProductVersion(string versionString)
+        {
+            if (Version.TryParse(versionString.Split(' ')[0], out var version))
+                return version;
+            else return new Version();
         }
 
     }
