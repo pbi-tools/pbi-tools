@@ -1,6 +1,10 @@
-﻿using System;
+﻿// Copyright (c) Mathias Thierbach
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
+using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using Newtonsoft.Json;
@@ -114,24 +118,35 @@ namespace PbiTools
         }
 
         [ArgActionMethod, ArgShortcut("info"), ArgDescription("Collects diagnostic information about the local system and writes a JSON object to StdOut.")]
-        public void Info()
+        public void Info(
+            [ArgDescription("When specified, checks the latest Power BI Desktop version available from download.microsoft.com")] bool checkDownloadVersion
+        )
         {
             using (_appSettings.SetScopedLogLevel(LogEventLevel.Warning))  // Suppresses Informational logs
             {
-                var pbiInstalls = PowerBILocator.FindInstallations();
-                var json = new JObject
+                var jsonResult = new JObject
                 {
+                    { "version", AssemblyVersionInformation.AssemblyInformationalVersion },
                     { "build", AssemblyVersionInformation.AssemblyFileVersion },
                     { "effectivePowerBiFolder", DependenciesResolver.Default.GetEffectivePowerBiInstallDir() },
-                    { "pbiInstalls", JArray.Parse(JsonConvert.SerializeObject(pbiInstalls)) },
-                    { "amoVersion", typeof(Microsoft.AnalysisServices.Tabular.Server).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion }
+                    { "pbiSessions", JArray.FromObject(PowerBIProcesses.EnumerateProcesses().ToArray()) },
+                    { "pbiInstalls", JArray.FromObject(PowerBILocator.FindInstallations()) },
+                    { "amoVersion", typeof(Microsoft.AnalysisServices.Tabular.Server).Assembly
+                        .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion }
                 };
+
+                if (checkDownloadVersion)
+                {
+                    var downloadInfo = PowerBIDownloader.TryFetchInfo(out var info) ? info : new PowerBIDownloadInfo {};
+                    jsonResult.Add("pbiDownloadVersion", JObject.FromObject(downloadInfo));
+                }
+
                 using (var writer = new JsonTextWriter(Console.Out))
                 {
                     writer.Formatting = Environment.UserInteractive ? Formatting.Indented : Formatting.None;
-                    json.WriteTo(writer);
+                    jsonResult.WriteTo(writer);
                 }
-            }            
+            }
         }
 
         [ArgActionMethod, ArgShortcut("start-server"), HideFromUsage]
