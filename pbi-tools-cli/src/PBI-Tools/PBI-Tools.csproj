@@ -38,6 +38,7 @@
       <Private>false</Private>
     </Reference>
     <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Management" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
