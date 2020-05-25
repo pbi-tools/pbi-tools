@@ -25,6 +25,10 @@
 
     .\.paket\paket update Microsoft.AnalysisServices.retail.amd64
 
+#### Updating Build Dependencies
+
+    .\.paket\paket update -g Fake-Build
+
 #### Invoke Build script directly
 
     dotnet fake {...}
