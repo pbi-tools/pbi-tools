@@ -1,4 +1,4 @@
-version 5.243.0
+version 5.245.1
 
 group Main
   source https://api.nuget.org/v3/index.json
@@ -10,7 +10,7 @@ group Main
   nuget Serilog.Sinks.Console
   nuget Microsoft.AnalysisServices.retail.amd64
   nuget Newtonsoft.Json
-  nuget PowerArgs  < 3.0.0  // 3.x requires netstandard 2.0 (4.6.1+)
+  nuget PowerArgs
   nuget Moq
   nuget System.ValueTuple
   nuget Polly

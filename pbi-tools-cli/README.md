@@ -29,6 +29,10 @@
 
     .\.paket\paket update -g Fake-Build
 
+#### Find outdated dependencies
+
+    .\.paket\paket outdated -g Main
+
 #### Invoke Build script directly
 
     dotnet fake {...}
