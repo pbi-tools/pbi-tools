@@ -11,6 +11,7 @@
     <LangVersion>latest</LangVersion>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <ApplicationIcon>pbi-tools.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="msmdsrv.ini.xml" />
