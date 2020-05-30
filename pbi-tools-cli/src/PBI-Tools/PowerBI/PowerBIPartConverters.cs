@@ -22,7 +22,7 @@ namespace PbiTools.PowerBI
         #region Legacy
 
         public IPowerBIPartConverter<JObject> ReportSettings { get; } = new BinarySerializationConverter<ReportSettings>();
-        public IPowerBIPartConverter<JObject> ReportMetadata { get; } = new BinarySerializationConverter<ReportMetadata>();
+        public IPowerBIPartConverter<JObject> ReportMetadata { get; } = new BinarySerializationConverter<ReportMetadataContainer>();
         public IPowerBIPartConverter<MashupParts> DataMashup { get; } = new MashupConverter();
         public IPowerBIPartConverter<XDocument> LinguisticSchema { get; } = new XmlPartConverter();
         
