@@ -13,6 +13,10 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <ApplicationIcon>pbi-tools.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup>
+    <!-- See: https://github.com/dotnet/sdk/issues/2809 -->
+    <AssemblySearchPaths>$(ReferencePath);$(AssemblySearchPaths)</AssemblySearchPaths>
+  </PropertyGroup>
   <ItemGroup>
     <None Remove="msmdsrv.ini.xml" />
     <EmbeddedResource Include="msmdsrv.ini.xml" />

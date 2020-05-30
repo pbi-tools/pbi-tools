@@ -150,8 +150,21 @@ Target.create "Clean" (fun _ ->
 // Including 'Restore' target addresses issue: https://github.com/fsprojects/Paket/issues/2697
 // Previously, msbuild would fail not being able to find **\obj\project.assets.json
 Target.create "Build" (fun _ ->
+    // If 'PBITOOLS_PbiInstallDir' points to a valid PBI Desktop installation, set the MSBuild 'ReferencePath' property to that location
+    let tryFindPbiDesktopInstall () =
+        match Environment.environVarOrNone "PBITOOLS_PbiInstallDir" with // PBIDesktop.exe might be in a sub-folder .. getting that folder here
+        | Some path -> Directory.EnumerateFiles(path, "PBIDesktop.exe", SearchOption.AllDirectories)
+                       |> Seq.tryHead
+                       |> function
+                          | Some p -> Some (p |> Path.getDirectory)
+                          | _ -> None
+        | None -> None
+    let msbuildProps = match tryFindPbiDesktopInstall () with
+                       | Some dir -> [ "ReferencePath", dir ]
+                       | _ -> []
+
     !! solutionFile
-    |> MSBuild.runRelease id outDir "Restore;Rebuild"
+    |> MSBuild.runReleaseExt id outDir msbuildProps "Restore;Rebuild"
     |> ignore
 
     // Could not get Fody to do its thing unless when building the entire solution, so we're grabbing the dist files here explicitly

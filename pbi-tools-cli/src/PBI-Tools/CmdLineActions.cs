@@ -128,7 +128,7 @@ namespace PbiTools
                 {
                     { "version", AssemblyVersionInformation.AssemblyInformationalVersion },
                     { "build", AssemblyVersionInformation.AssemblyFileVersion },
-                    { "effectivePowerBiFolder", DependenciesResolver.Default.GetEffectivePowerBiInstallDir() },
+                    { "effectivePbiInstallDir", DependenciesResolver.Default.GetEffectivePowerBiInstallDir() },
                     { "pbiSessions", JArray.FromObject(PowerBIProcesses.EnumerateProcesses().ToArray()) },
                     { "pbiInstalls", JArray.FromObject(PowerBILocator.FindInstallations()) },
                     { "amoVersion", typeof(Microsoft.AnalysisServices.Tabular.Server).Assembly

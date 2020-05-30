@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.Win32;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Serilog;
 
 namespace PbiTools.Utils
@@ -49,13 +50,22 @@ namespace PbiTools.Utils
 
         private static PowerBIDesktopInstallation GetPBIInstall()
         {
-            // TODO Refactor this to allow user to specify preferred/custom PBI location
-
-            var install = PowerBILocator.FindInstallations()
-                .Where(x => x.Is64Bit)                    // TODO Support 32-bit in a future version
+            // TODO Allow to customize preference: Custom|WindowsStore|Installer
+            var allInstalls = PowerBILocator.FindInstallations();
+            var install = allInstalls
+                .Where(x => x.Is64Bit && x.Location == PowerBIDesktopInstallationLocation.Custom)
                 .OrderByDescending(x => x.Version)        // Use highest version installed
                 .FirstOrDefault();
-            if (install == null) throw new Exception("No 64-bit Power BI Desktop installation found"); // TODO Make specific exception
+                
+            if (install == null)
+            {
+                install = allInstalls
+                    .Where(x => x.Is64Bit && x.Location != PowerBIDesktopInstallationLocation.Custom)
+                    .OrderByDescending(x => x.Version)        // Use highest version installed
+                    .FirstOrDefault();
+
+                if (install == null) throw new Exception("No 64-bit Power BI Desktop installation found"); // TODO Make specific exception
+            }
 
             Log.Information("Using Power BI Desktop install: {ProductVersion} at {InstallDir}", install.ProductVersion, install.InstallDir);
 
@@ -173,6 +183,15 @@ namespace PbiTools.Utils
         public Version Version { get; set; }
         public bool Is64Bit { get; set; }
         public string InstallDir { get; set; }
+        public PowerBIDesktopInstallationLocation Location { get; set; }
+    }
+
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum PowerBIDesktopInstallationLocation
+    {
+        WindowsStore,
+        Installer,
+        Custom
     }
 
     public class PowerBILocator
@@ -182,10 +201,55 @@ namespace PbiTools.Utils
 
         public static PowerBIDesktopInstallation[] FindInstallations()
         {
-            return
-                GetWindowsStoreInstalls()
-                    .Concat(GetInstallerInstalls())
-                    .ToArray();
+            var installs = new List<PowerBIDesktopInstallation>();
+            if (TryFindCustomInstallation(out var customInstall))
+            {
+                installs.Add(customInstall);
+            }
+            installs.AddRange(GetWindowsStoreInstalls());
+            installs.AddRange(GetInstallerInstalls());
+            return installs.ToArray();
+        }
+
+        public static bool TryFindCustomInstallation(string path, out PowerBIDesktopInstallation install)
+        {
+            install = null;
+            try
+            {
+                if (!Directory.Exists(path)) return false;
+
+                var pbiExePath = Directory.EnumerateFiles(path, PBIDesktop_exe, SearchOption.AllDirectories).FirstOrDefault();
+                if (pbiExePath == null) return false;
+
+                var fileInfo = FileVersionInfo.GetVersionInfo(pbiExePath);
+                install = new PowerBIDesktopInstallation
+                {
+                    InstallDir = Path.GetDirectoryName(fileInfo.FileName),
+                    Is64Bit = PeNet.PeFile.Is64BitPeFile(fileInfo.FileName),
+                    ProductVersion = fileInfo.ProductVersion,
+                    Version = ParseProductVersion(fileInfo.ProductVersion),
+                    Location = PowerBIDesktopInstallationLocation.Custom
+                };
+                Log.Verbose("Located Power BI Desktop custom install at {Path}", pbiExePath);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "An error occurred when parsing custom PBI install location at {Path}", path);
+                return false;
+            }
+        }
+
+        public static bool TryFindCustomInstallation(out PowerBIDesktopInstallation install)
+        {
+            var envPbiInstallDir = Environment.GetEnvironmentVariable($"{AppSettings.EnvPrefix}PbiInstallDir");
+            if (!string.IsNullOrEmpty(envPbiInstallDir))
+                return TryFindCustomInstallation(envPbiInstallDir, out install);
+            else
+            {
+                install = null;
+                return false;
+            }
         }
 
         private static readonly string StoreInstallKey =
@@ -211,7 +275,8 @@ namespace PbiTools.Utils
                                     InstallDir = Path.GetDirectoryName(fileInfo.FileName),
                                     Is64Bit = fileInfo.FileName.Contains("x64"),
                                     ProductVersion = fileInfo.ProductVersion,
-                                    Version = ParseProductVersion(fileInfo.ProductVersion)
+                                    Version = ParseProductVersion(fileInfo.ProductVersion),
+                                    Location = PowerBIDesktopInstallationLocation.WindowsStore
                                 };
                             }
                         }
@@ -241,7 +306,8 @@ namespace PbiTools.Utils
                         InstallDir = Path.GetDirectoryName(fileInfo.FileName),
                         Is64Bit = win64.Equals("yes", StringComparison.OrdinalIgnoreCase),
                         ProductVersion = fileInfo.ProductVersion,
-                        Version = ParseProductVersion(fileInfo.ProductVersion)
+                        Version = ParseProductVersion(fileInfo.ProductVersion),
+                        Location = PowerBIDesktopInstallationLocation.Installer
                     };
                 }
             }
