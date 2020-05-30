@@ -35,6 +35,7 @@ group Fake-Build
   storage: none
 
   nuget Fake.Api.GitHub
+  nuget Fake.BuildServer.TeamFoundation
   nuget Fake.Core.Environment
   nuget Fake.Core.ReleaseNotes
   nuget Fake.Core.Target

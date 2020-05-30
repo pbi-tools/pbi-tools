@@ -2,6 +2,7 @@
 #load "./.fake/build.fsx/intellisense.fsx"
 
 open Fake.Core
+open Fake.BuildServer
 open Fake.DotNet
 open Fake.DotNet.Testing
 open Fake.IO
@@ -60,6 +61,9 @@ let gitName = "cli"
 // The url for the raw files hosted
 let gitRaw = Environment.environVarOrDefault "gitRaw" ("https://raw.github.com/" + gitOwner)
 
+BuildServer.install [
+    TeamFoundation.Installer
+]
 
 // --------------------------------------------------------------------------------------
 // END TODO: The rest of the file includes standard build steps
