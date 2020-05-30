@@ -44,4 +44,4 @@
 
 ## Diagnostics
 
-* Log output can be controlled using the environment variable `PBITOOLS_LogLevel`. Allowed values are: *Verbose, Debug, Information, Warning, Error, Fatal*. The default is ***Information***, which is also effective when an unknown option has been specified.
+* Log output can be controlled using the environment variable `PBITOOLS_LogLevel`. Allowed values are: *Verbose, Debug, Information, Warning, Error, Fatal*. The default is ***Information***, which is also effective when an unknown/invalid option has been specified.

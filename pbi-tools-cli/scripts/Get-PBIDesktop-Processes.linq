@@ -29,14 +29,18 @@ void Main()
 				acc => acc.Dict);
 			args.Dump();
 			Directory.EnumerateFiles(args["-s"]).Dump();
-			File.ReadAllText(Path.Combine(args["-s"], "msmdsrv.port.txt"), Encoding.Unicode).Dump("Port");
+			var port = File.ReadAllText(Path.Combine(args["-s"], "msmdsrv.port.txt"), Encoding.Unicode).Dump("Port");
 			using (var parent = proc.GetParent())
 			{
 				new
 				{
 					parent.MainModule.FileVersionInfo.ProductName,
 					parent.MainModule.FileVersionInfo.ProductVersion,
-					parent.MainModule.FileVersionInfo.FileName
+					parent.MainModule.FileVersionInfo.FileName,
+					ProcessID = parent.Id,
+					Port = port,
+					WorkspaceName = args["-n"],
+					WorkspaceDir = args["-s"]
 				}.Dump("Parent");
 			}
 		}

@@ -1,17 +1,23 @@
 
-## 0.11.0 - 2020-03-29
+## 0.11.0 - 2020-05-25
 * Changed target framework to .Net 4.7.2 (allows compatibility with external libraries that only support .Net Standard 2.0, rather than legacy .Net Framework versions)
-* Upgraded AMO library to 18.4, supporting latest TMSL features
+* Upgraded AMO library to 18.7, supporting latest TMSL features
+* Upgraded various other 3rd party dependencies
 * Support for new PBIX metadata format ("V3"), introduced in March 2020 version of Power BI Desktop
-  * `PbixModel` API ow available
+  * `PbixModel` API now available
 * PBIXPROJ format 0.5
 * New CLI action: "export-bim"
+* "info" action: Added 'version', 'pbiSessions'
+* Compatible with Power BI Desktop May 2020 version
+* Significantly reduced exe file size by excluding 3rd party satellite assemblies
+* Support for 'PBITOOLS_PbiInstallDir', 'PBITOOLS_LogLevel' environment variables
+* Appliation icon added
 
 ## 0.10.0 - 2019-11-14
 * Upgraded AMO library to 18.2
 * Addresses breaking API change in Nov 2019 release (2.75) of Power BI Desktop. Modification is backwards-compatible, however, so will still work with the Oct release.
   * Details: `ReportMetadata` now has a dependency on <IFeatureSwitchManager> (also added DirectQueryResources, QueryDependencyGraph - for v3 report model)
-* Fixed duplicated "DiagramViewState extracted" message 
+* Fixed duplicated "DiagramViewState extracted" message
 
 ## 0.9.0 - 2019-10-20
 * Upgraded AMO library to 18.0 so that latest tabular features are recognized by serializer (Specifically, measure/dataCategory)
