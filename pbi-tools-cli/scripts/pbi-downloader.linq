@@ -1,35 +1,97 @@
 <Query Kind="Program">
   <NuGetReference>PInvoke.Msi</NuGetReference>
+  <Namespace>System.Net.Http</Namespace>
+  <Namespace>System.Threading.Tasks</Namespace>
   <Namespace>System.Runtime.InteropServices</Namespace>
 </Query>
 
-void Main()
+async Task Main()
 {
-	var msiPath = @"E:\temp\pbi-downloader\install\AttachedContainer\PBIDesktop_x64.msi";
-	var destDir = @"E:\temp\pbi-downloader\PBIDesktop_x64\2.81.5831.821\";
-	var logPath = @"E:\temp\pbi-downloader\PBIDesktop_x64\2.81.5831.821.log";
-	Directory.CreateDirectory(destDir);
+	var downloadUrlBase = "https://download.microsoft.com/download/8/8/0/880BCA75-79DD-466A-927D-1ABF1F5454B0/";
+	var downloadFilename = // --------------"PBIDesktopSetup-2019-10_x64.exe";
+	// "PBIDesktopSetup-2019-11_x64.exe";
+	// "PBIDesktopSetup-2019-12_x64.exe";
+	// "PBIDesktopSetup-2020-02_x64.exe";
+	// "PBIDesktopSetup-2020-03_x64.exe";
+	// "PBIDesktopSetup-2020-04_x64.exe";
+	 "PBIDesktopSetup_x64.exe";
+
+	/********************************************************/
+	var rootFolder = @"E:\temp\pbi-downloader\PBIDesktop_x64";
+	/********************************************************/
+	var tempFolder = Path.Combine(rootFolder, "_temp");
 	
-	var hwnd = IntPtr.Zero;
-	MsiSetInternalUI(INSTALLUILEVEL.INSTALLUILEVEL_NONE, ref hwnd);
-	MsiEnableLog(INSTALLLOGMODE.INSTALLLOGMODE_INFO, logPath, INSTALLLOGATTRIBUTES.INSTALLLOGATTRIBUTES_FLUSHEACHLINE);
+	var downloadPath = Path.Combine(tempFolder, downloadFilename);
+	var extractPath = Path.Combine(tempFolder, Path.GetFileNameWithoutExtension(downloadFilename));
 	
-	// 'ADMIN' action performs network drive install (extraction only)
-	var result = PInvoke.Msi.MsiInstallProduct(msiPath, $"ACTION=ADMIN TARGETDIR=\"{destDir}\"");
-	result.Dump();
+	Directory.CreateDirectory(extractPath);
+
+	var skipDownload = false;
+	if (!skipDownload)
+	{
+		"Downloading...".Dump();
+		using (var http = new HttpClient())
+		using (ConsoleProgressIndicator.Start())
+		{
+			var stream = await http.GetStreamAsync($"{downloadUrlBase}{downloadFilename}");
+			using (var file = File.Create(downloadPath))
+			{
+				await stream.CopyToAsync(file).Dump();  // This might take a while, so progress updates would be useful
+			}
+		}
+	}
+	
+	var versionInfo = FileVersionInfo.GetVersionInfo(downloadPath).Dump();
+	// Here, determine if extraction is needed
+	
+	var darkExe = Environment.ExpandEnvironmentVariables(@"%WIX%bin\dark.exe"); // TODO Find exe: $env:WIX, $env:PATH, ??
+	using (var darkProc = new Process())
+	{
+		darkProc.StartInfo = new ProcessStartInfo
+		{
+			CreateNoWindow = true,
+			WindowStyle = ProcessWindowStyle.Hidden,
+			UseShellExecute = false, // Allows stdout/stderr redirect
+			FileName = darkExe,
+			Arguments = $"\"{downloadPath}\" -x \"{extractPath}\"",
+			RedirectStandardOutput = true,
+			RedirectStandardError = true,
+			WorkingDirectory = tempFolder
+		};
+	
+		darkProc.OutputDataReceived += (sender, e) => Console.WriteLine($"INF: {e.Data}");
+		darkProc.ErrorDataReceived += (sender, e) => Console.WriteLine($"ERR: {e.Data}");
+		
+		darkProc.Start();
+		
+		darkProc.BeginOutputReadLine();
+		darkProc.BeginErrorReadLine();
+		
+		darkProc.WaitForExit();
+		
+		darkProc.ExitCode.Dump("Exit Code"); // Expect: 0
+	}
+	
+	var msiPath = Directory.EnumerateFiles(Path.Combine(extractPath, "AttachedContainer"), "*.msi").FirstOrDefault().Dump();
+	if (msiPath != null)
+	{
+		var destDir = Path.Combine(tempFolder, versionInfo.ProductVersion);
+		var logPath = $"{destDir}.log";
+		Directory.CreateDirectory(destDir);
+
+		var hwnd = IntPtr.Zero;
+		MsiSetInternalUI(INSTALLUILEVEL.INSTALLUILEVEL_NONE, ref hwnd);
+		MsiEnableLog(INSTALLLOGMODE.INSTALLLOGMODE_INFO, logPath, INSTALLLOGATTRIBUTES.INSTALLLOGATTRIBUTES_FLUSHEACHLINE);
+
+		// 'ADMIN' action performs network drive install (extraction only)
+		var result = PInvoke.Msi.MsiInstallProduct(msiPath, $"ACTION=ADMIN TARGETDIR=\"{destDir}\"");
+		result.Dump(); // Expect: NERR_Success
+	}
+	
+	// TODO: Move {destDir} >> 
 }
 
-/*
- ExtractFromMsi
- DownloadAndExtract
- 
- global:
- - PBIInstallDir
- 
- */
-
-
-// Define other methods and classes here
+// Define other methods, classes and namespaces here
 public enum INSTALLUILEVEL
 {
 	INSTALLUILEVEL_NOCHANGE = 0,    // UI level is unchanged
@@ -97,3 +159,48 @@ public enum INSTALLLOGATTRIBUTES // flag attributes for MsiEnableLog
 
 [DllImport("msi.dll", CharSet = CharSet.Auto, SetLastError = true)]
 public static extern UInt32 MsiEnableLog(INSTALLLOGMODE dwLogMode, string szLogFile, INSTALLLOGATTRIBUTES dwLogAttributes);
+
+
+public class ConsoleProgressIndicator : IDisposable
+{
+	private readonly CancellationTokenSource _cts;
+	private Task _task;
+
+	private ConsoleProgressIndicator()
+	{
+		this._cts = new CancellationTokenSource();
+	}
+
+	private void Action()
+	{
+		while (!_cts.Token.IsCancellationRequested)
+		{
+			Console.Write('.');
+			Thread.Sleep(500);
+		}
+	}
+
+	public static IDisposable Start()
+	{
+		var instance = new ConsoleProgressIndicator();
+		if (Environment.UserInteractive)
+			instance._task = Task.Run(new Action(instance.Action), instance._cts.Token);
+		else
+			instance._task = Task.CompletedTask;
+		return instance;
+	}
+
+	public void Dispose()
+	{
+		using (_cts)
+		using (_task)
+		{
+			if (_cts.IsCancellationRequested) return;
+
+			_cts.Cancel();
+			_task.Wait();
+
+			if (Environment.UserInteractive) Console.WriteLine();
+		}
+	}
+}
