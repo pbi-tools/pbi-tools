@@ -1,6 +1,3 @@
 {
-    "files.exclude": {
-        "pbi-tools-cli": true,
-        "vscode-pbitools": true
-    }
+  "editor.tabSize": 4
 }

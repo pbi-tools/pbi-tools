@@ -118,6 +118,7 @@ let genCSAssemblyInfo (projectPath) =
         AssemblyInfo.Version release.AssemblyVersion
         AssemblyInfo.FileVersion fileVersion
         AssemblyInfo.InformationalVersion release.NugetVersion ]
+        // TODO Add [Metadata] attribute with Power BI ProductVersion compiled against
 
 // Generate assembly info files with the right version & up-to-date information
 Target.create "AssemblyInfo" (fun _ ->
@@ -162,6 +163,7 @@ Target.create "Build" (fun _ ->
     let msbuildProps = match tryFindPbiDesktopInstall () with
                        | Some dir -> [ "ReferencePath", dir ]
                        | _ -> []
+    // TODO Log ReferencePath if not null
 
     !! solutionFile
     |> MSBuild.runReleaseExt id outDir msbuildProps "Restore;Rebuild"
