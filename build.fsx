@@ -56,18 +56,18 @@ let gitOwner = "pbi-tools"
 let gitHome = "https://github.com/" + gitOwner
 
 // The name of the project on GitHub
-let gitName = "cli"
+let gitName = "pbi-tools-cli"
 
 // The url for the raw files hosted
 let gitRaw = Environment.environVarOrDefault "gitRaw" ("https://raw.github.com/" + gitOwner)
 
-BuildServer.install [
-    TeamFoundation.Installer
-]
-
 // --------------------------------------------------------------------------------------
 // END TODO: The rest of the file includes standard build steps
 // --------------------------------------------------------------------------------------
+
+BuildServer.install [
+    TeamFoundation.Installer
+]
 
 let buildDir = ".build"
 let outDir = buildDir @@ "out"

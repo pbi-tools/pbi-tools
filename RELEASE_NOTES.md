@@ -1,7 +1,7 @@
 
-## 0.11.0 - 2020-05-25
+## 1.0.0-prerelease - 2020-06-03
 * Changed target framework to .Net 4.7.2 (allows compatibility with external libraries that only support .Net Standard 2.0, rather than legacy .Net Framework versions)
-* Upgraded AMO library to 18.7, supporting latest TMSL features
+* Upgraded AMO library to 19.2.0.2, supporting latest TMSL features
 * Upgraded various other 3rd party dependencies
 * Support for new PBIX metadata format ("V3"), introduced in March 2020 version of Power BI Desktop
   * `PbixModel` API now available
