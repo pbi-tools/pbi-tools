@@ -128,6 +128,7 @@ namespace PbiTools
                 {
                     { "version", AssemblyVersionInformation.AssemblyInformationalVersion },
                     { "build", AssemblyVersionInformation.AssemblyFileVersion },
+                    { "pbiBuildVersion", AssemblyVersionInformation.AssemblyMetadata_PBIBuildVersion },
                     { "effectivePbiInstallDir", DependenciesResolver.Default.GetEffectivePowerBiInstallDir() },
                     { "pbiSessions", JArray.FromObject(PowerBIProcesses.EnumerateProcesses().ToArray()) },
                     { "pbiInstalls", JArray.FromObject(PowerBILocator.FindInstallations()) },

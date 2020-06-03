@@ -103,6 +103,25 @@ let stable =
     | Some stable -> stable
     | _ -> release
 
+// If 'PBITOOLS_PbiInstallDir' points to a valid PBI Desktop installation, set the MSBuild 'ReferencePath' property to that location
+let pbiInstallDir =
+    lazy ( match Environment.environVarOrNone "PBITOOLS_PbiInstallDir" with // PBIDesktop.exe might be in a sub-folder .. getting that folder here
+           | Some path -> Directory.EnumerateFiles(path, "PBIDesktop.exe", SearchOption.AllDirectories)
+                         |> Seq.tryHead
+                         |> function
+                            | Some p -> Some (p |> Path.getDirectory)
+                            | _ -> None
+           | None -> None )
+
+let pbiBuildVersion =
+    lazy ( let dir = match pbiInstallDir.Value with
+                     | Some p -> p
+                     | _ -> @"C:\Program Files\Microsoft Power BI Desktop\bin" // this path is hard-coded in the csproj, so fine to do the same here
+           let pbiDesktopPath = Path.combine dir "PBIDesktop.exe"
+           if pbiDesktopPath |> File.exists then
+              pbiDesktopPath |> File.tryGetVersion
+           else
+              None )
 
 let genCSAssemblyInfo (projectPath) =
     let projectName = System.IO.Path.GetFileNameWithoutExtension(projectPath)
@@ -117,8 +136,8 @@ let genCSAssemblyInfo (projectPath) =
         AssemblyInfo.Description summary
         AssemblyInfo.Version release.AssemblyVersion
         AssemblyInfo.FileVersion fileVersion
-        AssemblyInfo.InformationalVersion release.NugetVersion ]
-        // TODO Add [Metadata] attribute with Power BI ProductVersion compiled against
+        AssemblyInfo.InformationalVersion release.NugetVersion
+        AssemblyInfo.Metadata ("PBIBuildVersion", match pbiBuildVersion.Value with | Some v -> v | _ -> "" ) ]
 
 // Generate assembly info files with the right version & up-to-date information
 Target.create "AssemblyInfo" (fun _ ->
@@ -151,19 +170,10 @@ Target.create "Clean" (fun _ ->
 // Including 'Restore' target addresses issue: https://github.com/fsprojects/Paket/issues/2697
 // Previously, msbuild would fail not being able to find **\obj\project.assets.json
 Target.create "Build" (fun _ ->
-    // If 'PBITOOLS_PbiInstallDir' points to a valid PBI Desktop installation, set the MSBuild 'ReferencePath' property to that location
-    let tryFindPbiDesktopInstall () =
-        match Environment.environVarOrNone "PBITOOLS_PbiInstallDir" with // PBIDesktop.exe might be in a sub-folder .. getting that folder here
-        | Some path -> Directory.EnumerateFiles(path, "PBIDesktop.exe", SearchOption.AllDirectories)
-                       |> Seq.tryHead
-                       |> function
-                          | Some p -> Some (p |> Path.getDirectory)
-                          | _ -> None
-        | None -> None
-    let msbuildProps = match tryFindPbiDesktopInstall () with
-                       | Some dir -> [ "ReferencePath", dir ]
+    let msbuildProps = match pbiInstallDir.Value with
+                       | Some dir -> Trace.logfn "Using assembly ReferencePath: %s" dir
+                                     [ "ReferencePath", dir ]
                        | _ -> []
-    // TODO Log ReferencePath if not null
 
     !! solutionFile
     |> MSBuild.runReleaseExt id outDir msbuildProps "Restore;Rebuild"
