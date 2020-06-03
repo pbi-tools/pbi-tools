@@ -11,6 +11,10 @@
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
+  <PropertyGroup>
+    <!-- See: https://github.com/dotnet/sdk/issues/2809 -->
+    <AssemblySearchPaths>$(ReferencePath);$(AssemblySearchPaths)</AssemblySearchPaths>
+  </PropertyGroup>  
   <ItemGroup>
     <EmbeddedResource Include="..\data\Simple.pbix" Link="Simple.pbix">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
