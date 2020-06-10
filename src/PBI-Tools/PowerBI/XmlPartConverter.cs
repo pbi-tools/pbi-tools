@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text;
 using System.Xml.Linq;
 using Microsoft.PowerBI.Packaging;
@@ -20,7 +21,7 @@ namespace PbiTools.PowerBI
 
         public XDocument FromPackagePart(IStreamablePowerBIPackagePartContent part)
         {
-            if (part == null) return default(XDocument);
+            if (part == null || (part.ContentType?.Contains("json") ?? false)) return default(XDocument);
             using (var reader = new StreamReader(part.GetStream(), _encoding))
             {
                 return XDocument.Load(reader);  // TODO Error Handling

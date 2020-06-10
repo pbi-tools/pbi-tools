@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Xml.Linq;
 using Newtonsoft.Json.Linq;
 using PbiTools.FileSystem;
 using PbiTools.PowerBI;
@@ -21,6 +22,7 @@ namespace PbiTools.Model
         JObject DiagramViewState { get; }
         JObject DiagramLayout { get; }
         JObject LinguisticSchema { get; }
+        XDocument LinguisticSchemaXml { get; }
         JObject ReportMetadata { get; }
         JObject ReportSettings { get; }
         string Version { get; }
@@ -85,7 +87,15 @@ namespace PbiTools.Model
             pbixModel.Report = reader.ReadReport();
             pbixModel.DiagramLayout = reader.ReadDiagramLayout();
             pbixModel.DiagramViewState = reader.ReadDiagramViewState();
-            pbixModel.LinguisticSchema = reader.ReadLinguisticSchemaV3();
+
+            Log.Debug("Reading LinguisticSchemaXml...");
+            pbixModel.LinguisticSchemaXml = reader.ReadLinguisticSchema();
+
+            if (pbixModel.LinguisticSchemaXml == null)
+            {
+                Log.Debug("Reading LinguisticSchema...");
+                pbixModel.LinguisticSchema = reader.ReadLinguisticSchemaV3();
+            }
             pbixModel.ReportMetadata = reader.ReadReportMetadataV3();
             pbixModel.ReportSettings = reader.ReadReportSettingsV3();
             pbixModel.CustomVisuals = reader.ReadCustomVisuals();
@@ -118,6 +128,7 @@ namespace PbiTools.Model
                 pbixModel.DiagramLayout = serializers.DiagramLayout.DeserializeSafe();
                 pbixModel.DiagramViewState = serializers.DiagramViewState.DeserializeSafe();
                 pbixModel.LinguisticSchema = serializers.LinguisticSchema.DeserializeSafe();
+                pbixModel.LinguisticSchemaXml = serializers.LinguisticSchemaXml.DeserializeSafe();
                 pbixModel.ReportMetadata = serializers.ReportMetadata.DeserializeSafe();
                 pbixModel.ReportSettings = serializers.ReportSettings.DeserializeSafe();
                 pbixModel.CustomVisuals = serializers.CustomVisuals.DeserializeSafe();
@@ -166,6 +177,9 @@ namespace PbiTools.Model
                 if (serializers.LinguisticSchema.Serialize(this.LinguisticSchema))
                     Log.Information("LinguisticSchema extracted to: {Path}", serializers.LinguisticSchema.BasePath);
 
+                if (serializers.LinguisticSchemaXml.Serialize(this.LinguisticSchemaXml))
+                    Log.Information("LinguisticSchema extracted to: {Path}", serializers.LinguisticSchemaXml.BasePath);
+
                 if (serializers.DataModel.Serialize(this.DataModel))
                     Log.Information("DataModel extracted to: {Path}", serializers.DataModel.BasePath);
 
@@ -199,6 +213,7 @@ namespace PbiTools.Model
         public JObject DiagramViewState { get; private set; }
         public JObject DiagramLayout { get; private set; }
         public JObject LinguisticSchema { get; private set; }
+        public XDocument LinguisticSchemaXml { get; private set; }
         public JObject ReportMetadata { get; private set; }
         public JObject ReportSettings { get; private set; }
         public string Version { get; private set; }
