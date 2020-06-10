@@ -78,14 +78,23 @@ namespace PbiTools.Model
                 Version = reader.ReadVersion()
             };
 
+            Log.Verbose("Reading PbixModel from file at {Path} (Version: {Version})", reader.Path, pbixModel.Version);
+
             if (!PbixReader.IsV3Version(pbixModel.Version))
             {
                 throw new NotSupportedException("The PBIX file does not contain a V3 model. This API only supports V3 PBIX files.");
             }
 
+            Log.Debug("Reading Connections...");
             pbixModel.Connections = reader.ReadConnections();
+
+            Log.Debug("Reading Report...");
             pbixModel.Report = reader.ReadReport();
+
+            Log.Debug("Reading DiagramLayout...");
             pbixModel.DiagramLayout = reader.ReadDiagramLayout();
+
+            Log.Debug("Reading DiagramViewState...");
             pbixModel.DiagramViewState = reader.ReadDiagramViewState();
 
             Log.Debug("Reading LinguisticSchemaXml...");
@@ -96,11 +105,20 @@ namespace PbiTools.Model
                 Log.Debug("Reading LinguisticSchema...");
                 pbixModel.LinguisticSchema = reader.ReadLinguisticSchemaV3();
             }
+
+            Log.Debug("Reading ReportMetadata...");
             pbixModel.ReportMetadata = reader.ReadReportMetadataV3();
+
+            Log.Debug("Reading ReportSettings...");
             pbixModel.ReportSettings = reader.ReadReportSettingsV3();
+
+            Log.Debug("Reading CustomVisuals...");
             pbixModel.CustomVisuals = reader.ReadCustomVisuals();
+
+            Log.Debug("Reading StaticResources...");
             pbixModel.StaticResources = reader.ReadStaticResources();
 
+            Log.Debug("Reading DataModel...");
             pbixModel.DataModel = reader.ReadDataModel();  // will fire up SSAS instance if PBIX has embedded model
 
             using (var projectFolder = new ProjectRootFolder(PbixProject.GetProjectFolderForFile(pbixModel.SourcePath)))
