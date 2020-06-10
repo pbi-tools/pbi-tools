@@ -1,5 +1,5 @@
 
-## 1.0.0-alpha.1 - 2020-06-09
+## 1.0.0-alpha.2 - 2020-06-10
 * Changed target framework to .Net 4.7.2 (allows compatibility with external libraries that only support .Net Standard 2.0, rather than legacy .Net Framework versions)
 * Upgraded AMO library to 19.2.0.2, supporting latest TMSL features
 * Upgraded various other 3rd party dependencies
@@ -8,6 +8,7 @@
 * PBIXPROJ format 0.5
 * New CLI action: "export-bim"
 * "info" action: Added 'version', 'pbiSessions'
+* "export-bim" action added
 * Compatible with Power BI Desktop May 2020 version
 * Significantly reduced exe file size by excluding 3rd party satellite assemblies
 * Support for 'PBITOOLS_PbiInstallDir', 'PBITOOLS_LogLevel' environment variables
