@@ -87,7 +87,7 @@ namespace PbiTools
         [ArgActionMethod, ArgShortcut("export-bim"), ArgDescription("Converts the Model artifacts to a TMSL/BIM file.")]
         public void ExportBim(
             [ArgRequired, ArgExistingDirectory, ArgDescription("The PbixProj folder to export the BIM file from.")] string folder,
-            [ArgDescription("")] bool generateDataSources
+            [ArgDescription("Do not generate model data sources.")] bool skipDataSources
         )
         {
             using (var rootFolder = new FileSystem.ProjectRootFolder(folder))
@@ -95,8 +95,9 @@ namespace PbiTools
                 var serializer = new Serialization.TabularModelSerializer(rootFolder);
                 if (serializer.TryDeserialize(out var db))
                 {
-                    if (generateDataSources)
+                    if (!skipDataSources)
                     {
+                        var dependenciesResolver = DependenciesResolver.Default; // Must force initialization of DependencyResolver
                         var dataSources = TabularModel.TabularModelConversions.GenerateDataSources(db);
                         db["model"]["dataSources"] = dataSources;
                     }
