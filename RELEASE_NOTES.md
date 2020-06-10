@@ -1,5 +1,5 @@
 
-## 1.0.0-prerelease - 2020-06-03
+## 1.0.0-alpha.1 - 2020-06-09
 * Changed target framework to .Net 4.7.2 (allows compatibility with external libraries that only support .Net Standard 2.0, rather than legacy .Net Framework versions)
 * Upgraded AMO library to 19.2.0.2, supporting latest TMSL features
 * Upgraded various other 3rd party dependencies
@@ -11,7 +11,8 @@
 * Compatible with Power BI Desktop May 2020 version
 * Significantly reduced exe file size by excluding 3rd party satellite assemblies
 * Support for 'PBITOOLS_PbiInstallDir', 'PBITOOLS_LogLevel' environment variables
-* Appliation icon added
+* Application icon added
+* V3 files are supported with LinguisticSchema in either xml (legacy) or json format
 
 ## 0.10.0 - 2019-11-14
 * Upgraded AMO library to 18.2
