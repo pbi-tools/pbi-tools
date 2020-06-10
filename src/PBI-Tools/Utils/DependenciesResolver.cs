@@ -34,11 +34,14 @@ namespace PbiTools.Utils
 
         public static IDependenciesResolver Default
         {
-            get {
+            get
+            {
+                // TODO Make thread-safe?
                 if (_defaultInstance == null) _defaultInstance = new DependenciesResolver();
                 return _defaultInstance;
             }
-            set {
+            set
+            {
                 _defaultInstance = value;
             }
         }
