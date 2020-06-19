@@ -87,19 +87,25 @@ namespace PbiTools
         [ArgActionMethod, ArgShortcut("export-bim"), ArgDescription("Converts the Model artifacts to a TMSL/BIM file.")]
         public void ExportBim(
             [ArgRequired, ArgExistingDirectory, ArgDescription("The PbixProj folder to export the BIM file from.")] string folder,
-            [ArgDescription("Do not generate model data sources.")] bool skipDataSources
+            [ArgDescription("Do not generate model data sources.")] bool skipDataSources,
+            [ArgDescription("List transformations to be applied to TMSL document.")] ExportTransforms transforms
         )
         {
             using (var rootFolder = new FileSystem.ProjectRootFolder(folder))
             {
                 var serializer = new Serialization.TabularModelSerializer(rootFolder);
-                if (serializer.TryDeserialize(out var db))
+                if (serializer.TryDeserialize(out var db))  // throws for V1 models
                 {
                     if (!skipDataSources)
                     {
                         var dependenciesResolver = DependenciesResolver.Default; // Must force initialization of DependencyResolver
                         var dataSources = TabularModel.TabularModelConversions.GenerateDataSources(db);
                         db["model"]["dataSources"] = dataSources;
+                    }
+
+                    if (transforms.HasFlag(ExportTransforms.RemovePBIDataSourceVersion))
+                    {
+                        db["model"]["defaultPowerBIDataSourceVersion"]?.Parent.Remove();
                     }
 
                     var path = Path.GetFullPath(Path.Combine(folder, "..", $"{Path.GetFileName(folder)}.bim"));
@@ -196,5 +202,11 @@ namespace PbiTools
         Auto, 
         V3,
         Legacy
+    }
+
+    [Flags]
+    public enum ExportTransforms
+    {
+        RemovePBIDataSourceVersion = 1
     }
 }
