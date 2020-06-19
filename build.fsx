@@ -141,8 +141,9 @@ let genCSAssemblyInfo (projectPath) =
 
 // Generate assembly info files with the right version & up-to-date information
 Target.create "AssemblyInfo" (fun _ ->
-    let csProjs = !! "src/**/*.csproj" |> Seq.filter (fun s -> not <| s.Contains("preview"))
-    csProjs |> Seq.iter genCSAssemblyInfo
+    !! "src/**/*.csproj"
+    |> Seq.filter (fun s -> not <| s.Contains("PbiDownloader"))
+    |> Seq.iter genCSAssemblyInfo
 )
 
 
