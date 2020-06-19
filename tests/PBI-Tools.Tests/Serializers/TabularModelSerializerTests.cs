@@ -49,9 +49,38 @@ namespace PbiTools.Tests
             Assert.True(folder.ContainsPath(@"tables\table1\table.json"));
             Assert.True(folder.ContainsPath(@"tables\table2\table.json"));
         }
-        
 
-            #endregion
+        [Theory]
+        [InlineData(@"foo/bar", "foo%2Fbar")]
+        [InlineData(@"foo\bar", "foo%5Cbar")]
+        [InlineData(@"foo""bar", "foo%22bar")]
+        [InlineData(@"foo<bar", "foo%3Cbar")]
+        [InlineData(@"foo>bar", "foo%3Ebar")]
+        [InlineData(@"foo|bar", "foo%7Cbar")]
+        [InlineData(@"foo:bar", "foo%3Abar")]
+        [InlineData(@"foo*bar", "foo%2Abar")]
+        [InlineData(@"foo?bar", "foo%3Fbar")]
+        public void SerializeTables__SanitizesTableName(string tableName, string expectedFolderName)
+        {
+            var folder = new MockProjectFolder();
+            var db = new JObject 
+            {
+                { "model", new JObject {
+                    { "tables", new JArray(
+                        new JObject {
+                            { "name", tableName} 
+                        }
+                    )}
+                }}
+            };
+
+            TabularModelSerializer.SerializeTables(db, folder, new MockQueriesLookup());
+
+            Assert.True(folder.ContainsPath($@"tables\{expectedFolderName}\table.json"));
+        }
+
+
+        #endregion
 
         #region Measures
 

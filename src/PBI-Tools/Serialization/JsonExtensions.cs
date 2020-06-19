@@ -6,7 +6,7 @@ using PbiTools.FileSystem;
 
 namespace PbiTools.Serialization
 {
-    public static class ReportJsonExtensions
+    public static class JsonExtensions
     {
         /// <summary>
         /// Removes the specified property from its parent, parses its content as a string-encoded <see cref="JObject"/>, and saves the parsed json object

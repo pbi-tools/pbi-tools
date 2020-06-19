@@ -4,7 +4,7 @@ using Newtonsoft.Json.Linq;
 
 namespace PbiTools.Serialization
 {
-    public static class ReportJsonTransforms
+    public static class JsonTransforms
     {
         /// <summary>
         /// Sorts the properties of all nested Json objects alphabetically.
@@ -33,10 +33,8 @@ namespace PbiTools.Serialization
         }
 
         /// <summary>
-        /// Removes all named properties from a Json object.
+        /// Removes all named properties from the provided Json object (root level only).
         /// </summary>
-        /// <param name="propertyNames"></param>
-        /// <returns></returns>
         public static Func<JToken, JToken> RemoveProperties(params string[] propertyNames)
         {
             return token =>
@@ -52,6 +50,30 @@ namespace PbiTools.Serialization
 
                 return token;
             };
+        }
+
+
+        /// <summary>
+        /// Recursively removes all named properties from the provided Json object.
+        /// </summary>
+        public static JObject RemoveProperties(this JObject json, params string[] propertyNames)
+        {
+            JToken RemovePropertiesRec(JToken token)
+            {
+                switch (token)
+                {
+                    case JObject obj:
+                        return propertyNames == null ? obj : new JObject(obj.Properties()
+                            .Where(p => !propertyNames.Contains(p.Name))
+                            .Select(p => new JProperty(p.Name, RemovePropertiesRec(p.Value))));
+                    case JArray arr:
+                        return new JArray(arr.Select(RemovePropertiesRec));
+                    default:
+                        return token;
+                }
+            };
+
+            return RemovePropertiesRec(json) as JObject;
         }
     }
 }

@@ -40,6 +40,9 @@ namespace PbiTools.Serialization
 
         public bool Serialize(JObject db)
         {
+            // Ignore PBIT timestamps -- TODO: Make this configurable
+            db = db.RemoveProperties("modifiedTime", "refreshedTime", "lastProcessed", "structureModifiedTime", "lastUpdate", "lastSchemaUpdate", "createdTimestamp");
+
             if (db == null) return false;
 
             var dataSources = db.SelectToken("model.dataSources") as JArray ?? new JArray();
@@ -57,9 +60,6 @@ namespace PbiTools.Serialization
                        dataSource/mashup
                        expressions { name, kind=m, expression } ==> {name}.m  [~~not relevant for PBI~~]
             */
-
-            // TODO - Ignore PBIT timestamps:
-            // modifiedTime, refreshedTime, lastProcessed, structureModifiedTime, lastUpdate, lastSchemaUpdate, createdTimestamp
 
             db = SerializeDataSources(db, _folder, idCache);
             db = SerializeTables(db, _folder, idCache);
@@ -100,7 +100,7 @@ namespace PbiTools.Serialization
 
             foreach (var table in tables.OfType<JObject>())
             {
-                var name = table["name"]?.Value<string>();
+                var name = table["name"]?.Value<string>()?.SanitizeFilename();
                 if (name == null) continue;
 
                 // TODO Come up with a more elegant API
@@ -145,7 +145,7 @@ namespace PbiTools.Serialization
                 var name = hierarchy["name"]?.Value<string>();
                 if (name == null) continue;
 
-                folder.Write(hierarchy, Path.Combine(pathPrefix, "hierarchies", $"{name}.json"));
+                folder.Write(hierarchy, Path.Combine(pathPrefix, "hierarchies", $"{name.SanitizeFilename()}.json"));
             }
 
             table = new JObject(table);
@@ -249,7 +249,7 @@ namespace PbiTools.Serialization
                     MashupSerializer.ExtractMashup(folder, mashupPrefix, mashup);
                 }
 
-                folder.Write(dataSource, $@"dataSources\{dir}\dataSource.json");
+                folder.Write(dataSource, $@"dataSources\{dir.SanitizeFilename()}\dataSource.json");
             }
 
             db.Value<JObject>("model").Remove("dataSources");
@@ -408,6 +408,7 @@ namespace PbiTools.Serialization
 
             if (_folder.GetSubfolder("dataSources").Exists())
             {
+                // TODO Support V1 models
                 throw new NotSupportedException("Legacy PBIX models cannot be deserialized. Please convert the project to the V3 Power BI metadata format first.");
             }
 

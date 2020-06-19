@@ -74,20 +74,20 @@ namespace PbiTools.Serialization
 
                     visualConfig.Save("config", visualFolder);
                     jVisual.Save("visualContainer", visualFolder
-                        , ReportJsonTransforms.SortProperties
-                        , ReportJsonTransforms.NormalizeNumbers
-                        , ReportJsonTransforms.RemoveProperties("queryHash")); // TODO Make transforms configurable
+                        , JsonTransforms.SortProperties
+                        , JsonTransforms.NormalizeNumbers
+                        , JsonTransforms.RemoveProperties("queryHash")); // TODO Make transforms configurable
                 }
 
                 jSection.Save("section", sectionFolder
-                    , ReportJsonTransforms.SortProperties
-                    , ReportJsonTransforms.NormalizeNumbers
-                    , ReportJsonTransforms.RemoveProperties("objectId", "id"));
+                    , JsonTransforms.SortProperties
+                    , JsonTransforms.NormalizeNumbers
+                    , JsonTransforms.RemoveProperties("objectId", "id"));
             }
 
             content.Save("report", _reportFolder
-                , ReportJsonTransforms.SortProperties
-                , ReportJsonTransforms.RemoveProperties("objectId")); // resourcePackage ids tend to change when exporting from powerbi.com
+                , JsonTransforms.SortProperties
+                , JsonTransforms.RemoveProperties("objectId")); // resourcePackage ids tend to change when exporting from powerbi.com
 
             return true;
         }
