@@ -2,6 +2,7 @@
 using System.Text;
 using System.Xml.Linq;
 using Microsoft.PowerBI.Client.Windows;
+using PbiPackaging = Microsoft.PowerBI.Packaging.Storage;
 using Newtonsoft.Json.Linq;
 using PbiTools.Model;
 using PbiTools.Utils;
@@ -21,7 +22,7 @@ namespace PbiTools.PowerBI
 
         #region Legacy
 
-        public IPowerBIPartConverter<JObject> ReportSettings { get; } = new BinarySerializationConverter<ReportSettings>();
+        public IPowerBIPartConverter<JObject> ReportSettings { get; } = new BinarySerializationConverter<PbiPackaging.ReportSettings>();
         public IPowerBIPartConverter<JObject> ReportMetadata { get; } = new BinarySerializationConverter<ReportMetadataContainer>();
         public IPowerBIPartConverter<MashupParts> DataMashup { get; } = new MashupConverter();
         public IPowerBIPartConverter<XDocument> LinguisticSchema { get; } = new XmlPartConverter();
