@@ -3,13 +3,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Microsoft.Win32;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Serilog;
 
 namespace PbiTools.Utils
@@ -176,152 +172,6 @@ namespace PbiTools.Utils
         }
 
         public string GetEffectivePowerBiInstallDir() => _pbiInstall.Value.InstallDir;
-
-    }
-
-    public class PowerBIDesktopInstallation
-    {
-        public string ProductVersion { get; set; }
-        [JsonIgnore]
-        public Version Version { get; set; }
-        public bool Is64Bit { get; set; }
-        public string InstallDir { get; set; }
-        public PowerBIDesktopInstallationLocation Location { get; set; }
-    }
-
-    [JsonConverter(typeof(StringEnumConverter))]
-    public enum PowerBIDesktopInstallationLocation
-    {
-        WindowsStore,
-        Installer,
-        Custom
-    }
-
-    public class PowerBILocator
-    {
-        private const string PBIDesktop_exe = "PBIDesktop.exe";
-        private static readonly ILogger Log = Serilog.Log.ForContext<PowerBILocator>();
-
-        public static PowerBIDesktopInstallation[] FindInstallations()
-        {
-            var installs = new List<PowerBIDesktopInstallation>();
-            if (TryFindCustomInstallation(out var customInstall))
-            {
-                installs.Add(customInstall);
-            }
-            installs.AddRange(GetWindowsStoreInstalls());
-            installs.AddRange(GetInstallerInstalls());
-            return installs.ToArray();
-        }
-
-        public static bool TryFindCustomInstallation(string path, out PowerBIDesktopInstallation install)
-        {
-            install = null;
-            try
-            {
-                if (!Directory.Exists(path)) return false;
-
-                var pbiExePath = Directory.EnumerateFiles(path, PBIDesktop_exe, SearchOption.AllDirectories).FirstOrDefault();
-                if (pbiExePath == null) return false;
-
-                var fileInfo = FileVersionInfo.GetVersionInfo(pbiExePath);
-                install = new PowerBIDesktopInstallation
-                {
-                    InstallDir = Path.GetDirectoryName(fileInfo.FileName),
-                    Is64Bit = PeNet.PeFile.Is64BitPeFile(fileInfo.FileName),
-                    ProductVersion = fileInfo.ProductVersion,
-                    Version = ParseProductVersion(fileInfo.ProductVersion),
-                    Location = PowerBIDesktopInstallationLocation.Custom
-                };
-                Log.Verbose("Located Power BI Desktop custom install at {Path}", pbiExePath);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Log.Warning(ex, "An error occurred when parsing custom PBI install location at {Path}", path);
-                return false;
-            }
-        }
-
-        public static bool TryFindCustomInstallation(out PowerBIDesktopInstallation install)
-        {
-            var envPbiInstallDir = Environment.GetEnvironmentVariable($"{AppSettings.EnvPrefix}PbiInstallDir");
-            if (!string.IsNullOrEmpty(envPbiInstallDir))
-                return TryFindCustomInstallation(envPbiInstallDir, out install);
-            else
-            {
-                install = null;
-                return false;
-            }
-        }
-
-        private static readonly string StoreInstallKey =
-            @"SOFTWARE\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppModel\PackageRepository\Packages";
-
-        internal static IEnumerable<PowerBIDesktopInstallation> GetWindowsStoreInstalls()
-        {
-            using (var key = Registry.LocalMachine.OpenSubKey(StoreInstallKey, writable: false))
-            {
-                if (key != null)
-                {
-                    var names = key.GetSubKeyNames();
-                    foreach (var name in names.Where(n => n.StartsWith("Microsoft.MicrosoftPowerBIDesktop")))
-                    {
-                        using (var subKey = key.OpenSubKey(name, writable: false))
-                        {
-                            var path = Path.Combine((string)subKey?.GetValue("Path") ?? "", "bin", PBIDesktop_exe);
-                            if (File.Exists(path))
-                            {
-                                var fileInfo = FileVersionInfo.GetVersionInfo(path);
-                                yield return new PowerBIDesktopInstallation
-                                {
-                                    InstallDir = Path.GetDirectoryName(fileInfo.FileName),
-                                    Is64Bit = fileInfo.FileName.Contains("x64"),
-                                    ProductVersion = fileInfo.ProductVersion,
-                                    Version = ParseProductVersion(fileInfo.ProductVersion),
-                                    Location = PowerBIDesktopInstallationLocation.WindowsStore
-                                };
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        private static readonly string[] InstallerKeys = // TODO 32/64?
-        {
-            @"SOFTWARE\Microsoft\Microsoft Power BI Desktop\Installer",
-            @"SOFTWARE\WOW6432Node\Microsoft\Microsoft Power BI Desktop\Installer",
-        };
-
-        internal static IEnumerable<PowerBIDesktopInstallation> GetInstallerInstalls()
-        {
-            foreach (var baseKey in InstallerKeys)
-            using (var key = Registry.LocalMachine.OpenSubKey(baseKey, writable: false))
-            {
-                var path = Path.Combine((string)key?.GetValue("InstallPath") ?? "", "bin", PBIDesktop_exe);
-                if (File.Exists(path))
-                {
-                    var fileInfo = FileVersionInfo.GetVersionInfo(path);
-                    var win64 = (string)key.GetValue("Win64Install");
-                    yield return new PowerBIDesktopInstallation
-                    {
-                        InstallDir = Path.GetDirectoryName(fileInfo.FileName),
-                        Is64Bit = win64.Equals("yes", StringComparison.OrdinalIgnoreCase),
-                        ProductVersion = fileInfo.ProductVersion,
-                        Version = ParseProductVersion(fileInfo.ProductVersion),
-                        Location = PowerBIDesktopInstallationLocation.Installer
-                    };
-                }
-            }
-        }
-
-        internal static Version ParseProductVersion(string versionString)
-        {
-            if (Version.TryParse(versionString.Split(' ')[0], out var version))
-                return version;
-            else return new Version();
-        }
 
     }
 }
