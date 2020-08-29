@@ -1,4 +1,4 @@
-version 5.245.1
+version 5.249.2
 
 group Main
   source https://api.nuget.org/v3/index.json

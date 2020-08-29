@@ -1,3 +1,8 @@
+2.84.981.0 # Aug-2020
+2.84.701.0
+2.83.5894.961;https://download.microsoft.com/download/8/8/0/880BCA75-79DD-466A-927D-1ABF1F5454B0/PBIDesktopSetup-2020-07_x64.exe
+2.83.5894.721
+2.82.5858.1161;https://download.microsoft.com/download/8/8/0/880BCA75-79DD-466A-927D-1ABF1F5454B0/PBIDesktopSetup-2020-06_x64.exe
 2.82.5858.641
 2.81.5831.1181;https://download.microsoft.com/download/8/8/0/880BCA75-79DD-466A-927D-1ABF1F5454B0/PBIDesktopSetup-2020-05_x64.exe
 2.81.5831.821
