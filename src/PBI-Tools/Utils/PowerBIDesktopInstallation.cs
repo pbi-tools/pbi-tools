@@ -14,6 +14,7 @@ namespace PbiTools.Utils
         [JsonIgnore]
         public Version Version { get; set; }
         public bool Is64Bit { get; set; }
+        public bool? V3ModelEnabled { get; set; }
         public string InstallDir { get; set; }
         public PowerBIDesktopInstallationLocation Location { get; set; }
     }

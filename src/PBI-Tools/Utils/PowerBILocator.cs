@@ -5,7 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
+using System.Xml.Linq;
+using System.Xml.XPath;
 using Microsoft.Win32;
 using Serilog;
 
@@ -74,6 +77,7 @@ namespace PbiTools.Utils
 
         internal static IEnumerable<PowerBIDesktopInstallation> GetWindowsStoreInstalls()
         {
+            var settingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Microsoft\\Power BI Desktop Store App");
             using (var key = Registry.LocalMachine.OpenSubKey(StoreInstallKey, writable: false))
             {
                 if (key != null)
@@ -93,7 +97,8 @@ namespace PbiTools.Utils
                                     Is64Bit = fileInfo.FileName.Contains("x64"),
                                     ProductVersion = fileInfo.ProductVersion,
                                     Version = ParseProductVersion(fileInfo.ProductVersion),
-                                    Location = PowerBIDesktopInstallationLocation.WindowsStore
+                                    Location = PowerBIDesktopInstallationLocation.WindowsStore,
+                                    V3ModelEnabled = TryGetV3ModelEnabledFeatureSwitch(settingsPath, out var enabled) ? enabled : default(bool?),
                                 };
                             }
                         }
@@ -110,6 +115,7 @@ namespace PbiTools.Utils
 
         internal static IEnumerable<PowerBIDesktopInstallation> GetInstallerInstalls()
         {
+            var settingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft\\Power BI Desktop");
             foreach (var baseKey in InstallerKeys)
             using (var key = Registry.LocalMachine.OpenSubKey(baseKey, writable: false))
             {
@@ -124,7 +130,8 @@ namespace PbiTools.Utils
                         Is64Bit = win64.Equals("yes", StringComparison.OrdinalIgnoreCase),
                         ProductVersion = fileInfo.ProductVersion,
                         Version = ParseProductVersion(fileInfo.ProductVersion),
-                        Location = PowerBIDesktopInstallationLocation.Installer
+                        Location = PowerBIDesktopInstallationLocation.Installer,
+                        V3ModelEnabled = TryGetV3ModelEnabledFeatureSwitch(settingsPath, out var enabled) ? enabled : default(bool?),
                     };
                 }
             }
@@ -135,6 +142,33 @@ namespace PbiTools.Utils
             if (Version.TryParse(versionString.Split(' ')[0], out var version))
                 return version;
             else return new Version();
+        }
+
+        private static readonly Guid V3ModelFeatureGuid = new Guid("C15D05E2-F1C1-4F62-94B2-0F179E080741");
+
+        internal static bool TryGetV3ModelEnabledFeatureSwitch(string settingsPath, out bool enabled)
+        {
+            enabled = false;
+            var userSettingsPath = Path.Combine(settingsPath, "User.zip");
+            if (!File.Exists(userSettingsPath)) return false;
+
+            using (var file = File.OpenRead(userSettingsPath))
+            using (var zip = new ZipArchive(file))
+            {
+                var entry = zip.Entries.Single(e => e.FullName == "FeatureSwitches/FeatureSwitches.xml");
+                using (var stream = entry.Open())
+                {
+                    var xml = XDocument.Load(stream);
+                    var xEntry = xml.XPathSelectElement($"//Entry[@Type='{V3ModelFeatureGuid.ToString()}']");
+                    if (xEntry != null)
+                    {
+                        enabled = xEntry.Attribute("Value").Value.Contains("1");
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
     }
