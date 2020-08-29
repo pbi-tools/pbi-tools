@@ -20,7 +20,6 @@ namespace PbiTools.Utils
     public class DependenciesResolver : IDependenciesResolver
     {
         private const string MSMDSRV_EXE = "msmdsrv.exe";
-        private const string LOCALAPPDATA = "%LOCALAPPDATA%";
 
         private static readonly ILogger Log = Serilog.Log.ForContext<DependenciesResolver>();
 
@@ -95,11 +94,6 @@ namespace PbiTools.Utils
             };
         }
 
-        private static string GetShadowCopyDir(string winAppHandle) => Path.Combine(
-            Environment.ExpandEnvironmentVariables(LOCALAPPDATA),  // TODO Refactor APPDATA folder into dedicated component
-            "pbi-tools",                                           // TODO make platform specific (x64/x86)
-            winAppHandle);
-
         private static string GetWinAppHandle(string path) => path.Split(Path.DirectorySeparatorChar)
             .FirstOrDefault(s => s.StartsWith("Microsoft.MicrosoftPowerBIDesktop"));
 
@@ -117,7 +111,7 @@ namespace PbiTools.Utils
             if (winAppHandle != null)
             {
                 var shadowCopyPath = Path.Combine(
-                    GetShadowCopyDir(winAppHandle),
+                    ApplicationFolders.GetShadowCopyDir(winAppHandle),
                     MSMDSRV_EXE);
                 if (File.Exists(shadowCopyPath))
                     path = shadowCopyPath;
@@ -159,7 +153,7 @@ namespace PbiTools.Utils
                 }
             }
 
-            var copyDest = GetShadowCopyDir(winAppHandle);
+            var copyDest = ApplicationFolders.GetShadowCopyDir(winAppHandle);
 
             foreach (var file in files)
             {

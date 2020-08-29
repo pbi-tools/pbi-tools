@@ -158,6 +158,31 @@ namespace PbiTools
             }
         }
 
+        [ArgActionMethod, ArgShortcut("cache"), ArgDescription("Manages the internal assembly cache")]
+        public void Cache(
+            [ArgRequired, ArgDescription("The cache action to perform")] CacheAction action
+        )
+        {
+            var folders = Directory.GetDirectories(ApplicationFolders.AppDataFolder);
+            
+            switch (action)
+            {
+                case CacheAction.List:
+                    Array.ForEach(folders, f =>
+                        Console.WriteLine($"- {Path.GetFileName(f)}")
+                    );
+                    break;
+                case CacheAction.Clear:
+                    Array.ForEach(folders, f => 
+                    {
+                        Directory.Delete(f, recursive: true);
+                        Console.WriteLine($"Deleted: {Path.GetFileName(f)}");
+                    });
+                    break;
+            }
+        }
+
+
         [ArgActionMethod, ArgShortcut("start-server"), HideFromUsage]
         public void StartJsonRpcServer()
         {
@@ -208,5 +233,13 @@ namespace PbiTools
     public enum ExportTransforms
     {
         RemovePBIDataSourceVersion = 1
+    }
+
+    public enum CacheAction
+    {
+        [ArgDescription("List all cache folders")]
+        List = 1,
+        [ArgDescription("Clear all cache folders")]
+        Clear
     }
 }
