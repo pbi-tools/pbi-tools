@@ -136,6 +136,7 @@ namespace PbiTools.Utils
             "FlightRecorderTraceDef.xml",
             "Microsoft.Data*",
             "Microsoft.Mashup*",
+            "Microsoft.Spatial*",
             "PowerBIExtensions*"
         };
 
