@@ -9,24 +9,25 @@ async Task Main()
 {
 	var downloadUrlBase = "https://download.microsoft.com/download/8/8/0/880BCA75-79DD-466A-927D-1ABF1F5454B0/";
 	var downloadFilename = // --------------"PBIDesktopSetup-2019-10_x64.exe";
-	// "PBIDesktopSetup-2019-11_x64.exe";
-	// "PBIDesktopSetup-2019-12_x64.exe";
-	// "PBIDesktopSetup-2020-02_x64.exe";
-	// "PBIDesktopSetup-2020-03_x64.exe";
-	// "PBIDesktopSetup-2020-04_x64.exe";
-	 "PBIDesktopSetup_x64.exe";
+						   // "PBIDesktopSetup-2019-11_x64.exe";
+						   // "PBIDesktopSetup-2019-12_x64.exe";
+						   // "PBIDesktopSetup-2020-02_x64.exe";
+						   // "PBIDesktopSetup-2020-03_x64.exe";
+						   // "PBIDesktopSetup-2020-04_x64.exe";
+						   // "PBIDesktopSetup-2020-05_x64.exe";
+						   // "PBIDesktopSetup-2020-06_x64.exe";
+						   // "PBIDesktopSetup-2020-07_x64.exe";
+						   "PBIDesktopSetup_x64.exe";
+	var skipDownload = false;
+	var skipExtract = false;
 
 	/********************************************************/
-	var rootFolder = @"E:\temp\pbi-downloader\PBIDesktop_x64";
+	var rootFolder = @"D:\temp\pbi-downloader\PBIDesktop_x64";
 	/********************************************************/
 	var tempFolder = Path.Combine(rootFolder, "_temp");
 	
 	var downloadPath = Path.Combine(tempFolder, downloadFilename);
-	var extractPath = Path.Combine(tempFolder, Path.GetFileNameWithoutExtension(downloadFilename));
-	
-	Directory.CreateDirectory(extractPath);
 
-	var skipDownload = false;
 	if (!skipDownload)
 	{
 		"Downloading...".Dump();
@@ -44,6 +45,14 @@ async Task Main()
 	var versionInfo = FileVersionInfo.GetVersionInfo(downloadPath).Dump();
 	// Here, determine if extraction is needed
 	
+	if (skipExtract) return;
+
+	var extractPath = Path.Combine(tempFolder, Path.GetFileNameWithoutExtension(downloadFilename));
+	Directory.CreateDirectory(extractPath);
+
+	var destDir = Path.Combine(tempFolder, versionInfo.ProductVersion);
+	var logPath = $"{destDir}.log";
+
 	var darkExe = Environment.ExpandEnvironmentVariables(@"%WIX%bin\dark.exe"); // TODO Find exe: $env:WIX, $env:PATH, ??
 	using (var darkProc = new Process())
 	{
@@ -75,8 +84,6 @@ async Task Main()
 	var msiPath = Directory.EnumerateFiles(Path.Combine(extractPath, "AttachedContainer"), "*.msi").FirstOrDefault().Dump();
 	if (msiPath != null)
 	{
-		var destDir = Path.Combine(tempFolder, versionInfo.ProductVersion);
-		var logPath = $"{destDir}.log";
 		Directory.CreateDirectory(destDir);
 
 		var hwnd = IntPtr.Zero;
@@ -87,8 +94,13 @@ async Task Main()
 		var result = PInvoke.Msi.MsiInstallProduct(msiPath, $"ACTION=ADMIN TARGETDIR=\"{destDir}\"");
 		result.Dump(); // Expect: NERR_Success
 	}
-	
-	// TODO: Move {destDir} >> 
+
+	var archiveDir = Path.Combine(rootFolder, versionInfo.ProductVersion).Dump("Moving to...");
+	if (!Directory.Exists(archiveDir))
+	{
+		Directory.Move(destDir, archiveDir);
+		File.Move(logPath, Path.Combine(rootFolder, $"{versionInfo.ProductVersion}.log"));
+	}
 }
 
 // Define other methods, classes and namespaces here
