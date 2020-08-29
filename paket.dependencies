@@ -51,6 +51,7 @@ group Fake-Build
   nuget Fake.DotNet.Paket
   nuget Fake.DotNet.Testing.XUnit2
   nuget Fake.IO.FileSystem
+  nuget Fake.IO.Zip
 
 group Fake-Tools
   source https://api.nuget.org/v3/index.json

@@ -193,6 +193,11 @@ Target.create "Test" (fun _ ->
                                      XmlOutputPath = Some (testDir @@ "xunit.xml") } )
 )
 
+Target.create "Pack" (fun _ ->
+    !! (distDir @@ "*.*")
+    |> Zip.zip distDir (sprintf @"%s\pbi-tools.%s.zip" buildDir release.NugetVersion)
+)
+
 Target.create "Help" (fun _ ->
     Trace.traceError "Please specify a target to run."
 )
@@ -205,6 +210,7 @@ open Fake.Core.TargetOperators
   ==> "AssemblyInfo"
   ==> "Build"
   ==> "Test"
+  ==> "Pack"
 
 // --------------------------------------------------------------------------------------
 // Show help by default. Invoke 'fake build -t <Target>' to override
