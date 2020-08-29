@@ -28,7 +28,7 @@ NUGET
       System.Runtime.CompilerServices.Unsafe (>= 4.5.2)
       System.Threading.Tasks.Extensions (>= 4.5.3)
     MessagePack.Annotations (2.1.90)
-    Microsoft.AnalysisServices.retail.amd64 (19.6)
+    Microsoft.AnalysisServices.retail.amd64 (19.9.0.1)
     Microsoft.Bcl.AsyncInterfaces (1.1)
       System.Threading.Tasks.Extensions (>= 4.5.2)
     Microsoft.NETCore.Platforms (3.1.1) - restriction: || (&& (== net472) (< net45)) (&& (== net472) (>= netcoreapp2.0)) (&& (== net472) (>= netcoreapp5.0)) (== netcoreapp3.1)
