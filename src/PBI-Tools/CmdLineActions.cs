@@ -27,6 +27,7 @@ namespace PbiTools
     {
 
         private readonly AppSettings _appSettings;
+        private readonly IDependenciesResolver _dependenciesResolver = DependenciesResolver.Default;
         private readonly Stopwatch _stopWatch = Stopwatch.StartNew();
 
         public CmdLineActions() : this(Program.AppSettings)
@@ -53,7 +54,7 @@ namespace PbiTools
         )
         {
             // TODO Support '-parts' parameter, listing specifc parts to extract only
-            using (var reader = new PbixReader(path, DependenciesResolver.Default))
+            using (var reader = new PbixReader(path, _dependenciesResolver))
             {
                 if (mode == ExtractActionCompatibilityMode.Legacy)
                 {
@@ -98,7 +99,6 @@ namespace PbiTools
                 {
                     if (!skipDataSources)
                     {
-                        var dependenciesResolver = DependenciesResolver.Default; // Must force initialization of DependencyResolver
                         var dataSources = TabularModel.TabularModelConversions.GenerateDataSources(db);
                         db["model"]["dataSources"] = dataSources;
                     }

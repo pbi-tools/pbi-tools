@@ -15,6 +15,7 @@ namespace PbiTools.Utils
         bool TryFindMsmdsrv(out string path);
         string ShadowCopyMsmdsrv(string path);
         string GetEffectivePowerBiInstallDir();
+        PowerBIDesktopInstallation[] PBIInstalls { get; }
     }
 
     public class DependenciesResolver : IDependenciesResolver
@@ -24,7 +25,11 @@ namespace PbiTools.Utils
         private static readonly ILogger Log = Serilog.Log.ForContext<DependenciesResolver>();
 
 
-        private readonly Lazy<PowerBIDesktopInstallation> _pbiInstall = new Lazy<PowerBIDesktopInstallation>(GetPBIInstall);
+        private readonly Lazy<PowerBIDesktopInstallation[]> _pbiInstalls = new Lazy<PowerBIDesktopInstallation[]>(PowerBILocator.FindInstallations);
+        private PowerBIDesktopInstallation _effectivePbiInstall;
+
+        public PowerBIDesktopInstallation[] PBIInstalls => _pbiInstalls.Value;
+
         private static IDependenciesResolver _defaultInstance;
 
         public static IDependenciesResolver Default
@@ -46,10 +51,10 @@ namespace PbiTools.Utils
             AppDomain.CurrentDomain.AssemblyResolve += AssemblyResolve(this);
         }
 
-        private static PowerBIDesktopInstallation GetPBIInstall()
+        private PowerBIDesktopInstallation GetPBIInstall()
         {
             // TODO Allow to customize preference: Custom|WindowsStore|Installer
-            var allInstalls = PowerBILocator.FindInstallations();
+            var allInstalls = _pbiInstalls.Value;
             var install = allInstalls
                 .Where(x => x.Is64Bit && x.Location == PowerBIDesktopInstallationLocation.Custom)
                 .OrderByDescending(x => x.Version)        // Use highest version installed
@@ -80,7 +85,7 @@ namespace PbiTools.Utils
                 Log.Verbose("Attempting to resolve assembly: {AssemblyName}", args.Name);
 
                 var dllName = args.Name.Split(',')[0];
-                var path = Path.Combine(_pbiInstall.Value.InstallDir, $"{dllName}.dll");
+                var path = Path.Combine(GetEffectivePowerBiInstallDir(), $"{dllName}.dll");
                 if (File.Exists(path))
                 {
                     Log.Debug("Assembly '{AssemblyName}' found at {Path}", args.Name, path);
@@ -103,7 +108,7 @@ namespace PbiTools.Utils
             // need to shadow-copy MSDMSRV and dependencies into %LOCALAPPDATA%
 
             path = Path.Combine(
-                _pbiInstall.Value.InstallDir, // "C:\\Program Files\\WindowsApps\\Microsoft.MicrosoftPowerBIDesktop_2.56.5023.0_x64__8wekyb3d8bbwe\\bin"
+                GetEffectivePowerBiInstallDir(), // "C:\\Program Files\\WindowsApps\\Microsoft.MicrosoftPowerBIDesktop_2.56.5023.0_x64__8wekyb3d8bbwe\\bin"
                 MSMDSRV_EXE
             );
 
@@ -166,7 +171,15 @@ namespace PbiTools.Utils
             return Path.Combine(copyDest, MSMDSRV_EXE);
         }
 
-        public string GetEffectivePowerBiInstallDir() => _pbiInstall.Value.InstallDir;
+        public string GetEffectivePowerBiInstallDir()
+        {
+            if (_effectivePbiInstall == null)
+            {
+                _effectivePbiInstall = GetPBIInstall();
+            }
+            return _effectivePbiInstall.InstallDir;
+        }
+
 
     }
 }
