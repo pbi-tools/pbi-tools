@@ -1,4 +1,7 @@
-﻿using Microsoft.PowerBI.Packaging;
+﻿// Copyright (c) Mathias Thierbach
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
+using Microsoft.PowerBI.Packaging;
 
 namespace PbiTools.PowerBI
 {
