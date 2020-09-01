@@ -1,22 +1,42 @@
 
 ## 1.0.0-alpha.5 - 2020-08-29
-* Changed target framework to .Net 4.7.2 (allows compatibility with external libraries that only support .Net Standard 2.0, rather than legacy .Net Framework versions)
 * Upgraded AMO library to 19.9, supporting latest TMSL features
+* New CLI action: "cache"
+* "info" action: Added 'pbiInstall/V3ModelEnabled'
+* "cache" action: Manages the internal assembly cache for MSMDSRV (Options: List,Clear)
+* Bugfix for Aug 2020 release (2.84)
+* https://github.com/microsoft/powerbi-desktop-samples.git added as submodule (/data/external) for testing purposes
+
+## 1.0.0-alpha.4 - 2020-07-21
+* Upgraded AMO library to 19.6, supporting latest TMSL features
+* Fixed braking change in Power BI Desktop July 2020 (2.83) version
+
+## 1.0.0-alpha.3 - 2020-06-19
+* Upgraded AMO library to 19.4.0.2, supporting latest TMSL features
+* "export-bim" action
+  * New argument added: `-transforms RemovePBIDataSourceVersion`
+* TabularModel Serializer
+  * Ignore timestamp properties in TMSL (for *.pbit files)
+  * Sanitize table, hierarchy, and data source names
+
+## 1.0.0-alpha.2 - 2020-06-10
+* Improvements to "export-bim" action
+  * Replaced `-generateDataSources` with `-skipDataSources` (reversed default)
+
+## 1.0.0-alpha.1 - 2020-06-09
+* Changed target framework to .Net 4.7.2 (allows compatibility with external libraries that only support .Net Standard 2.0, rather than legacy .Net Framework versions)
+* Upgraded AMO library to 19.2.0.2, supporting latest TMSL features
 * Upgraded various other 3rd party dependencies
 * Support for new PBIX metadata format ("V3"), introduced in March 2020 version of Power BI Desktop
   * `PbixModel` API now available
 * PBIXPROJ format 0.5
-* New CLI actions: "export-bim", "cache"
-* "info" action: Added 'version', 'pbiSessions', 'pbiInstall/V3ModelEnabled'
-* "export-bim" action: Convert the Model artifacts to a TMSL/BIM file
-* "cache" action: Manages the internal assembly cache for MSMDSRV (Options: List,Clear)
-* Compatible with Power BI Desktop July 2020 (2.83) version
-* Bugfix for Aug 2020 release (2.84)
+* New CLI action: "export-bim"
+* "info" action: Added 'version', 'pbiSessions'
+* Compatible with Power BI Desktop May 2020 version
 * Significantly reduced exe file size by excluding 3rd party satellite assemblies
 * Support for `PBITOOLS_PbiInstallDir`, `PBITOOLS_LogLevel` environment variables
 * Application icon added
 * V3 files are supported with LinguisticSchema in either xml (legacy) or json format
-* https://github.com/microsoft/powerbi-desktop-samples.git added as submodule (/data/external) for testing purposes
 
 ## 0.10.0 - 2019-11-14
 * Upgraded AMO library to 18.2
