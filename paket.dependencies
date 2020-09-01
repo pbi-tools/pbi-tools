@@ -9,7 +9,9 @@ group Main
   nuget Serilog
   nuget Serilog.Sinks.Console
   nuget Microsoft.AnalysisServices.retail.amd64
+  nuget Microsoft.AnalysisServices.AdomdClient.retail.amd64
   nuget Newtonsoft.Json
+  nuget CsvHelper
   nuget PowerArgs
   nuget Moq
   nuget System.ValueTuple

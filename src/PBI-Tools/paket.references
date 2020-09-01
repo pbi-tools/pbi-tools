@@ -1,6 +1,7 @@
 Serilog
 Serilog.Sinks.Console
 Microsoft.AnalysisServices.retail.amd64
+Microsoft.AnalysisServices.AdomdClient.retail.amd64
 Newtonsoft.Json
 PowerArgs
 System.ValueTuple
@@ -10,3 +11,4 @@ Costura.Fody
 Moq
 HtmlAgilityPack
 PeNet
+CsvHelper

@@ -14,6 +14,7 @@ using PbiTools.PowerBI;
 using PbiTools.Rpc;
 using PbiTools.Utils;
 using PowerArgs;
+using Serilog;
 using Serilog.Events;
 
 namespace PbiTools
@@ -25,6 +26,9 @@ namespace PbiTools
     [ApplyDefinitionTransforms]
     public class CmdLineActions
     {
+
+        private static readonly ILogger Log = Serilog.Log.ForContext<CmdLineActions>();
+
 
         private readonly AppSettings _appSettings;
         private readonly IDependenciesResolver _dependenciesResolver = DependenciesResolver.Default;
@@ -186,6 +190,54 @@ namespace PbiTools
             }
         }
 
+        // [ArgActionMethod, ArgShortcut("list-tables"), ArgDescription("")]
+        // public void ListTables()
+        // {}
+
+        [ArgActionMethod, ArgShortcut("extract-data"), ArgDescription("Extract data from all tables in a tabular model, either from within a PBIX file, or from a live session.")]
+        public void ExtractData(
+            [ArgCantBeCombinedWith("pbixPath"), ArgDescription("The port number of a local Tabular Server instance.")] int port,
+            [ArgRequired(IfNot = "port"), ArgExistingFile, ArgDescription("The PBIX file to extract data from.")] string pbixPath,
+            [ArgDescription("The output directory. Uses working directory if not provided.")] string outPath
+        )
+        {
+            if (outPath == null && pbixPath != null)
+                outPath = Path.GetDirectoryName(pbixPath);
+            else if (outPath == null)
+                outPath = Environment.CurrentDirectory;
+
+            Log.Verbose("Port: {Port}, Path: {PbixPath}, OutPath: {OutPath}", port, pbixPath, outPath);
+
+            if (pbixPath != null)
+            {
+                using (var file = File.OpenRead(pbixPath))
+                using (var package = Microsoft.PowerBI.Packaging.PowerBIPackager.Open(file, skipValidation: true))
+                using (var msmdsrv = new AnalysisServicesServer(new ASInstanceConfig
+                {
+                    DeploymentMode = DeploymentMode.SharePoint,
+                    DisklessModeRequested = true,
+                    EnableDisklessTMImageSave = true,
+                }, _dependenciesResolver))
+                {
+                    msmdsrv.HideWindow = true;
+
+                    msmdsrv.Start();
+                    msmdsrv.LoadPbixModel(package.DataModel, "Model", "Model");
+
+                    using (var reader = new TabularModel.TabularDataReader(msmdsrv.OleDbConnectionString))
+                    {
+                        reader.ExtractTableData(outPath);
+                    }
+                }
+            }
+            else
+            {
+                using (var reader = new TabularModel.TabularDataReader($"Provider=MSOLAP;Data Source=.:{port};"))
+                {
+                    reader.ExtractTableData(outPath);
+                }
+            }
+        }
 
         [ArgActionMethod, ArgShortcut("start-server"), HideFromUsage]
         public void StartJsonRpcServer()
