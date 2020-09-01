@@ -62,7 +62,7 @@ namespace PbiTools.Utils
 
         public static bool TryFindCustomInstallation(out PowerBIDesktopInstallation install)
         {
-            var envPbiInstallDir = Environment.GetEnvironmentVariable($"{AppSettings.EnvPrefix}PbiInstallDir");
+            var envPbiInstallDir = AppSettings.GetEnvironmentSetting(AppSettings.Environment.PbiInstallDir);
             if (!string.IsNullOrEmpty(envPbiInstallDir))
                 return TryFindCustomInstallation(envPbiInstallDir, out install);
             else

@@ -139,8 +139,12 @@ namespace PbiTools
                     { "pbiBuildVersion", AssemblyVersionInformation.AssemblyMetadata_PBIBuildVersion },
                     { "amoVersion", typeof(Microsoft.AnalysisServices.Tabular.Server).Assembly
                         .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion },
-                    { "effectivePbiInstallDir", DependenciesResolver.Default.GetEffectivePowerBiInstallDir() },
-                    { "pbiInstalls", JArray.FromObject(PowerBILocator.FindInstallations()) },
+                    { "settings", new JObject {
+                        { AppSettings.Environment.LogLevel, AppSettings.GetEnvironmentSetting(AppSettings.Environment.LogLevel) },
+                        { AppSettings.Environment.PbiInstallDir, AppSettings.GetEnvironmentSetting(AppSettings.Environment.PbiInstallDir) },
+                    }},
+                    { "pbiInstalls", JArray.FromObject(_dependenciesResolver.PBIInstalls) },
+                    { "effectivePbiInstallDir", _dependenciesResolver.GetEffectivePowerBiInstallDir() },
                     { "pbiSessions", JArray.FromObject(PowerBIProcesses.EnumerateProcesses().ToArray()) },
                 };
 
