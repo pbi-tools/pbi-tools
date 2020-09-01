@@ -149,23 +149,34 @@ namespace PbiTools.Utils
         internal static bool TryGetV3ModelEnabledFeatureSwitch(string settingsPath, out bool enabled)
         {
             enabled = false;
-            var userSettingsPath = Path.Combine(settingsPath, "User.zip");
-            if (!File.Exists(userSettingsPath)) return false;
-
-            using (var file = File.OpenRead(userSettingsPath))
-            using (var zip = new ZipArchive(file))
+            try
             {
-                var entry = zip.Entries.Single(e => e.FullName == "FeatureSwitches/FeatureSwitches.xml");
-                using (var stream = entry.Open())
+                var userSettingsPath = Path.Combine(settingsPath, "User.zip");
+                Log.Verbose("Attempting to read feature switches from {UserSettingsPath}", userSettingsPath);
+
+                if (!File.Exists(userSettingsPath)) return false;
+
+                using (var file = File.OpenRead(userSettingsPath))
+                using (var zip = new ZipArchive(file))
                 {
-                    var xml = XDocument.Load(stream);
-                    var xEntry = xml.XPathSelectElement($"//Entry[@Type='{V3ModelFeatureGuid.ToString()}']");
-                    if (xEntry != null)
+                    var entry = zip.Entries.FirstOrDefault(e => e.FullName == "FeatureSwitches/FeatureSwitches.xml");
+                    if (entry == null) return false;
+
+                    using (var stream = entry.Open())
                     {
-                        enabled = xEntry.Attribute("Value").Value.Contains("1");
-                        return true;
+                        var xml = XDocument.Load(stream);
+                        var xEntry = xml.XPathSelectElement($"//Entry[@Type='{V3ModelFeatureGuid.ToString()}']");
+                        if (xEntry != null)
+                        {
+                            enabled = xEntry.Attribute("Value").Value.Contains("1");
+                            return true;
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, "Unexpected exception trying to detect V3 Model feature switch.");
             }
 
             return false;
