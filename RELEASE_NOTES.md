@@ -1,4 +1,11 @@
 
+## 1.0.0-alpha.6 - 2020-09-01
+* Added extra error handling to V3 Model Feature Switch detection (enable via "Verbose" loglevel setting)
+* "info" action: Added 'settings', listing pbi-tools specific environment variables -- Resolves #4
+* New CLI action: "extract-data"
+  * Extracts all data from a Tabular model into CSV files
+  * Supports reading from PBIX file as well as from live session
+
 ## 1.0.0-alpha.5 - 2020-08-29
 * Upgraded AMO library to 19.9, supporting latest TMSL features
 * New CLI action: "cache"
