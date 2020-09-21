@@ -484,10 +484,13 @@ namespace PbiTools.Serialization
                 {
                     if (!tableJson.ContainsKey("partitions")) tableJson["partitions"] = new JArray();
                     var partitionsJson = tableJson["partitions"] as JArray;
+                    var partitionName = partitionsJson.Count == 0
+                        ? tableName
+                        : $"{tableName}-{Guid.NewGuid()}";
 
                     partitionsJson.Add(new JObject
                     {
-                        { "name", $"{tableName}-{Guid.NewGuid()}" },
+                        { "name", partitionName },
                         { "mode", "import" },
                         // { "queryGroup", "TODO" },
                         { "source", new JObject 
