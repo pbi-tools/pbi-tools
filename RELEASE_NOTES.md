@@ -1,4 +1,8 @@
 
+## 1.0.0-alpha.7 - 2020-09-21
+* Upgraded AMO library to 19.10, supporting latest TMSL features
+* Resolve #6: In exported BIM, partition name matches table name if there is only one partition
+
 ## 1.0.0-alpha.6 - 2020-09-01
 * Added extra error handling to V3 Model Feature Switch detection (enable via "Verbose" loglevel setting)
 * "info" action: Added 'settings', listing pbi-tools specific environment variables -- Resolves #4
