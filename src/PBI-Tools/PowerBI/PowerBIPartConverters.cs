@@ -4,14 +4,23 @@
 using System;
 using System.Text;
 using System.Xml.Linq;
-using Microsoft.PowerBI.Client.Windows;
-using PbiPackaging = Microsoft.PowerBI.Packaging.Storage;
 using Newtonsoft.Json.Linq;
 using PbiTools.Model;
 using PbiTools.Utils;
 
 namespace PbiTools.PowerBI
 {
+    public class PowerBILegacyPartConverters
+    {
+
+        public IPowerBIPartConverter<JObject> ReportSettings { get; } = new BinarySerializationConverter<Microsoft.PowerBI.Packaging.Storage.ReportSettings>();
+        
+        public IPowerBIPartConverter<JObject> ReportMetadata { get; } = new BinarySerializationConverter<Microsoft.PowerBI.Packaging.Storage.ReportMetadataContainer>();
+        
+        public IPowerBIPartConverter<MashupParts> DataMashup { get; } = new MashupConverter();
+
+    }
+
     // ReSharper disable once InconsistentNaming
     public class PowerBIPartConverters
     {
@@ -23,18 +32,10 @@ namespace PbiTools.PowerBI
             this.DataModel = new DataModelConverter(modelName, resolver);
         }
 
-        #region Legacy
-
-        public IPowerBIPartConverter<JObject> ReportSettings { get; } = new BinarySerializationConverter<PbiPackaging.ReportSettings>();
-        public IPowerBIPartConverter<JObject> ReportMetadata { get; } = new BinarySerializationConverter<ReportMetadataContainer>();
-        public IPowerBIPartConverter<MashupParts> DataMashup { get; } = new MashupConverter();
-        public IPowerBIPartConverter<XDocument> LinguisticSchema { get; } = new XmlPartConverter();
-        
-        #endregion
-
         public IPowerBIPartConverter<string> Version { get; } = new StringPartConverter();
         public IPowerBIPartConverter<JObject> ReportSettingsV3 { get; } = new JsonPartConverter();
         public IPowerBIPartConverter<JObject> ReportMetadataV3 { get; } = new JsonPartConverter();
+        public IPowerBIPartConverter<XDocument> LinguisticSchema { get; } = new XmlPartConverter();
         public IPowerBIPartConverter<JObject> LinguisticSchemaV3 { get; } = new JsonPartConverter();
         public IPowerBIPartConverter<JObject> DiagramViewState { get; } = new JsonPartConverter();
         public IPowerBIPartConverter<JObject> DiagramLayout { get; } = new JsonPartConverter();

@@ -26,6 +26,9 @@ namespace PbiTools.PowerBI
         private readonly Stream _pbixStream;
         private readonly IPowerBIPackage _package;
         private readonly PowerBIPartConverters _converters;
+        private readonly Lazy<PowerBILegacyPartConverters> _legacyConverters
+            /* Lazy instantiation ensures legacy types are only getting resolved if needed -- API incompatibilities are more likely to occur with legacy types */
+            = new Lazy<PowerBILegacyPartConverters>(() => new PowerBILegacyPartConverters());
 
 
 
@@ -84,7 +87,7 @@ namespace PbiTools.PowerBI
         {
             if (_package.DataMashup != null)
             {
-                return _converters.DataMashup.FromPackagePart(_package.DataMashup);
+                return _legacyConverters.Value.DataMashup.FromPackagePart(_package.DataMashup);
             }
             return default(MashupParts);
         }
@@ -116,7 +119,7 @@ namespace PbiTools.PowerBI
 
         public JObject ReadReportMetadata()
         {
-            return _converters.ReportMetadata.FromPackagePart(_package.ReportMetadata);
+            return _legacyConverters.Value.ReportMetadata.FromPackagePart(_package.ReportMetadata);
         }
 
         public JObject ReadReportMetadataV3()
@@ -126,7 +129,7 @@ namespace PbiTools.PowerBI
 
         public JObject ReadReportSettings()
         {
-            return _converters.ReportSettings.FromPackagePart(_package.ReportSettings);
+            return _legacyConverters.Value.ReportSettings.FromPackagePart(_package.ReportSettings);
         }
 
         public JObject ReadReportSettingsV3()
@@ -161,7 +164,6 @@ namespace PbiTools.PowerBI
                     return result;
                 });
         }
-
 
         #endregion
 
