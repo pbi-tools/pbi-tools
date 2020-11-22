@@ -17,12 +17,15 @@ async Task Main()
 						   // "PBIDesktopSetup-2020-05_x64.exe";
 						   // "PBIDesktopSetup-2020-06_x64.exe";
 						   // "PBIDesktopSetup-2020-07_x64.exe";
+						   // "PBIDesktopSetup-2020-08_x64.exe";
+						   // "PBIDesktopSetup-2020-09_x64.exe";
+						   // "PBIDesktopSetup-2020-10_x64.exe";
 						   "PBIDesktopSetup_x64.exe";
 	var skipDownload = false;
 	var skipExtract = false;
 
 	/********************************************************/
-	var rootFolder = @"D:\temp\pbi-downloader\PBIDesktop_x64";
+	var rootFolder = @"E:\temp\pbi-downloader\PBIDesktop_x64";
 	/********************************************************/
 	var tempFolder = Path.Combine(rootFolder, "_temp");
 	
@@ -100,6 +103,10 @@ async Task Main()
 	{
 		Directory.Move(destDir, archiveDir);
 		File.Move(logPath, Path.Combine(rootFolder, $"{versionInfo.ProductVersion}.log"));
+	}
+	else
+	{
+		$"{archiveDir} exists already!".Dump("WARNING");
 	}
 }
 
