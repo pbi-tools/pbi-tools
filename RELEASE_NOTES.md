@@ -1,4 +1,10 @@
 
+## 1.0.0-beta.1 - 2020-11-18
+* Bugfix for Power BI Desktop Nov 2020 release (2.87)
+* Made implementation backwards-compatible: V3 models can be extracted with any prior version of PBI Desktop, only legacy models require the Nov 2020 version
+* Upgraded AMO library to 19.12, supporting latest TMSL features
+* Upgraded various other dependencies
+
 ## 1.0.0-alpha.7 - 2020-09-21
 * Upgraded AMO library to 19.10, supporting latest TMSL features
 * Resolve #6: In exported BIM, partition name matches table name if there is only one partition
