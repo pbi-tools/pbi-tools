@@ -53,7 +53,7 @@ namespace PbiTools.TabularModel
             .ToArray(/*Ensures reader is closed*/);
         }
 
-        public void ExtractTableData(string outPath)
+        public void ExtractTableData(string outPath, string dateTimeFormat)
         {
             Directory.CreateDirectory(outPath);
             
@@ -67,7 +67,7 @@ namespace PbiTools.TabularModel
                 using (var csv = new CsvWriter(outFile, CultureInfo.CurrentCulture))
                 using (var cmd = _connection.CreateCommand())
                 {
-                    csv.Configuration.TypeConverterOptionsCache.GetOptions<DateTime>().Formats = new[] {"s"};
+                    csv.Context.TypeConverterOptionsCache.GetOptions<DateTime>().Formats = new[] { dateTimeFormat };
 
                     cmd.CommandText = $"EVALUATE '{table}'";
 
