@@ -31,14 +31,17 @@ namespace PbiTools.Utils
         public PowerBIDesktopInstallation[] PBIInstalls => _pbiInstalls.Value;
 
         private static IDependenciesResolver _defaultInstance;
+        private static object _syncObj = new object();
 
         public static IDependenciesResolver Default
         {
             get
             {
-                // TODO Make thread-safe?
-                if (_defaultInstance == null) _defaultInstance = new DependenciesResolver();
-                return _defaultInstance;
+                lock (_syncObj)
+                { 
+                    if (_defaultInstance == null) _defaultInstance = new DependenciesResolver();
+                    return _defaultInstance;
+                }
             }
             set
             {
