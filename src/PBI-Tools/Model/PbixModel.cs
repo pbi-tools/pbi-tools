@@ -64,6 +64,9 @@ namespace PbiTools.Model
             this.Type = type;
         }
 
+        /// <summary>
+        /// Builds a PbixModel from the PBIX file at the path specified.
+        /// </summary>
         public static PbixModel FromFile(string path, IDependenciesResolver dependenciesResolver = null)
         {
             using (var reader = new PbixReader(path ?? throw new ArgumentNullException(nameof(path)), dependenciesResolver ?? DependenciesResolver.Default))
@@ -129,6 +132,11 @@ namespace PbiTools.Model
                 pbixModel.PbixProj = PbixProject.FromFolder(projectFolder);
             }
 
+            if (PbixReader.IsV3Version(pbixModel.Version))
+            {
+                pbixModel.PbixProj.Queries = null; // remove 'Queries' from a previous legacy version of the model
+            }
+
             return pbixModel;
         }
 
@@ -139,9 +147,10 @@ namespace PbiTools.Model
 
             using (var projectFolder = new ProjectRootFolder(path))
             {
-                var serializers = new PowerBIPartSerializers(projectFolder);
-                
-                var pbixModel = new PbixModel(path, PbixModelSource.PbixProjFolder);
+                var pbixProject = PbixProject.FromFolder(projectFolder);
+                var serializers = new PowerBIPartSerializers(projectFolder, pbixProject.Settings);
+
+                var pbixModel = new PbixModel(path, PbixModelSource.PbixProjFolder) { PbixProj = pbixProject };
 
                 pbixModel.Version = serializers.Version.DeserializeSafe();
                 pbixModel.Connections = serializers.Connections.DeserializeSafe();
@@ -156,8 +165,6 @@ namespace PbiTools.Model
                 pbixModel.StaticResources = serializers.StaticResources.DeserializeSafe();                
                 pbixModel.DataModel = serializers.DataModel.DeserializeSafe();
 
-                pbixModel.PbixProj = PbixProject.FromFolder(projectFolder);
-
                 return pbixModel;
             }
         }
@@ -165,13 +172,13 @@ namespace PbiTools.Model
         /// <summary>
         /// Serializes the entire model to a file system folder.
         /// </summary>
-        /// <param name="path"></param>
+        /// <param name="path">A custom location to extract the model to (optional).</param>
         public void ToFolder(string path = null)
         {
             var rootFolderPath = path ?? this.GetProjectFolder();
             using (var projectFolder = new ProjectRootFolder(rootFolderPath))
             {
-                var serializers = new PowerBIPartSerializers(projectFolder);
+                var serializers = new PowerBIPartSerializers(projectFolder, this.PbixProj.Settings);
                 
                 // **** Parts ****
                 if (serializers.Version.Serialize(this.Version))

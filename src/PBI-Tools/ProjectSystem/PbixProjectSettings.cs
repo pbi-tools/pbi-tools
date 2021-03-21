@@ -1,7 +1,24 @@
-/* Config sources: (priority)
+// Copyright (c) Mathias Thierbach
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
-   1 cmd-line
-   2 .pbixproj.json (cwd, parent, root, UserProfile)
-   3 ENV ("PBITOOLS_")
-   
-*/
+using Newtonsoft.Json;
+
+namespace PbiTools.ProjectSystem
+{
+
+    /* Config sources: (priority)
+    1 cmd-line
+    2 .pbixproj.json (cwd, parent, root, UserProfile)
+    3 ENV ("PBITOOLS_")   
+    */
+
+    public class PbixProjectSettings
+    {
+        [JsonProperty("model")]
+        public ModelSettings Model { get; set; } = new ModelSettings();
+
+        public bool IsDefault() => Model == null || Model.IsDefault;
+
+    }
+
+}

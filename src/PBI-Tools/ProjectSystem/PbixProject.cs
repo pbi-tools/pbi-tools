@@ -5,17 +5,20 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
-using PbiTools.FileSystem;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using Serilog;
 
 namespace PbiTools.ProjectSystem
 {
+    using FileSystem;
+
     public class PbixProject
     {
         private static readonly ILogger Log = Serilog.Log.ForContext<PbixProject>();
 
-        public static readonly string Filename = ".pbixproj.json";
-        public static readonly Version CurrentVersion = Version.Parse("0.5");
+        public const string Filename = ".pbixproj.json";
+        public static readonly Version CurrentVersion = Version.Parse("0.6");
 
         /*
          * PBIXPROJ Change Log
@@ -38,34 +41,41 @@ namespace PbiTools.ProjectSystem
          *       - V3 models: /Mashup no longer serialized
          *       - V3 models: /Model/queries folder added
          *       - Added 'created' and 'lastModified' properties
+         * 0.6   - Extract model columns into /Model/tables/{name}/columns/{name}.json|dax
+         *       - Extract calculated table expressions into /Model/tables/{name}/table.dax
+         *       - Extract measure expression into /Model/tables/{table}/measures/{name}.dax
+         *       - Extract model cultures in /Model/cultures/{name}.json
+         *       - Control Model serialization settings via settings.model in pbixproj file (Serialization Mode, Ignore Properties)
          */
 
         /* Entries to add later: */
-        // Settings (Serialization)
         // Deployments
         // CustomProperties
 
-        private static readonly JsonSerializerSettings DefaultJsonSerializerSettings = new JsonSerializerSettings {
+        private static readonly JsonSerializerSettings DefaultJsonSerializerSettings = new JsonSerializerSettings
+        {
             DateFormatString = "yyyy-MM-ddTHH:mm:ssK",
             Formatting = Formatting.Indented,
+            //ContractResolver = new DefaultContractResolver { NamingStrategy = new CamelCaseNamingStrategy() },
+            // don't use CamelCaseContractResolver as it will modify query names
+            DefaultValueHandling = DefaultValueHandling.Ignore
         };
 
         #region Version
 
         [JsonProperty("version")]
-        public string VersionString { get; set; }
+        private string versionString;
 
         [JsonIgnore]
         public Version Version
         {
-            get => Version.TryParse(VersionString, out var version) ? version : CurrentVersion;
-            set => this.VersionString = value.ToString();
+            get => Version.TryParse(versionString, out var version) ? version : CurrentVersion;
+            set => this.versionString = value.ToString();
         }
 
         #endregion
 
-        [JsonProperty("queries", NullValueHandling = NullValueHandling.Ignore)] // Only needed for legacy models
-        public IDictionary<string, string> Queries { get; set; }
+        #region Timestamps
 
         [JsonProperty("created")]
         public DateTimeOffset Created { get; set; }
@@ -73,6 +83,21 @@ namespace PbiTools.ProjectSystem
         [JsonProperty("lastModified")]
         public DateTimeOffset LastModified { get; set; }
 
+        #endregion
+
+        #region Legacy
+
+        [JsonProperty("queries", NullValueHandling = NullValueHandling.Ignore)] // Only needed for legacy models
+        public IDictionary<string, string> Queries { get; set; }
+
+        #endregion
+
+        #region Settings
+
+        [JsonProperty("settings", NullValueHandling = NullValueHandling.Ignore)]
+        public PbixProjectSettings Settings { get; set; } = new PbixProjectSettings();
+
+        #endregion
 
         public PbixProject()
         {
@@ -94,7 +119,7 @@ namespace PbiTools.ProjectSystem
                     }
                     catch (JsonReaderException e)
                     {
-                        Log.Error(e, "Failed to read PBIXPROJ file from {Path}", file.Path);
+                        Log.Error(e, "Failed to read PBIXPROJ file from {Path}. Using default settings.", file.Path);
                     }
                 }
             }
@@ -104,7 +129,8 @@ namespace PbiTools.ProjectSystem
 
         public void Save(IProjectRootFolder folder)
         {
-            var json = JsonConvert.SerializeObject(this, DefaultJsonSerializerSettings); // don't use CamelCaseContractResolver as it will modify query names
+            var json = JObject.FromObject(this, JsonSerializer.Create(DefaultJsonSerializerSettings));
+            if (this.Settings.IsDefault()) json.Remove("settings"); // TODO Provide setting to enable full expansion
 
             folder.GetFile(Filename).Write(json);
         }

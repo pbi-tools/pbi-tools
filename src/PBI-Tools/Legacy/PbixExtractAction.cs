@@ -84,7 +84,7 @@ namespace PbiTools.Actions
         public void ExtractModel(PbixProject pbixProj)
         {
             if (pbixProj.Queries == null) pbixProj.Queries = new Dictionary<string, string>();
-            var serializer = new TabularModelSerializer(_rootFolder, pbixProj.Queries);
+            var serializer = new TabularModelSerializer(_rootFolder, pbixProj.Settings, pbixProj.Queries);
             serializer.Serialize(_pbixReader.ReadDataModel());
         }
 

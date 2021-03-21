@@ -6,13 +6,15 @@ using System.Collections.Generic;
 using System.Xml.Linq;
 using Microsoft.PowerBI.Packaging;
 using Newtonsoft.Json.Linq;
-using PbiTools.FileSystem;
 
 namespace PbiTools.Serialization
 {
+    using FileSystem;
+    using ProjectSystem;
+
     public class PowerBIPartSerializers
     {
-        public PowerBIPartSerializers(IProjectRootFolder rootFolder)
+        public PowerBIPartSerializers(IProjectRootFolder rootFolder, PbixProjectSettings settings)
         {
             if (rootFolder is null) throw new ArgumentNullException(nameof(rootFolder));
 
@@ -27,7 +29,7 @@ namespace PbiTools.Serialization
             this.LinguisticSchema = new JsonPartSerializer(rootFolder, nameof(IPowerBIPackage.LinguisticSchema));
             this.LinguisticSchemaXml = new XmlPartSerializer(rootFolder, nameof(IPowerBIPackage.LinguisticSchema));
 
-            this.DataModel = new TabularModelSerializer(rootFolder);
+            this.DataModel = new TabularModelSerializer(rootFolder, settings);
             this.ReportDocument = new ReportSerializer(rootFolder);
         }
 
