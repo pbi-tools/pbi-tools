@@ -33,14 +33,6 @@ namespace PbiTools
         }
     }
 
-    /// <summary>
-    /// Do not show this action in auto generated usage documentation.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Method)]
-    public class HideFromUsageAttribute : Attribute, ICommandLineActionMetadata
-    {
-    }
-
     [AttributeUsage(AttributeTargets.Class)]
     public class ApplyDefinitionTransforms : ArgHook
     {
@@ -61,8 +53,9 @@ namespace PbiTools
 
             // remove hidden args:
             new List<CommandLineAction>(
-                context.Definition.Actions.Where(a => a.Metadata.HasMeta<HideFromUsageAttribute>())
-            ).ForEach(a => context.Definition.Actions.Remove(a));
+                context.Definition.Actions.Where(a => a.Metadata.HasMeta<OmitFromUsageDocs>())
+            )
+            .ForEach(a => context.Definition.Actions.Remove(a));
         }
 
     }

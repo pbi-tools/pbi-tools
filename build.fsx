@@ -193,6 +193,14 @@ Target.create "Test" (fun _ ->
                                      XmlOutputPath = Some (testDir @@ "xunit.xml") } )
 )
 
+Target.create "UsageDocs" (fun _ ->
+    [ "export-usage"; "-outPath"; "./docs/Usage.md" ]
+    |> CreateProcess.fromRawCommand "./.build/dist/pbi-tools.exe"
+    |> CreateProcess.ensureExitCode
+    |> Proc.run
+    |> ignore
+)
+
 Target.create "Pack" (fun _ ->
     !! (distDir @@ "*.*")
     |> Zip.zip distDir (sprintf @"%s\pbi-tools.%s.zip" buildDir release.NugetVersion)
@@ -210,6 +218,7 @@ open Fake.Core.TargetOperators
   ==> "AssemblyInfo"
   ==> "Build"
   ==> "Test"
+  ==> "UsageDocs"
   ==> "Pack"
 
 // --------------------------------------------------------------------------------------
