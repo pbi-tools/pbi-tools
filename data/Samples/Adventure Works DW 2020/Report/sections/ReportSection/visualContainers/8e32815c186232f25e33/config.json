@@ -1,0 +1,36 @@
+{
+  "name": "8e32815c186232f25e33",
+  "layouts": [
+    {
+      "id": 0,
+      "position": {
+        "x": 40.884520884520889,
+        "y": 54.512694512694516,
+        "z": 0,
+        "width": 279.9017199017199,
+        "height": 279.9017199017199
+      }
+    }
+  ],
+  "singleVisual": {
+    "visualType": "image",
+    "drillFilterOtherVisuals": true,
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "imageUrl": {
+              "expr": {
+                "ResourcePackageItem": {
+                  "PackageName": "RegisteredResources",
+                  "PackageType": 1,
+                  "ItemName": "AdventureWorksLogo08110190716818466.jpg"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

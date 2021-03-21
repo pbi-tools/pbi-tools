@@ -1,0 +1,30 @@
+{
+  "name": "Geography",
+  "levels": [
+    {
+      "name": "Country-Region",
+      "ordinal": 0,
+      "column": "Country-Region"
+    },
+    {
+      "name": "State-Province",
+      "ordinal": 1,
+      "column": "State-Province"
+    },
+    {
+      "name": "Postal Code",
+      "ordinal": 3,
+      "column": "Postal Code"
+    },
+    {
+      "name": "City",
+      "ordinal": 2,
+      "column": "City"
+    },
+    {
+      "name": "Reseller",
+      "ordinal": 4,
+      "column": "Reseller"
+    }
+  ]
+}

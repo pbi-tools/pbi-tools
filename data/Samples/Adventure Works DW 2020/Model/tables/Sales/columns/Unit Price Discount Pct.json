@@ -1,0 +1,17 @@
+{
+  "name": "Unit Price Discount Pct",
+  "dataType": "double",
+  "sourceColumn": "Unit Price Discount Pct",
+  "formatString": "0.00%;-0.00%;0.00%",
+  "summarizeBy": "none",
+  "annotations": [
+    {
+      "name": "SummarizationSetBy",
+      "value": "User"
+    },
+    {
+      "name": "Format",
+      "value": "<Format Format=\"Percentage\" Accuracy=\"2\" />"
+    }
+  ]
+}

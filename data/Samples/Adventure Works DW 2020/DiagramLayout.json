@@ -1,0 +1,117 @@
+{
+  "version": "1.1.0",
+  "diagrams": [
+    {
+      "ordinal": 0,
+      "scrollPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 13.843414634146342,
+            "y": 549.09560975609759
+          },
+          "nodeIndex": "Customer",
+          "size": {
+            "height": 232,
+            "width": 234
+          },
+          "zIndex": 1
+        },
+        {
+          "location": {
+            "x": 634.1,
+            "y": 329.7
+          },
+          "nodeIndex": "Date",
+          "size": {
+            "height": 232,
+            "width": 234
+          },
+          "zIndex": 2
+        },
+        {
+          "location": {
+            "x": 484.58487804878047,
+            "y": 0
+          },
+          "nodeIndex": "Product",
+          "size": {
+            "height": 251,
+            "width": 234
+          },
+          "zIndex": 3
+        },
+        {
+          "location": {
+            "x": 0,
+            "y": 265.15463414634149
+          },
+          "nodeIndex": "Reseller",
+          "size": {
+            "height": 232,
+            "width": 234
+          },
+          "zIndex": 4
+        },
+        {
+          "location": {
+            "x": 290.00292682926829,
+            "y": 291
+          },
+          "nodeIndex": "Sales",
+          "size": {
+            "height": 337,
+            "width": 234
+          },
+          "zIndex": 8
+        },
+        {
+          "location": {
+            "x": 36.324390243902442,
+            "y": 22.828780487804877
+          },
+          "nodeIndex": "Sales Order",
+          "size": {
+            "height": 217,
+            "width": 237
+          },
+          "zIndex": 5
+        },
+        {
+          "location": {
+            "x": 490.75853658536585,
+            "y": 668
+          },
+          "nodeIndex": "Sales Territory",
+          "size": {
+            "height": 175,
+            "width": 234
+          },
+          "zIndex": 6
+        },
+        {
+          "location": {
+            "x": 941.4,
+            "y": 0
+          },
+          "nodeIndex": "Sales by Color and Business Type",
+          "size": {
+            "height": 197,
+            "width": 234
+          },
+          "zIndex": 7
+        }
+      ],
+      "name": "All tables",
+      "zoomValue": 68.130375735626984,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false
+    }
+  ],
+  "selectedDiagram": "All tables",
+  "defaultDiagram": "All tables"
+}

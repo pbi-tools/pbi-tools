@@ -1,0 +1,86 @@
+{
+  "name": "dbb7aa4447e4690db31e",
+  "layouts": [
+    {
+      "id": 0,
+      "position": {
+        "x": 394.16871416871419,
+        "y": 64.995904995905,
+        "z": 1000,
+        "width": 743.25962325962325,
+        "height": 279.9017199017199
+      }
+    }
+  ],
+  "singleVisual": {
+    "visualType": "textbox",
+    "drillFilterOtherVisuals": true,
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "The ",
+                    "textStyle": {
+                      "fontSize": "20pt"
+                    }
+                  },
+                  {
+                    "value": "Adventure Works DW 2020 ",
+                    "textStyle": {
+                      "fontWeight": "bold",
+                      "fontSize": "20pt"
+                    }
+                  },
+                  {
+                    "value": "(v1) Power BI Desktop sample model is designed to support your DAX learning.",
+                    "textStyle": {
+                      "fontSize": "20pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": ""
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "For an explanation of the model, see ",
+                    "textStyle": {
+                      "fontSize": "20pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "https://aka.ms/dax-docs-samples",
+                    "textStyle": {
+                      "fontSize": "20pt"
+                    },
+                    "url": "https://aka.ms/dax-docs-samples"
+                  },
+                  {
+                    "value": ".",
+                    "textStyle": {
+                      "fontSize": "20pt"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "name": "Adventure Works DW 2020",
+  "compatibilityLevel": 1540,
+  "model": {
+    "culture": "en-US",
+    "dataAccessOptions": {
+      "legacyRedirects": true,
+      "returnErrorValuesAsNull": true
+    },
+    "defaultPowerBIDataSourceVersion": "powerBI_V3",
+    "sourceQueryCulture": "en-US",
+    "relationships": [
+      {
+        "name": "c4007daa-09a5-455d-ac3b-d8338a0e4468",
+        "fromTable": "Sales",
+        "fromColumn": "SalesTerritoryKey",
+        "toTable": "Sales Territory",
+        "toColumn": "SalesTerritoryKey"
+      },
+      {
+        "name": "fe440ad4-cbfb-4a8c-9b24-4d02f59a009f",
+        "fromTable": "Sales",
+        "fromColumn": "ProductKey",
+        "toTable": "Product",
+        "toColumn": "ProductKey"
+      },
+      {
+        "name": "ddc90e12-74d0-451e-87b6-3bc8d773bf07",
+        "fromCardinality": "one",
+        "fromTable": "Sales",
+        "fromColumn": "SalesOrderLineKey",
+        "toTable": "Sales Order",
+        "toColumn": "SalesOrderLineKey",
+        "crossFilteringBehavior": "bothDirections"
+      },
+      {
+        "name": "3921d624-3ba4-40ca-b78d-61fe4ebc7659",
+        "fromTable": "Sales",
+        "fromColumn": "CustomerKey",
+        "toTable": "Customer",
+        "toColumn": "CustomerKey"
+      },
+      {
+        "name": "ad03fb2c-8d99-47eb-bdab-0e52920c9d3f",
+        "fromTable": "Sales",
+        "fromColumn": "OrderDateKey",
+        "toTable": "Date",
+        "toColumn": "DateKey"
+      },
+      {
+        "name": "a390c257-6a75-4c82-aab5-270f564d26b0",
+        "fromTable": "Sales",
+        "fromColumn": "DueDateKey",
+        "toTable": "Date",
+        "toColumn": "DateKey",
+        "isActive": false
+      },
+      {
+        "name": "fcf11ed1-afec-495f-8897-4461f7a9d501",
+        "fromTable": "Sales",
+        "fromColumn": "ShipDateKey",
+        "toTable": "Date",
+        "toColumn": "DateKey",
+        "isActive": false
+      },
+      {
+        "name": "f72f8f53-10b5-4d0a-82ea-19e584697a64",
+        "fromTable": "Sales",
+        "fromColumn": "ResellerKey",
+        "toTable": "Reseller",
+        "toColumn": "ResellerKey"
+      }
+    ],
+    "expressions": [
+      {
+        "name": "SqlServerInstance",
+        "kind": "m",
+        "annotations": [
+          {
+            "name": "PBI_NavigationStepName",
+            "value": "Navigation"
+          },
+          {
+            "name": "PBI_ResultType",
+            "value": "Text"
+          }
+        ]
+      },
+      {
+        "name": "SqlServerDatabase",
+        "kind": "m",
+        "annotations": [
+          {
+            "name": "PBI_NavigationStepName",
+            "value": "Navigation"
+          },
+          {
+            "name": "PBI_ResultType",
+            "value": "Text"
+          }
+        ]
+      },
+      {
+        "name": "Culture",
+        "description": "Used to format month names in the Date query.",
+        "kind": "m",
+        "annotations": [
+          {
+            "name": "PBI_NavigationStepName",
+            "value": "Navigation"
+          },
+          {
+            "name": "PBI_ResultType",
+            "value": "Text"
+          }
+        ]
+      }
+    ],
+    "annotations": [
+      {
+        "name": "__PBI_TimeIntelligenceEnabled",
+        "value": "0"
+      },
+      {
+        "name": "PBIDesktopVersion",
+        "value": "2.91.701.0 (21.03)"
+      },
+      {
+        "name": "PBI_QueryOrder",
+        "value": "[\"SqlServerInstance\",\"SqlServerDatabase\",\"Culture\",\"Customer\",\"Date\",\"Product\",\"Reseller\",\"Sales\",\"Sales Order\",\"Sales Territory\"]"
+      }
+    ]
+  }
+}
