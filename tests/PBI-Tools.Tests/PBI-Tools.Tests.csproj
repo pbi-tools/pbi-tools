@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk" InitialTargets="ZipSampleData">
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <TargetFramework>net472</TargetFramework>
@@ -16,14 +16,9 @@
     <AssemblySearchPaths>$(ReferencePath);$(AssemblySearchPaths)</AssemblySearchPaths>
   </PropertyGroup>
   <ItemGroup>
-    <None Remove="TestResources\MashupMetadata_LastAnalysisServicesFormulaText.xml" />
-    <None Remove="TestResources\MashupMetadata_Simple.xml" />
-    <None Remove="TestResources\MashupMetadata_WithQueryGroups.xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="TestResources\MashupMetadata_LastAnalysisServicesFormulaText.xml" />
-    <EmbeddedResource Include="TestResources\MashupMetadata_Simple.xml" />
-    <EmbeddedResource Include="TestResources\MashupMetadata_WithQueryGroups.xml" />
+    <None Remove="TestResources\**\*.*" />
+    <EmbeddedResource Include="TestResources\**\*.*" />
+    <EmbeddedResource Include="..\..\.temp\Adventure Works DW 2020.zip" LogicalName="Adventure Works DW 2020.zip" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\PBI-Tools\PBI-Tools.csproj" />
@@ -42,5 +37,11 @@
       <HintPath>C:\Program Files\Microsoft Power BI Desktop\bin\Microsoft.Mashup.Document.dll</HintPath>
     </Reference>
   </ItemGroup>
+  <Target Name="ZipSampleData">
+      <ZipDirectory
+          SourceDirectory="..\..\data\Samples\Adventure Works DW 2020\"
+          DestinationFile="..\..\.temp\Adventure Works DW 2020.zip"
+          Overwrite="True" />
+  </Target>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

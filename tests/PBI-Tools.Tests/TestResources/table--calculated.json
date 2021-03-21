@@ -1,0 +1,87 @@
+{
+  "name": "Sales by Color and Business Type",
+  "columns": [
+    {
+      "type": "calculatedTableColumn",
+      "name": "Color",
+      "dataType": "string",
+      "isNameInferred": true,
+      "isDataTypeInferred": true,
+      "sourceColumn": "Product[Color]",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Text\" />"
+        }
+      ]
+    },
+    {
+      "type": "calculatedTableColumn",
+      "name": "Business Type",
+      "dataType": "string",
+      "isNameInferred": true,
+      "isDataTypeInferred": true,
+      "sourceColumn": "Reseller[Business Type]",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Text\" />"
+        }
+      ]
+    },
+    {
+      "type": "calculatedTableColumn",
+      "name": "Total Sales",
+      "dataType": "decimal",
+      "isNameInferred": true,
+      "isDataTypeInferred": true,
+      "sourceColumn": "[Total Sales]",
+      "formatString": "\"£\"#,0.###############;-\"£\"#,0.###############;\"£\"#,0.###############",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "User"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"CurrencyGeneral\" ThousandSeparator=\"True\"><Currency LCID=\"2057\" DisplayName=\"£ English (United Kingdom)\" Symbol=\"£\" PositivePattern=\"0\" NegativePattern=\"1\" /></Format>"
+        }
+      ]
+    }
+  ],
+  "partitions": [
+    {
+      "name": "Sales by Color and Business Type-3256be7a-6f0d-4519-a4ff-4080b95a59bf",
+      "mode": "import",
+      "source": {
+        "type": "calculated",
+        "expression": [
+          "SUMMARIZECOLUMNS (",
+          "    Product[Color],",
+          "    Reseller[Business Type],",
+          "    FILTER ( ALL ( Product[List Price] ), Product[List Price] > 150.00 ),",
+          "    TREATAS ( { \"Accessories\", \"Bikes\" }, 'Product'[Category] ),",
+          "    \"Total Sales\", SUM ( Sales[Sales Amount] )",
+          ")"
+        ]
+      }
+    }
+  ],
+  "annotations": [
+    {
+      "name": "PBI_Id",
+      "value": "b636b2d3a54244c7a0706aeb8339c24f"
+    }
+  ]
+}

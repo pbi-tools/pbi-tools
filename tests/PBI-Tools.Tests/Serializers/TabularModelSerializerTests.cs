@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿// Copyright (c) Mathias Thierbach
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
+using System.Collections.Generic;
 using System.Data.OleDb;
-using System.IO;
 using System.Xml;
 using System.Xml.XPath;
 using Newtonsoft.Json.Linq;
@@ -16,7 +18,7 @@ namespace PbiTools.Tests
         #region Tables
 
         [Fact]
-        public void ProcessTables__RemovesTablesArrayFromOriginalJson()
+        public void SerializeTables__RemovesTablesArrayFromOriginalJson()
         {
             var folder = new MockProjectFolder();
             var db = JObject.Parse(@"
@@ -32,7 +34,7 @@ namespace PbiTools.Tests
         }
 
         [Fact]
-        public void ProcessTables__CreatesFolderForEachTableUsingName()
+        public void SerializeTables__CreatesFolderForEachTableUsingName()
         {
             var folder = new MockProjectFolder();
             var db = JObject.Parse(@"
@@ -80,12 +82,84 @@ namespace PbiTools.Tests
         }
 
 
+        [Fact]
+        public void SerializeTables__CreatesDaxFileForCalculatedTables()
+        {
+            var folder = new MockProjectFolder();
+            var table = Resources.GetEmbeddedResourceFromString("table--calculated.json", JObject.Parse);
+            var table2 = TabularModelSerializer.SerializeTablePartitions(table, folder, @"tables\calculated", new MockQueriesLookup());
+
+            Assert.NotNull(table.SelectToken("partitions[0].source.expression"));
+            Assert.Null(table2.SelectToken("partitions[0].source.expression"));
+
+            // folder.ContainsFile(@"tables\calculated\table.dax");
+            Assert.Equal(Resources.GetEmbeddedResourceString("table--calculated.dax"), folder.GetAsString(@"tables\calculated\table.dax"));
+        }
+
+        #endregion
+
+        #region Columns
+
+        public class SerializeColumnsTests
+        {
+            public SerializeColumnsTests()
+            {
+                var table = Resources.GetEmbeddedResourceFromString("table--with-calc-column.json", JObject.Parse);
+                _tableJsonWithoutColumns = TabularModelSerializer.SerializeColumns(table, _folder, @"tables\calculated");
+            }
+
+            private readonly MockProjectFolder _folder = new MockProjectFolder();
+            private readonly JObject _tableJsonWithoutColumns;
+            private readonly string[] _columnNames = new[] {
+                "DateKey",
+                "Date",
+                "Fiscal Year",
+                "Fiscal Quarter",
+                "Month",
+                "MonthKey",
+                "Full Date",
+                "Is Current Month"
+            };
+
+            [Fact]
+            public void RemovesColumnsArrayFromTable() 
+            {
+                Assert.Null(_tableJsonWithoutColumns["columns"]);
+            }
+
+            [Fact]
+            public void CreatesJsonFileForEachColumn() 
+            {
+                Assert.All(_columnNames,
+                    name => Assert.True(_folder.ContainsFile(@$"tables\calculated\columns\{name}.json"))
+                );
+            }
+
+            [Fact]
+            public void ColumnFilesContainValidJson() 
+            {
+                Assert.All(_columnNames,
+                    name => _folder.GetAsJson(@$"tables\calculated\columns\{name}.json")
+                );
+            }
+
+            [Fact]
+            public void CreatesDaxFileForCalculatedColumns() 
+            {
+                var path = @"tables\calculated\columns\Is Current Month.dax";
+
+                Assert.True(_folder.ContainsFile(path));
+                Assert.Equal("MONTH([Date]) = MONTH(TODAY()) && YEAR([Date]) = YEAR(TODAY())", _folder.GetAsString(path));
+            }
+
+        }
+
         #endregion
 
         #region Measures
 
         [Fact]
-        public void ProcessMeasures__DoesNothingIfThereAreNoMeasures()
+        public void SerializeMeasures__DoesNothingIfThereAreNoMeasures()
         {
             var table = new JObject {};
             var folder = new MockProjectFolder();
@@ -97,7 +171,7 @@ namespace PbiTools.Tests
         }
 
         [Fact]
-        public void ProcessMeasures__CreatesFileForEachMeasure()
+        public void SerializeMeasures__CreatesFileForEachMeasure()
         {
             var table = JObject.Parse(@"
 {
@@ -115,7 +189,7 @@ namespace PbiTools.Tests
         }
 
         [Fact]
-        public void ProcessMeasures__RemovesMeasuresFromTableJson()
+        public void SerializeMeasures__RemovesMeasuresFromTableJson()
         {
             var table = JObject.Parse(@"
 {
@@ -133,7 +207,7 @@ namespace PbiTools.Tests
         }
 
         [Fact]
-        public void ProcessMeasures__ConvertsAnnotationXmlToNativeXml()
+        public void SerializeMeasures__ConvertsAnnotationXmlToNativeXml()
         {
             var table = JObject.Parse(@"
 {
@@ -159,7 +233,7 @@ namespace PbiTools.Tests
         }
 
         [Fact]
-        public void ProcessMeasures__ConvertsExpressionToCDATA()
+        public void SerializeMeasures__ConvertsExpressionToDAXFile()
         {
             var table = JObject.Parse(@"
 {
@@ -179,14 +253,14 @@ namespace PbiTools.Tests
             var folder = new MockProjectFolder();
             TabularModelSerializer.SerializeMeasures(table, folder, @"tables\table1");
 
-            var xml = folder.GetAsXml(@"tables\table1\measures\measure1.xml");
-            var expression = xml.XPathSelectElement("Measure/Expression");
-            Assert.Equal(XmlNodeType.CDATA, expression.FirstNode.NodeType); 
-            Assert.Equal("CALCULATE (\n    [SalesAmount],\n    ALLSELECTED ( Customer[Occupation] )\n)", expression.Value);
+            var expression = folder.GetAsString(@"tables\table1\measures\measure1.dax");
+            Assert.Equal(
+                "CALCULATE (\n    [SalesAmount],\n    ALLSELECTED ( Customer[Occupation] )\n)",
+                expression.Replace("\r\n", "\n"));
         }
 
         [Fact]
-        public void ProcessMeasures__ConvertsSingleLineExpression()
+        public void SerializeMeasures__ConvertsSingleLineExpression()
         {
             var table = JObject.Parse(@"
 {
@@ -201,8 +275,7 @@ namespace PbiTools.Tests
             var folder = new MockProjectFolder();
             TabularModelSerializer.SerializeMeasures(table, folder, @"tables\table1");
 
-            var xml = folder.GetAsXml(@"tables\table1\measures\measure1.xml");
-            var expression = xml.XPathSelectElement("Measure/Expression").Value;
+            var expression = folder.GetAsString(@"tables\table1\measures\measure1.dax");
             Assert.Equal("CALCULATE ([SalesAmount], ALLSELECTED ( Customer[Occupation] ) )", expression);
         }
         
@@ -212,7 +285,7 @@ namespace PbiTools.Tests
         #region Hierarchies
 
         [Fact]
-        public void ProcessHierarchies__CreatesFileForEachHierarchy()
+        public void SerializeHierarchies__CreatesFileForEachHierarchy()
         {
             var table = JObject.Parse(@"
 {
@@ -234,7 +307,7 @@ namespace PbiTools.Tests
         #endregion
 
 
-        public class ProcessDataSources
+        public class SerializeDataSources
         {
             private readonly JObject _databaseJson = new JObject
             {
@@ -263,7 +336,7 @@ namespace PbiTools.Tests
 
             private readonly MockProjectFolder _folder;
 
-            public ProcessDataSources()
+            public SerializeDataSources()
             {
                 _folder = new MockProjectFolder();
                 TabularModelSerializer.SerializeDataSources(_databaseJson, _folder, _queriesLookup);
@@ -312,16 +385,6 @@ namespace PbiTools.Tests
 
         }
 
-
-        // Test: Sanitize filenames
-        // Test: Table partitions (dataSource id replace)
-        //
-        // *** Data Sources
-        // Mashup extraction
-        // non-PBI connstr's are kept as-is
-        // using idCache lookup for {name}
-        // #(cr,lf) conversion .. start simple -- PBID only using (tab) and (cr,lf)
-        // Global Pipe drop
     }
 
 }
