@@ -123,7 +123,7 @@ let pbiBuildVersion =
            else
               None )
 
-let genCSAssemblyInfo (projectPath) =
+let genCSAssemblyInfo (projectPath : string) =
     let projectName = System.IO.Path.GetFileNameWithoutExtension(projectPath)
     let folderName = System.IO.Path.GetDirectoryName(projectPath)
     let basePath = folderName @@ "Properties"
@@ -181,6 +181,7 @@ Target.create "Build" (fun _ ->
     |> ignore
 
     // Could not get Fody to do its thing unless when building the entire solution, so we're grabbing the dist files here explicitly
+    // TODO Revisit after upgrade to Fody 6.4 
     !! (outDir @@ "pbi-tools.*")
     -- (outDir @@ "*test*")
     -- (outDir @@ "*.runtimeconfig.*")
@@ -191,6 +192,31 @@ Target.create "Test" (fun _ ->
     !! testAssemblies
     |> XUnit2.run (fun p -> { p with HtmlOutputPath = Some (testDir @@ "xunit.html")
                                      XmlOutputPath = Some (testDir @@ "xunit.xml") } )
+)
+
+Target.create "SmokeTest" (fun _ ->
+    // Copy all *.pbix from /data folder to TEMP
+    // Run 'pbi-tools extract' on all
+    // Fail if error code is returned
+
+    !! "data/**/*.pbix"
+    -- "data/external/**"
+    |> Shell.copyFilesWithSubFolder tempDir
+
+    // 'external' folder contains files with deeply nested folder structures,
+    // likely to hit the Windows 260-character limit for paths
+    // copying those without sub folders to keep extracted paths shorter
+    !! "data/external/**/*.pbix"
+    |> Shell.copyFiles tempDir
+
+    !! (tempDir @@ "**/*.pbix")
+    |> Seq.iter (fun path ->
+        [ "extract"; path ]
+        |> CreateProcess.fromRawCommand "./.build/dist/pbi-tools.exe"
+        |> CreateProcess.ensureExitCode
+        |> Proc.run
+        |> ignore
+    )
 )
 
 Target.create "UsageDocs" (fun _ ->
@@ -220,6 +246,9 @@ open Fake.Core.TargetOperators
   ==> "Test"
   ==> "UsageDocs"
   ==> "Pack"
+
+"Build"
+  ==> "SmokeTest"
 
 // --------------------------------------------------------------------------------------
 // Show help by default. Invoke 'fake build -t <Target>' to override
