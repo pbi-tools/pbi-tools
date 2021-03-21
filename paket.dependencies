@@ -17,7 +17,8 @@ group Main
   nuget System.ValueTuple
   nuget Polly
   nuget StreamJsonRpc
-  nuget Costura.Fody
+  nuget Costura.Fody copy_local: true
+  nuget Fody
   nuget System.IO.Compression
   nuget HtmlAgilityPack
   nuget PInvoke.Msi
@@ -33,6 +34,7 @@ group Tests
 
   nuget xunit
   nuget xunit.runner.visualstudio
+  nuget Microsoft.NET.Test.Sdk
 
 # dependencies used for retrieving FAKE and its modules
 group Fake-Build
