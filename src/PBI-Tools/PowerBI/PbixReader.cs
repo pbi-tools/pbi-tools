@@ -15,7 +15,8 @@ using Serilog;
 namespace PbiTools.PowerBI
 {
     /// <summary>
-    /// Reads the contents of PBIX files and converts each of their parts into generic (non-PowerBI) data formats (like JObject, XDocument, ZipArchive).
+    /// Reads the contents of PBIX files and converts each of their parts into generic (non-PowerBI)
+    /// data formats (like JObject, XDocument, ZipArchive).
     /// Each instance handles one file only.
     /// </summary>
     public class PbixReader : IDisposable

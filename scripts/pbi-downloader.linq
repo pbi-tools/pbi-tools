@@ -20,12 +20,15 @@ async Task Main()
 						   // "PBIDesktopSetup-2020-08_x64.exe";
 						   // "PBIDesktopSetup-2020-09_x64.exe";
 						   // "PBIDesktopSetup-2020-10_x64.exe";
+						   // "PBIDesktopSetup-2020-11_x64.exe";
+						   // "PBIDesktopSetup-2020-12_x64.exe";
+						   // "PBIDesktopSetup-2021-02_x64.exe";
 						   "PBIDesktopSetup_x64.exe";
 	var skipDownload = false;
 	var skipExtract = false;
 
 	/********************************************************/
-	var rootFolder = @"E:\temp\pbi-downloader\PBIDesktop_x64";
+	var rootFolder = @"E:\pbi-tools\pbi-downloader\PBIDesktop_x64";
 	/********************************************************/
 	var tempFolder = Path.Combine(rootFolder, "_temp");
 	
@@ -194,8 +197,8 @@ public class ConsoleProgressIndicator : IDisposable
 	{
 		while (!_cts.Token.IsCancellationRequested)
 		{
-			Console.Write('.');
 			Thread.Sleep(500);
+			Console.Write('.');
 		}
 	}
 

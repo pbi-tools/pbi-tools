@@ -5,6 +5,7 @@ using System;
 using Microsoft.PowerBI.Packaging;
 using Newtonsoft.Json.Linq;
 using PbiTools.Utils;
+using TOM = Microsoft.AnalysisServices.Tabular;
 
 namespace PbiTools.PowerBI
 {
@@ -36,12 +37,12 @@ namespace PbiTools.PowerBI
                 msmdsrv.Start();
                 msmdsrv.LoadPbixModel(part, _modelName, _modelName);
 
-                using (var server = new Microsoft.AnalysisServices.Tabular.Server())
+                using (var server = new TOM.Server())
                 {
                     server.Connect(msmdsrv.ConnectionString);
                     using (var db = server.Databases[_modelName])
                     {
-                        var json = Microsoft.AnalysisServices.Tabular.JsonSerializer.SerializeDatabase(db, new Microsoft.AnalysisServices.Tabular.SerializeOptions
+                        var json = TOM.JsonSerializer.SerializeDatabase(db, new TOM.SerializeOptions
                         {
                             IgnoreTimestamps = true, // that way we don't have to strip them out later
                             IgnoreInferredObjects = true,

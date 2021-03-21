@@ -9,12 +9,12 @@ namespace PbiTools
 {
     public class AppSettings
     {
-        public static string EnvPrefix => "PBITOOLS_";
+        public const string EnvPrefix = "PBITOOLS_";
 
         public static class Environment
         {
-            public static string LogLevel => $"{EnvPrefix}{nameof(LogLevel)}";
-            public static string PbiInstallDir => $"{EnvPrefix}{nameof(PbiInstallDir)}";
+            public static readonly string LogLevel = $"{EnvPrefix}{nameof(LogLevel)}";
+            public static readonly string PbiInstallDir = $"{EnvPrefix}{nameof(PbiInstallDir)}";
         }
 
         public static string GetEnvironmentSetting(string name) => System.Environment.GetEnvironmentVariable(name);
