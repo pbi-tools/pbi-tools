@@ -269,3 +269,4 @@ __pycache__/
 
 #
 **/Properties/launchSettings.json
+.temp/
