@@ -1,4 +1,22 @@
 
+## 1.0.0-beta.2 - 2021-03-21
+* Upgraded AMO library to 19.18, supporting latest TMSL features (Compatibility level 1562)
+* Improved documentation of CLI actions and arguments, Inserted Usage docs into README and Usage.md
+* PbixProj v0.6 format: ... table/columns/*, table.dax, measure.dax, column.dax, /cultures #1 #2 #5
+* Extract action: -extractFolder, -modelSerialization
+* PbixProj Settings: model.serializationMode, model.ignoreProperties
+* Upgraded various other dependencies
+* Fix for breaking change in CsvHelper v20 API
+* Added Sample project (Adventure Works DW 2020)
+* Added substantial number of unit tests
+* Switched 'powerbi-desktop-samples' submodule to "main" branch
+* Added './pbi-tools.local.cmd'
+* Using paket as dotnet local tool, removed local copy of "paket.exe"
+* 'export-usage' action added
+* 'extract-data' - DateTime format can be specified
+* New build target: "UsageDocs"
+* Added attribution to Win32 files (from projectkudu/KuduHandles)
+
 ## 1.0.0-beta.1 - 2020-11-18
 * Bugfix for Power BI Desktop Nov 2020 release (2.87)
 * Made implementation backwards-compatible: V3 models can be extracted with any prior version of PBI Desktop, only legacy models require the Nov 2020 version
