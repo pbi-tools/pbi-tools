@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Attribution: https://github.com/projectkudu/KuduHandles/tree/8c34ac5/KuduHandles
+
+using System;
 using Microsoft.Win32.SafeHandles;
 
 namespace PbiTools.Win32

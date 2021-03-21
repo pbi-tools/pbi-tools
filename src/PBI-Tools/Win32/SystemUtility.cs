@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Attribution: https://github.com/projectkudu/KuduHandles/tree/8c34ac5/KuduHandles
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
