@@ -111,16 +111,21 @@ namespace PbiTools.FileSystem
         public bool TryReadFile(string path, Action<Stream> streamHandler)
         {
             var fullPath = GetFullPath(path);
+            Log.Verbose("Attempting to read file: {Path}", fullPath);
             if (File.Exists(fullPath))
             {
                 using (var stream = File.OpenRead(fullPath))
                 {
                     streamHandler(stream);
                 }
+                Log.Debug("Successfully read file: {Path}", fullPath);
                 return true;
             }
             else
+            {
+                Log.Debug("File not found: {Path}", fullPath);
                 return false;
+            }
         }
 
         public bool ContainsFile(string path)
@@ -173,7 +178,9 @@ namespace PbiTools.FileSystem
         }
 
         public IEnumerable<IProjectFolder> GetSubfolders(string searchPattern, SearchOption searchOption) =>
-            Directory.EnumerateDirectories(this.BasePath, searchPattern, searchOption).Select(dir => this.GetSubfolder(Path.GetFileName(dir)));
+            this.Exists()
+            ? Directory.EnumerateDirectories(this.BasePath, searchPattern, searchOption).Select(dir => this.GetSubfolder(Path.GetFileName(dir)))
+            : new IProjectFolder[0];
 
         public IProjectFile GetFile(string relativePath)
         {
@@ -181,7 +188,9 @@ namespace PbiTools.FileSystem
         }
 
         public IEnumerable<IProjectFile> GetFiles(string searchPattern, SearchOption searchOption) =>
-            Directory.EnumerateFiles(this.BasePath, searchPattern, searchOption).Select(path => new ProjectFile(this._root, path));
+            this.Exists()
+            ? Directory.EnumerateFiles(this.BasePath, searchPattern, searchOption).Select(path => new ProjectFile(this._root, path))
+            : new IProjectFile[0];
 
     }
 
@@ -205,12 +214,15 @@ namespace PbiTools.FileSystem
 
         public bool TryReadFile(out Stream stream)
         {
+            Log.Verbose("Attempting to read file: {Path}", Path);
             if (File.Exists(Path))
             {
                 stream = File.OpenRead(Path);
+                Log.Debug("File successfully opened: {Path}", Path);
                 return true;
             }
 
+            Log.Debug("File not found: {Path}", Path);
             stream = null;
             return false;
         }
@@ -427,6 +439,25 @@ namespace PbiTools.FileSystem
             return default(JObject);
         }
 
+        public static JArray ReadJsonArray(this IProjectFile file, JsonLoadSettings settings = null)
+        {
+            if (file.TryReadFile(out var stream))
+            {
+                using (var reader = new JsonTextReader(new StreamReader(stream)))
+                {
+                    try
+                    {
+                        return JArray.Load(reader, settings);
+                    }
+                    catch (JsonException e)
+                    {
+                        Log.Error(e, "Json file is invalid: {Path}", file.Path);
+                    }
+                }
+            }
+
+            return default(JArray);
+        }
 
         public static XDocument ReadXml(this IProjectFile file, XmlReaderSettings readerSettings = null)
         {

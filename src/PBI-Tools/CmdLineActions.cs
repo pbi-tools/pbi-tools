@@ -438,4 +438,11 @@ namespace PbiTools
         [ArgDescription("Clear all cache folders except the most recent one.")]
         ClearOutdated
     }
+
+    public enum ExternalToolAction
+    { 
+        Install,
+        Uninstall,
+        ExtractCurrentProject
+    }
 }

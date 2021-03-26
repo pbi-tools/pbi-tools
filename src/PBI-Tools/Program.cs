@@ -45,6 +45,9 @@ namespace PbiTools
                     )
                     .Filter.ByExcluding(_ => AppSettings.ShouldSuppressConsoleLogs)
                 .CreateLogger();
+            
+            if (AppSettings.LevelSwitch.MinimumLevel < Serilog.Events.LogEventLevel.Information)
+                Log.Information("Log level: {LogLevel}", AppSettings.LevelSwitch.MinimumLevel);
         }
 
         //internal static IConfigurationRoot Configuration { get; }
