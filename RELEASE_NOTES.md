@@ -1,4 +1,12 @@
 
+## 1.0.0-beta.3 - 2021-03-26
+* PbixProj v0.6 Format
+  * Generate /Report/sections sub-folders using page index and title (e.g.: "000_Introduction")
+  * Generate /Report/../visualContainers sub-folders using unique combination of visual tabOrder, title, type, name (e.g.: "00000_textbox (dbb7a)")
+* New feature: 'compile-pbix' action (EXPERIMENTAL)
+  * Compile PBIX or PBIT file from PbixProj sources
+* Improved diagnostic logging
+
 ## 1.0.0-beta.2 - 2021-03-21
 * Upgraded AMO library to 19.18, supporting latest TMSL features (Compatibility level 1562)
 * Improved documentation of CLI actions and arguments, Inserted Usage docs into README and Usage.md
