@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Xml.Linq;
 using Newtonsoft.Json.Linq;
 using PbiTools.FileSystem;
@@ -30,7 +31,7 @@ namespace PbiTools.Model
         JObject ReportSettings { get; }
         string Version { get; }
 
-        IDictionary<string, byte[]> CustomVisuals { get; }
+        IDictionary<string, byte[]> CustomVisuals { get; } // TODO Change to Dict<Uri, Func<Stream>> ??
         IDictionary<string, byte[]> StaticResources { get; }
 
         PbixProject PbixProj { get; }
@@ -64,6 +65,14 @@ namespace PbiTools.Model
             this.Type = type;
         }
 
+        public void EnsureV3Model()
+        {
+            if (!PbixReader.IsV3Version(this.Version))
+            {
+                throw new NotSupportedException("The PBIX file does not contain a V3 model. This API only supports V3 PBIX files.");
+            }
+        }
+
         /// <summary>
         /// Builds a PbixModel from the PBIX file at the path specified.
         /// </summary>
@@ -86,10 +95,7 @@ namespace PbiTools.Model
 
             Log.Verbose("Reading PbixModel from file at {Path} (Version: {Version})", reader.Path, pbixModel.Version);
 
-            if (!PbixReader.IsV3Version(pbixModel.Version))
-            {
-                throw new NotSupportedException("The PBIX file does not contain a V3 model. This API only supports V3 PBIX files.");
-            }
+            pbixModel.EnsureV3Model();
 
             Log.Debug("Reading Connections...");
             pbixModel.Connections = reader.ReadConnections();
@@ -132,35 +138,35 @@ namespace PbiTools.Model
                 pbixModel.PbixProj = PbixProject.FromFolder(projectFolder);
             }
 
-            if (PbixReader.IsV3Version(pbixModel.Version))
-            {
-                pbixModel.PbixProj.Queries = null; // remove 'Queries' from a previous legacy version of the model
-            }
+            pbixModel.PbixProj.Queries = null; // remove 'Queries' from a previous legacy version of the model
 
             return pbixModel;
         }
 
         public static PbixModel FromFolder(string path)
         {
-            // PBIXPROJ(folder) <==> Serializer <=|PbixModel|=> PbixReader|Writer[Converter] <==> PBIX(file)
-            //                       ##########                 ############################
+            // PBIXPROJ(folder) <==> Serializer <=|PbixModel|=> PbixReader|PbiPackage[Converter] <==> PBIX(file)
+            //                       ##########                 ################################
+
+            Log.Debug("Building PbixProj from folder: {Path}", path);
 
             using (var projectFolder = new ProjectRootFolder(path))
             {
                 var pbixProject = PbixProject.FromFolder(projectFolder);
                 var serializers = new PowerBIPartSerializers(projectFolder, pbixProject.Settings);
 
-                var pbixModel = new PbixModel(path, PbixModelSource.PbixProjFolder) { PbixProj = pbixProject };
+                var pbixModel = new PbixModel(projectFolder.BasePath, PbixModelSource.PbixProjFolder) { PbixProj = pbixProject };
 
-                pbixModel.Version = serializers.Version.DeserializeSafe();
+                pbixModel.Version = serializers.Version.DeserializeSafe(isOptional: false);
+                pbixModel.EnsureV3Model();
                 pbixModel.Connections = serializers.Connections.DeserializeSafe();
-                pbixModel.Report = serializers.ReportDocument.DeserializeSafe();
+                pbixModel.Report = serializers.ReportDocument.DeserializeSafe(isOptional: false);
                 pbixModel.DiagramLayout = serializers.DiagramLayout.DeserializeSafe();
                 pbixModel.DiagramViewState = serializers.DiagramViewState.DeserializeSafe();
                 pbixModel.LinguisticSchema = serializers.LinguisticSchema.DeserializeSafe();
                 pbixModel.LinguisticSchemaXml = serializers.LinguisticSchemaXml.DeserializeSafe();
-                pbixModel.ReportMetadata = serializers.ReportMetadata.DeserializeSafe();
-                pbixModel.ReportSettings = serializers.ReportSettings.DeserializeSafe();
+                pbixModel.ReportMetadata = serializers.ReportMetadata.DeserializeSafe(isOptional: false);
+                pbixModel.ReportSettings = serializers.ReportSettings.DeserializeSafe(isOptional: false);
                 pbixModel.CustomVisuals = serializers.CustomVisuals.DeserializeSafe();
                 pbixModel.StaticResources = serializers.StaticResources.DeserializeSafe();                
                 pbixModel.DataModel = serializers.DataModel.DeserializeSafe();
@@ -228,9 +234,16 @@ namespace PbiTools.Model
             }
         }
 
-        public static void ToFile(string path)
+        public void ToFile(string path, PbiFileFormat format, IDependenciesResolver dependenciesResolver = null)
         {
-            throw new NotImplementedException();
+            var modelName = PowerBIPartConverters.ConvertToValidModelName(Path.GetFileNameWithoutExtension(path));
+            var converters = new PowerBIPartConverters(modelName, dependenciesResolver ?? DependenciesResolver.Default);
+            var pbiPackage = new PbiPackage(this, converters, format);
+
+            using (var pbixFile = File.Create(path))
+            {
+                Microsoft.PowerBI.Packaging.PowerBIPackager.Save(pbiPackage, pbixFile);
+            }
         }
 
         #region IPbixModel

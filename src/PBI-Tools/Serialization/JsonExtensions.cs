@@ -3,12 +3,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Newtonsoft.Json.Linq;
-using PbiTools.FileSystem;
 
 namespace PbiTools.Serialization
 {
+    using FileSystem;
+
     public static class JsonExtensions
     {
         /// <summary>
@@ -43,10 +45,6 @@ namespace PbiTools.Serialization
         /// Returns an empty enumeration if the property does not exist, but it will fail if the property does not contain an array.
         /// Any array elements that are not of type <see cref="T"/> will be skipped.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="parent"></param>
-        /// <param name="property"></param>
-        /// <returns></returns>
         public static IEnumerable<T> RemoveArrayAs<T>(this JObject parent, string property)
         {
             var array = parent[property]?.Value<JArray>();
@@ -56,13 +54,9 @@ namespace PbiTools.Serialization
         }
 
         /// <summary>
-        /// Parses a string-encoded json token out of a json object property, removes the property, and optionally saves the token in the <see cref="IProjectFolder"/>.
+        /// Parses a string-encoded json token out of a json object property, removes the property,
+        /// and optionally saves the token in the <see cref="IProjectFolder"/>.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="parent"></param>
-        /// <param name="property"></param>
-        /// <param name="folder"></param>
-        /// <returns></returns>
         public static T ExtractToken<T>(this JObject parent, string property, IProjectFolder folder = null) where T : JToken
         {
             T obj = null;
@@ -76,8 +70,35 @@ namespace PbiTools.Serialization
             return obj;
         }
 
+
+        public static JObject InsertToken<T>(this JObject parent, string property, T token) where T : JToken
+        {
+            if (token != null)
+                parent[property] = token.ToString(formatting: Newtonsoft.Json.Formatting.None);
+            return parent;
+        }
+
+        public static JObject InsertObjectFromFile(this JObject parent, IProjectFolder folder, string fileName)
+        { 
+            var objectFile = folder.GetFile(fileName);
+            if (objectFile.Exists()) {
+                parent.InsertToken(Path.GetFileNameWithoutExtension(fileName), objectFile.ReadJson());
+            }
+            return parent;
+        }
+
+        public static JObject InsertArrayFromFile(this JObject parent, IProjectFolder folder, string fileName)
+        { 
+            var arrayFile = folder.GetFile(fileName);
+            if (arrayFile.Exists()) {
+                parent.InsertToken(Path.GetFileNameWithoutExtension(fileName), arrayFile.ReadJsonArray());
+            }
+            return parent;
+        }
+
         /// <summary>
-        /// Saves the <see cref="JToken"/> to the <see cref="IProjectFolder"/> using the <see cref="name"/> provided, applying all transforms (if any) in specified order.
+        /// Saves the <see cref="JToken"/> to the <see cref="IProjectFolder"/> using the <see cref="name"/> provided,
+        /// applying all transforms (if any) in specified order.
         /// </summary>
         public static void Save(this JToken token, string name, IProjectFolder folder, params Func<JToken, JToken>[] transforms)
         {
@@ -86,5 +107,21 @@ namespace PbiTools.Serialization
             folder.Write(token, $"{name}.json");
         }
 
+        public static T ReadPropertySafe<T>(this JObject json, string property, T defaultValue = default(T))
+        { 
+            if (json == null) throw new ArgumentNullException("json");
+            if (json.TryGetValue(property, StringComparison.InvariantCultureIgnoreCase, out var value))
+            {
+                try
+                { 
+                    return value.ToObject<T>();
+                }
+                catch (Exception e)
+                {
+                    Serilog.Log.Error(e, "Json conversion error occurred reading Property {PropertyName} as Type {TypeName}", property, typeof(T).Name);
+                }
+            }
+            return defaultValue;
+        }
     }
 }

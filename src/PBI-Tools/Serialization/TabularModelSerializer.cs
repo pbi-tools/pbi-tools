@@ -771,6 +771,7 @@ namespace PbiTools.Serialization
 
         public static string SanitizeFilename(this string name)
         {
+            if (name == null) return default(string);
             var sb = new StringBuilder();
             foreach (var c in name)
             {

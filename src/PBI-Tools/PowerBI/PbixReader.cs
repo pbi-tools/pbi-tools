@@ -42,17 +42,7 @@ namespace PbiTools.PowerBI
             _package = PowerBIPackager.Open(_pbixStream); // TODO Handle errors
             this.Path = pbixPath;
 
-            const string
-                forbiddenCharacters =
-                    @". , ; ' ` : / \ * | ? "" & % $ ! + = ( ) [ ] { } < >"; // grabbed these from an AMO exception message
-            var modelName = forbiddenCharacters // TODO Could also use TOM.Server.Databases.CreateNewName()
-                .Replace(" ", "")
-                .ToCharArray()
-                .Aggregate(
-                    System.IO.Path.GetFileNameWithoutExtension(pbixPath),
-                    (n, c) => n.Replace(c, '_')
-                );
-
+            var modelName = PowerBIPartConverters.ConvertToValidModelName(System.IO.Path.GetFileNameWithoutExtension(pbixPath));
             _converters = new PowerBIPartConverters(modelName, resolver);
         }
 
@@ -189,7 +179,7 @@ namespace PbiTools.PowerBI
        Converters translate between the binary IStreamablePowerBIPackagePartContent and a readable representation of the content.
        Serializers convert to and from the PbixProj format.
        ------------------------------------
-       | PBIX                             | - File System
+       | *.pbix|pbit                      | - File System
        | IPowerBIPackage                  | - Power BI API
        | PbixReader|Writer                | - pbi-tools
        | IPowerBIPartConverter            |   - IStreamablePowerBIPackagePartContent <==> JObject, XDocument, ZipArchive, String (RAW viewable content)

@@ -199,6 +199,26 @@ namespace PbiTools
         }
 
 
+        [ArgActionMethod, ArgShortcut("compile-pbix"), ArgDescription("*EXPERIMENTAL* Generates a PBIX/PBIT file from sources in the specified PbixProj folder.")]
+        public void CompilePbix(
+            [ArgRequired, ArgExistingDirectory, ArgDescription("The PbixProj folder to generate the PBIX from.")] string folder,
+            [ArgDescription("The path for the output file. If not provided, creates the file in the current working directory, using the foldername.")] string pbixPath,
+            [ArgDescription("The target file format."), ArgDefaultValue(PbiFileFormat.Pbix)] PbiFileFormat format
+        )
+        {
+            // mode: Create,Merge
+
+            using (var proj = PbiTools.Model.PbixModel.FromFolder(folder))
+            {
+                if (String.IsNullOrEmpty(pbixPath))
+                    pbixPath = $"{Path.GetFileName(proj.SourcePath)}.{(format == PbiFileFormat.Pbit ? "pbit" : "pbix")}";
+
+                proj.ToFile(pbixPath, format, _dependenciesResolver);
+            }
+
+            Console.WriteLine($"PBIX file written to: {new FileInfo(pbixPath).FullName}");
+        }
+
         [ArgActionMethod, ArgShortcut("info"), ArgDescription("Collects diagnostic information about the local system and writes a JSON object to StdOut.")]
         [ArgExample(
             "pbi-tools.exe info check", 

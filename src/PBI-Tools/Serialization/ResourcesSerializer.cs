@@ -59,7 +59,7 @@ namespace PbiTools.Serialization
         public bool TryDeserialize(out IDictionary<string, byte[]> part)
         {
             var result = new Dictionary<string, byte[]>();
-            var baseUri = new Uri(BasePath);
+            var baseUri = new Uri(BasePath + "/" /* Need trailing slash for MakeRelativeUri() below */);
 
             foreach (var file in _folder.GetFiles("*", SearchOption.AllDirectories))
             {
@@ -68,6 +68,7 @@ namespace PbiTools.Serialization
                 {
                     var relResourcePath = baseUri.MakeRelativeUri(new Uri(file.Path)).ToString();
                     stream.CopyTo(buffer);
+                    Log.Debug("Deserializing resource at {BasePath} - {Uri}", this.BasePath, relResourcePath);
                     result.Add(relResourcePath, buffer.ToArray());
                 }
             }

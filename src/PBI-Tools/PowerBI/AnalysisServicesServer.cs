@@ -128,7 +128,7 @@ namespace PbiTools.PowerBI
             // Wait for creation of Port file
             var portFilePath = Path.Combine(_tempPath, "msmdsrv.port.txt");
             var attempts = 20;
-            while (!File.Exists(portFilePath) && attempts-- > 0)
+            while (!File.Exists(portFilePath) && attempts-- > 0) // TODO Use Polly here
             {
                 Thread.Sleep(1000);
             }

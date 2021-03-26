@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using System;
+using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 using Newtonsoft.Json.Linq;
@@ -45,5 +46,19 @@ namespace PbiTools.PowerBI
         public IPowerBIPartConverter<JObject> Connections { get; } = new JsonPartConverter(Encoding.UTF8); // TODO Verify encoding
         public IPowerBIPartConverter<byte[]> Resources { get; } = new BytesPartConverter(); // TODO Different API required here?
 
+        public static string ConvertToValidModelName(string name)
+        { 
+            const string
+                forbiddenCharacters =
+                    @". , ; ' ` : / \ * | ? "" & % $ ! + = ( ) [ ] { } < >"; // grabbed these from an AMO exception message
+            var modelName = forbiddenCharacters // TODO Could also use TOM.Server.Databases.CreateNewName()
+                .Replace(" ", "")
+                .ToCharArray()
+                .Aggregate(
+                    name,
+                    (n, c) => n.Replace(c, '_')
+                );
+            return modelName;
+        }
     }
 }

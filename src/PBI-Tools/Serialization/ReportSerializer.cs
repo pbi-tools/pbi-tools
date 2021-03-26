@@ -132,12 +132,37 @@ namespace PbiTools.Serialization
 
         public bool TryDeserialize(out JObject part)
         {
-            throw new NotImplementedException();
+            var reportJson = DeserializeReportElement(_reportFolder, "report.json", 
+                "sections", sectionFolder => DeserializeReportElement(sectionFolder, "section.json",
+                "visualContainers", visualFolder => DeserializeReportElement(visualFolder, "visualContainer.json")
+                    .InsertObjectFromFile(visualFolder, "query.json")
+                    .InsertObjectFromFile(visualFolder, "dataTransforms.json")
+                )
+            );
 
-            // report.json
-            //   add config, filters
-            //   add section (+ config, filters)
-            //     add visualContainers
+            part = reportJson;
+            return true;
         }
+
+        internal static JObject DeserializeReportElement(IProjectFolder folder, string objectFileName, string childCollectionName = null, Func<IProjectFolder, JObject> childElementFactory = null)
+        {
+            var elementJson = folder.GetFile(objectFileName)
+                .ReadJson()
+                .InsertObjectFromFile(folder, "config.json")
+                .InsertArrayFromFile(folder, "filters.json");
+
+            if (!String.IsNullOrEmpty(childCollectionName))
+            { 
+                var childCollectionFolder = folder.GetSubfolder(childCollectionName);
+                if (childCollectionFolder.Exists())
+                {
+                    elementJson[childCollectionName] = 
+                        new JArray(childCollectionFolder.GetSubfolders("*").Select(childElementFactory));
+                }
+            }
+
+            return elementJson;
+        }
+
     }
 }
