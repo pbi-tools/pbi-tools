@@ -2,11 +2,14 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json.Linq;
-using PbiTools.FileSystem;
 
 namespace PbiTools.Serialization
 {
+    using FileSystem;
+
     public class ReportSerializer : IPowerBIPartSerializer<JObject>
     {
         public static string FolderName => "Report";
@@ -52,24 +55,26 @@ namespace PbiTools.Serialization
             if (content == null) return false;
 
             content.ExtractObject("config", _reportFolder);
+            // modelExtensions
+            // bookmarks
+            // settings
             content.ExtractArray("filters", _reportFolder);
 
             // sections:
             foreach (var jSection in content.RemoveArrayAs<JObject>("sections"))
             {
-                var name = jSection["name"]?.Value<string>();
-                var sectionFolder = _reportFolder.GetSubfolder("sections", name);
+                var sectionFolder = _reportFolder.GetSubfolder("sections", GenerateSectionFolderName(jSection));
 
                 jSection.ExtractObject("config", sectionFolder);
                 jSection.ExtractArray("filters", sectionFolder);
+
+                var visualFolderNames = new HashSet<string>(); // ensures visualContainer folder names are unique
 
                 // visualContainers:
                 foreach (var jVisual in jSection.RemoveArrayAs<JObject>("visualContainers"))
                 {
                     var visualConfig = jVisual.ExtractObject("config", folder: null); // not saving yet as folder name still has to be determined
-                    var visualName = visualConfig["name"]?.Value<string>() ?? jVisual["id"].Value<string>(); // TODO Handle missing name/id
-
-                    var visualFolder = sectionFolder.GetSubfolder("visualContainers", visualName);
+                    var visualFolder = sectionFolder.GetSubfolder("visualContainers", GenerateVisualFolderName(jVisual, visualConfig, visualFolderNames));
 
                     jVisual.ExtractObject("query", visualFolder);
                     jVisual.ExtractArray("filters", visualFolder);
@@ -93,6 +98,36 @@ namespace PbiTools.Serialization
                 , JsonTransforms.RemoveProperties("objectId")); // resourcePackage ids tend to change when exporting from powerbi.com
 
             return true;
+        }
+
+        internal static string GenerateSectionFolderName(JObject jSection)
+        { 
+            var name = jSection.ReadPropertySafe<string>("name");
+            var displayName = jSection.ReadPropertySafe<string>("displayName");
+            var ordinal = jSection.ReadPropertySafe<int>("ordinal", 999);
+            
+            return $"{ordinal:000}_{displayName.SanitizeFilename() ?? name}";
+        }
+
+        internal static string GenerateVisualFolderName(JObject jVisual, JObject jConfig, ISet<string> folderNames)
+        {
+            var name = jConfig.ReadPropertySafe<string>("name")?.Substring(0, 5);
+            var id = jVisual.ReadPropertySafe<int>("id");
+            var tabOrder = jVisual.ReadPropertySafe<int>("tabOrder");
+            string ExtractTitle(string t) => t == null ? null : (t.StartsWith("'") && t.EndsWith("'") ? t.Substring(1, t.Length - 2) : t);
+            var title = ExtractTitle(jConfig.SelectToken("singleVisual.vcObjects.title[0].properties.text..Literal.Value")?.Value<string>());
+            var groupName = jConfig.SelectToken("singleVisualGroup.displayName")?.Value<string>();
+            var visualType = jConfig.SelectToken("singleVisual.visualType")?.Value<string>();
+
+            var nameBase = $"{tabOrder:00000}_{title.SanitizeFilename() ?? groupName.SanitizeFilename() ?? ($"{visualType.SanitizeFilename()} ({name ?? id.ToString()})")}";
+            if (folderNames.Add(nameBase)) {
+                return nameBase;
+            }
+            else {
+                var nameWithId = $"{nameBase} ({name ?? id.ToString()})";
+                folderNames.Add(nameWithId);
+                return nameWithId;
+            }
         }
 
         public bool TryDeserialize(out JObject part)

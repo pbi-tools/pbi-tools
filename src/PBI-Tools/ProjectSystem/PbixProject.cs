@@ -18,7 +18,7 @@ namespace PbiTools.ProjectSystem
         private static readonly ILogger Log = Serilog.Log.ForContext<PbixProject>();
 
         public const string Filename = ".pbixproj.json";
-        public static readonly Version CurrentVersion = Version.Parse("0.6");
+        public static readonly Version CurrentVersion = Version.Parse("0.7");
 
         /*
          * PBIXPROJ Change Log
@@ -46,6 +46,7 @@ namespace PbiTools.ProjectSystem
          *       - Extract measure expression into /Model/tables/{table}/measures/{name}.dax
          *       - Extract model cultures in /Model/cultures/{name}.json
          *       - Control Model serialization settings via settings.model in pbixproj file (Serialization Mode, Ignore Properties)
+         * 0.7   - /Report: section and visualContainer folder names
          */
 
         /* Entries to add later: */
