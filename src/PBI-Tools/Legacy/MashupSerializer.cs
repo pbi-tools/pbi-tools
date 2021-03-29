@@ -15,13 +15,15 @@ using Microsoft.Mashup.Engine.Interface;
 using Microsoft.Mashup.Host.Document;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using PbiTools.FileSystem;
-using PbiTools.Model;
-using PbiTools.Utils;
 using Serilog;
 
 namespace PbiTools.Serialization
 {
+    using FileSystem;
+    using Model;
+    using ProjectSystem;
+    using Utils;
+
     // ReSharper disable IdentifierTypo
     public class MashupSerializer : IPowerBIPartSerializer<MashupParts>
     {
@@ -30,15 +32,16 @@ namespace PbiTools.Serialization
         // ReSharper disable once StringLiteralTypo
         public static string FolderName => "Mashup";
         internal IProjectFolder Folder { get; }
+        private readonly PbixProjectSettings _settings;
     
 
         private static readonly XmlSerializer PackageMetadataSerializer = new XmlSerializer(typeof(SerializedPackageMetadata));
 
-        public MashupSerializer(IProjectRootFolder rootFolder)
+        public MashupSerializer(IProjectRootFolder rootFolder, PbixProjectSettings settings)
         {
             if (rootFolder == null) throw new ArgumentNullException(nameof(rootFolder));
             this.Folder = rootFolder.GetFolder(FolderName);
-        }
+            _settings = settings;        }
 
         public string BasePath => Folder.BasePath;
 
@@ -133,6 +136,12 @@ namespace PbiTools.Serialization
 
         internal void SerializeMetadata(XDocument xmlMetadata)
         {
+            if (_settings.Mashup.SerializationMode == MashupSerializationMode.Raw)
+            {
+                this.Folder.Write(xmlMetadata, "metadata.xml");
+                return;
+            }
+
             var metadataFolder = Folder.GetSubfolder("Metadata");
 
             var metadata = (SerializedPackageMetadata)PackageMetadataSerializer.Deserialize(xmlMetadata.CreateReader());

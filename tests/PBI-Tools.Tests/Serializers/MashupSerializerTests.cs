@@ -21,7 +21,7 @@ namespace PbiTools.Tests
 
         public MashupSerializerTests()
         {
-            _serializer = new MashupSerializer(new MockRootFolder());
+            _serializer = new MashupSerializer(new MockRootFolder(), new ProjectSystem.PbixProjectSettings());
             _folder = _serializer.Folder as MockProjectFolder;
         }
 
@@ -164,7 +164,7 @@ namespace PbiTools.Tests
                 });
             mockFolder.Setup(folder => folder.GetSubfolder(It.IsAny<string[]>())).Returns(mockFolder.Object);
 
-            var serializer = new MashupSerializer(new MockRootFolder(() => mockFolder.Object));
+            var serializer = new MashupSerializer(new MockRootFolder(() => mockFolder.Object), new ProjectSystem.PbixProjectSettings());
 
             using (var stream = new MemoryStream())
             {

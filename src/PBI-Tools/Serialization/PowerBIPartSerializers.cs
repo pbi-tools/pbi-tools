@@ -32,7 +32,7 @@ namespace PbiTools.Serialization
 
             this.DataModel = new TabularModelSerializer(rootFolder, settings);
             this.ReportDocument = new ReportSerializer(rootFolder);
-            this.DataMashup = new MashupSerializer(rootFolder);
+            this.DataMashup = new MashupSerializer(rootFolder, settings);
         }
 
 
