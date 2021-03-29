@@ -78,7 +78,7 @@ namespace PbiTools.PowerBI
         {
             if (_package.DataMashup != null)
             {
-                return _legacyConverters.Value.DataMashup.FromPackagePart(_package.DataMashup);
+                return new MashupConverter().FromPackagePart(_package.DataMashup);
             }
             return default(MashupParts);
         }

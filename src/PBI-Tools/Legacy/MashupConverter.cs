@@ -16,10 +16,11 @@ using Microsoft.PowerBI.Packaging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
-using PbiTools.Model;
 
 namespace PbiTools.PowerBI
 {
+    using Model;
+
     public class MashupConverter : IPowerBIPartConverter<MashupParts>
     {
         private static readonly JsonSerializer CamelCaseSerializer = new JsonSerializer { ContractResolver = new CamelCasePropertyNamesContractResolver() };
@@ -35,7 +36,7 @@ namespace PbiTools.PowerBI
 
         public MashupParts FromPackagePart(IStreamablePowerBIPackagePartContent part)
         {
-            if (part == null) throw new ArgumentNullException(nameof(part));
+            if (part == null) return default(MashupParts);
             if (!PackageComponents.TryDeserialize(PowerBIPackagingUtils.GetContentAsBytes(part, isOptional: false), out PackageComponents packageComponents))
             {
                 throw new Exception("Could not read MashupPackage"); // TODO Better error handling

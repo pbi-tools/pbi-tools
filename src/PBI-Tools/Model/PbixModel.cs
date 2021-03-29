@@ -21,6 +21,7 @@ namespace PbiTools.Model
     public interface IPbixModel
     {
         JObject Connections { get; }
+        MashupParts DataMashup { get; }
         JObject DataModel { get; }
         JObject Report { get; }
         JObject DiagramViewState { get; }
@@ -133,6 +134,9 @@ namespace PbiTools.Model
             Log.Debug("Reading DataModel...");
             pbixModel.DataModel = reader.ReadDataModel();  // will fire up SSAS instance if PBIX has embedded model
 
+            Log.Debug("Reading DataMashup...");
+            pbixModel.DataMashup = reader.ReadMashup();
+
             using (var projectFolder = new ProjectRootFolder(PbixProject.GetProjectFolderForFile(pbixModel.SourcePath)))
             {
                 pbixModel.PbixProj = PbixProject.FromFolder(projectFolder);
@@ -217,6 +221,9 @@ namespace PbiTools.Model
                 if (serializers.DataModel.Serialize(this.DataModel))
                     Log.Information("DataModel extracted to: {Path}", serializers.DataModel.BasePath);
 
+                if (serializers.DataMashup.Serialize(this.DataMashup))
+                    Log.Information("DataMashup extracted to: {Path}", serializers.DataMashup.BasePath);
+
                 if (serializers.CustomVisuals.Serialize(this.CustomVisuals))
                     Log.Information("CustomVisuals extracted to: {Path}", serializers.CustomVisuals.BasePath);
 
@@ -236,6 +243,9 @@ namespace PbiTools.Model
 
         public void ToFile(string path, PbiFileFormat format, IDependenciesResolver dependenciesResolver = null)
         {
+            if (this.DataModel != null)
+                throw new NotSupportedException("Files with an embedded data model cannot currently be generated from sources. Only projects with a live connection are supported until further notice.");
+
             var modelName = PowerBIPartConverters.ConvertToValidModelName(Path.GetFileNameWithoutExtension(path));
             var converters = new PowerBIPartConverters(modelName, dependenciesResolver ?? DependenciesResolver.Default);
             var pbiPackage = new PbiPackage(this, converters, format);
@@ -249,6 +259,7 @@ namespace PbiTools.Model
         #region IPbixModel
 
         public JObject Connections { get; private set; }
+        public MashupParts DataMashup { get; private set; }
         public JObject DataModel { get; private set; }
         public JObject Report { get; private set; }
         public JObject DiagramViewState { get; private set; }

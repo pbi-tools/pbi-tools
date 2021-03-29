@@ -10,6 +10,7 @@ using Newtonsoft.Json.Linq;
 namespace PbiTools.Serialization
 {
     using FileSystem;
+    using Model;
     using ProjectSystem;
 
     public class PowerBIPartSerializers
@@ -31,6 +32,7 @@ namespace PbiTools.Serialization
 
             this.DataModel = new TabularModelSerializer(rootFolder, settings);
             this.ReportDocument = new ReportSerializer(rootFolder);
+            this.DataMashup = new MashupSerializer(rootFolder);
         }
 
 
@@ -44,6 +46,7 @@ namespace PbiTools.Serialization
         public IPowerBIPartSerializer<JObject> DiagramLayout { get; }
         public IPowerBIPartSerializer<JObject> ReportDocument { get; }
         public IPowerBIPartSerializer<JObject> DataModel { get; }
+        public IPowerBIPartSerializer<MashupParts> DataMashup { get; }
         public IPowerBIPartSerializer<JObject> Connections { get; }
         public IPowerBIPartSerializer<IDictionary<string, byte[]>> CustomVisuals { get; }
         public IPowerBIPartSerializer<IDictionary<string, byte[]>> StaticResources { get; }

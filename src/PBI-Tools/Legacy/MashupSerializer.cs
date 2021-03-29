@@ -37,7 +37,7 @@ namespace PbiTools.Serialization
         public MashupSerializer(IProjectRootFolder rootFolder)
         {
             if (rootFolder == null) throw new ArgumentNullException(nameof(rootFolder));
-            Folder = rootFolder.GetFolder(FolderName);
+            this.Folder = rootFolder.GetFolder(FolderName);
         }
 
         public string BasePath => Folder.BasePath;
@@ -414,6 +414,11 @@ namespace PbiTools.Serialization
 
         public bool TryDeserialize(out MashupParts part)
         {
+            part = default(MashupParts);
+            if (!this.Folder.Exists()) return false;
+
+            part = new MashupParts();
+
             /*
                 public MemoryStream Package { get; set; }
                 public JObject Permissions { get; set; }
@@ -421,6 +426,19 @@ namespace PbiTools.Serialization
                 public JArray QueryGroups { get; set; }
                 public MemoryStream Content { get; set; }
              */
+
+            var packageFolder = this.Folder.GetSubfolder("Package");
+            part.Package = new MemoryStream();
+
+            // .xml
+            // .m
+            // .*
+
+            var metadataFolder = this.Folder.GetSubfolder("Metadata");
+            var contentsFolder = this.Folder.GetSubfolder("Contents");
+            var queriesFile = this.Folder.GetFile("Metadata/queryGroups.json");
+            var permissionsFile = this.Folder.GetFile("permissions.json");
+
             throw new NotImplementedException();
         }
     }
