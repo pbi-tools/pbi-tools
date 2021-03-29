@@ -69,6 +69,8 @@ namespace PbiTools
         )
         {
             // TODO Support '-parts' parameter, listing specifc parts to extract only
+            // ReportSerializationMode: Full,ExtractObjets, Raw
+
             using (var reader = new PbixReader(pbixPath, _dependenciesResolver))
             {
                 if (mode == ExtractActionCompatibilityMode.Legacy)
@@ -199,14 +201,16 @@ namespace PbiTools
         }
 
 
-        [ArgActionMethod, ArgShortcut("compile-pbix"), ArgDescription("*EXPERIMENTAL* Generates a PBIX/PBIT file from sources in the specified PbixProj folder.")]
+        [ArgActionMethod, ArgShortcut("compile-pbix"), ArgDescription("*EXPERIMENTAL* Generates a PBIX/PBIT file from sources in the specified PbixProj folder. Currently, only PBIX projects with a live connection are supported.")]
         public void CompilePbix(
             [ArgRequired, ArgExistingDirectory, ArgDescription("The PbixProj folder to generate the PBIX from.")] string folder,
             [ArgDescription("The path for the output file. If not provided, creates the file in the current working directory, using the foldername.")] string pbixPath,
             [ArgDescription("The target file format."), ArgDefaultValue(PbiFileFormat.Pbix)] PbiFileFormat format
         )
         {
-            // mode: Create,Merge
+            // format: pbix, pbit
+            // mode: Create, Merge
+            // mashupHandling: Auto, Skip, GenerateFromModel, FromFolder
 
             using (var proj = PbiTools.Model.PbixModel.FromFolder(folder))
             {

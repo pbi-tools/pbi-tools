@@ -71,9 +71,13 @@ namespace PbiTools.PowerBI
 
         public IStreamablePowerBIPackagePartContent ToPackagePart(MashupParts content)
         {
-            // TODO Needs Testing
+            // PartsBytes: Package Stream as byte[]
             var partsBytes = content.Package.ToArray();
+            
+            // Convert json to PackagePermissions, then use PermissionsSerializer to convert to byte[]
             var permissionBytes = PermissionsSerializer.Serialize(content?.Permissions.ToObject<PackagePermissions>() ?? new PackagePermissions());
+            
+            // Convert xml to SerializedPackageMetadata, then use PackageMetadataSerializer to convert to byte[]
             var serializedPackageMetadata = (SerializedPackageMetadata)PackageMetadataXmlSerializer.Deserialize(content.Metadata.CreateReader());
             var metadataBytes = PackageMetadataSerializer.Serialize(serializedPackageMetadata,
                 content.Content.ToArray());

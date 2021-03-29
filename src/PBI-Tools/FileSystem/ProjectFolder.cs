@@ -360,6 +360,11 @@ namespace PbiTools.FileSystem
             });
         }
 
+        /// <summary>
+        /// Writes the json token to a given path inside the project folder provided.
+        /// The json payload is formatted for readability.
+        /// Any existing file is replaced.
+        /// </summary>
         public static void Write(this IProjectFolder folder, JToken json, string path)
         {
             folder.WriteText(path, writer =>

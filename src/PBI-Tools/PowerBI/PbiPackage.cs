@@ -40,7 +40,7 @@ namespace PbiTools.PowerBI
         }
 
         public IStreamablePowerBIPackagePartContent DataMashup {
-            get => EmptyContent; 
+            get => EmptyContent; // TODO Support 0.8 format
             set => throw new NotSupportedException();
         }
 
