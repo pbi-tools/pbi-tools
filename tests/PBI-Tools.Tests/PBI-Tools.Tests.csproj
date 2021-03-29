@@ -15,6 +15,13 @@
     <!-- See: https://github.com/dotnet/sdk/issues/2809 -->
     <AssemblySearchPaths>$(ReferencePath);$(AssemblySearchPaths)</AssemblySearchPaths>
   </PropertyGroup>
+  <Target Name="ZipSampleData">
+      <MakeDir Directories="..\..\.temp" />
+      <ZipDirectory
+          SourceDirectory="..\..\data\Samples\Adventure Works DW 2020\"
+          DestinationFile="..\..\.temp\Adventure Works DW 2020.zip"
+          Overwrite="True" />
+  </Target>
   <ItemGroup>
     <None Remove="TestResources\**\*.*" />
     <EmbeddedResource Include="TestResources\**\*.*" />
@@ -37,11 +44,5 @@
       <HintPath>C:\Program Files\Microsoft Power BI Desktop\bin\Microsoft.Mashup.Document.dll</HintPath>
     </Reference>
   </ItemGroup>
-  <Target Name="ZipSampleData">
-      <ZipDirectory
-          SourceDirectory="..\..\data\Samples\Adventure Works DW 2020\"
-          DestinationFile="..\..\.temp\Adventure Works DW 2020.zip"
-          Overwrite="True" />
-  </Target>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>
