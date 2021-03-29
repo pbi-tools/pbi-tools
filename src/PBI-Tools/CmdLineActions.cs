@@ -215,7 +215,7 @@ namespace PbiTools
             using (var proj = PbiTools.Model.PbixModel.FromFolder(folder))
             {
                 if (String.IsNullOrEmpty(pbixPath))
-                    pbixPath = $"{Path.GetFileName(proj.SourcePath)}.{(format == PbiFileFormat.Pbit ? "pbit" : "pbix")}";
+                    pbixPath = $"{new DirectoryInfo(proj.SourcePath).Name}.{(format == PbiFileFormat.Pbit ? "pbit" : "pbix")}";
 
                 proj.ToFile(pbixPath, format, _dependenciesResolver);
             }
