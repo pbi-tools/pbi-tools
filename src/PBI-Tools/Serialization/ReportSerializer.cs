@@ -112,7 +112,7 @@ namespace PbiTools.Serialization
         internal static string GenerateVisualFolderName(JObject jVisual, JObject jConfig, ISet<string> folderNames)
         {
             var name = jConfig.ReadPropertySafe<string>("name")?.Substring(0, 5);
-            var id = jVisual.ReadPropertySafe<int>("id");
+            var id = jVisual.ReadPropertySafe<long>("id");
             var tabOrder = jVisual.ReadPropertySafe<int>("tabOrder");
             string ExtractTitle(string t) => t == null ? null : (t.StartsWith("'") && t.EndsWith("'") ? t.Substring(1, t.Length - 2) : t);
             var title = ExtractTitle(jConfig.SelectToken("singleVisual.vcObjects.title[0].properties.text..Literal.Value")?.Value<string>());
