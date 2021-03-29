@@ -2,7 +2,7 @@
 
     pbi-tools <action> -options
 
-_pbi-tools-cli, 1.0.0-beta.3_
+_pbi-tools-cli, 1.0.0-beta.4_
 
 ### Actions
 
@@ -72,13 +72,13 @@ Converts the Model artifacts to a TMSL/BIM file.
 
     compile-pbix <folder> [<pbixPath>] [<format>] 
 
-*EXPERIMENTAL* Generates a PBIX/PBIT file from sources in the specified PbixProj folder.
+*EXPERIMENTAL* Generates a PBIX/PBIT file from sources in the specified PbixProj folder. Currently, only PBIX projects with a live connection are supported.
 
 | Option | Default Value | Is Switch | Description |
 | --- | --- | --- | --- |
 | folder* |  |  | The PbixProj folder to generate the PBIX from. |
 | pbixPath |  |  | The path for the output file. If not provided, creates the file in the current working directory, using the foldername. |
-| format | `Pbix` |  |  <br> `Pbix`  - Creates a file using the PBIX format. If a data model is loaded into the file it will have no data and will require processing. This is the default format. <br> `Pbit`  - Creates a file using the PBIT format. When opened in Power BI Desktop, parameters/credentials need to be provided and a refresh is triggered. |
+| format | `Pbix` |  | The target file format. <br> `Pbix`  - Creates a file using the PBIX format. If a data model is loaded into the file it will have no data and will require processing. This is the default format. <br> `Pbit`  - Creates a file using the PBIT format. When opened in Power BI Desktop, parameters/credentials need to be provided and a refresh is triggered. |
 
 #### info
 
