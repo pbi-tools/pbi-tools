@@ -18,7 +18,7 @@ namespace PbiTools.ProjectSystem
         private static readonly ILogger Log = Serilog.Log.ForContext<PbixProject>();
 
         public const string Filename = ".pbixproj.json";
-        public static readonly Version CurrentVersion = Version.Parse("0.7");
+        public static readonly Version CurrentVersion = Version.Parse("0.8");
 
         /*
          * PBIXPROJ Change Log
@@ -47,6 +47,7 @@ namespace PbiTools.ProjectSystem
          *       - Extract model cultures in /Model/cultures/{name}.json
          *       - Control Model serialization settings via settings.model in pbixproj file (Serialization Mode, Ignore Properties)
          * 0.7   - /Report: section and visualContainer folder names
+         * 0.8   - /Mashup extracted from V3 models (when present in PBIX)
          */
 
         /* Entries to add later: */
