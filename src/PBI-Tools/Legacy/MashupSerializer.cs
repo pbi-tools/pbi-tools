@@ -251,21 +251,8 @@ namespace PbiTools.Serialization
             // skip QueryGroups
         }
 
-        private static readonly Dictionary<char, string> FilenameCharReplace = "\"<>|:*?/\\".ToCharArray().ToDictionary(c => c, c => $"%{((int)c):X}");
-
         internal static string EscapeItemPathSegment(string segment)
-        {
-            var sb = new StringBuilder();
-            foreach (var c in WebUtility.UrlDecode(segment).ToCharArray())
-            {
-                if (FilenameCharReplace.TryGetValue(c, out var s))
-                    sb.Append(s);
-                else
-                    sb.Append(c);
-            }
-            return sb.ToString();
-        }
-
+            => WebUtility.UrlDecode(segment).SanitizeFilename();
         internal static string EscapeItemPath(string path)
         {
             return String.Join("/", path
