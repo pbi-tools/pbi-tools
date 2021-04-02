@@ -16,6 +16,7 @@ using Microsoft.PowerBI.Packaging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
+using Serilog;
 
 namespace PbiTools.PowerBI
 {
@@ -23,6 +24,7 @@ namespace PbiTools.PowerBI
 
     public class MashupConverter : IPowerBIPartConverter<MashupParts>
     {
+        private static readonly ILogger Log = Serilog.Log.ForContext<MashupConverter>();
         private static readonly JsonSerializer CamelCaseSerializer = new JsonSerializer { ContractResolver = new CamelCasePropertyNamesContractResolver() };
         private readonly XmlSerializerNamespaces _xmlNamespaces = new XmlSerializerNamespaces();
 
@@ -72,18 +74,27 @@ namespace PbiTools.PowerBI
 
         public IStreamablePowerBIPackagePartContent ToPackagePart(MashupParts content)
         {
+            if (content == null) return PbiPackage.EmptyContent;
+
             // PartsBytes: Package Stream as byte[]
-            var partsBytes = content.Package.ToArray();
+            var partsBytes = content.Package?.ToArray() ?? new byte[0];
             
             // Convert json to PackagePermissions, then use PermissionsSerializer to convert to byte[]
             var permissionBytes = PermissionsSerializer.Serialize(content?.Permissions.ToObject<PackagePermissions>() ?? new PackagePermissions());
             
             // Convert xml to SerializedPackageMetadata, then use PackageMetadataSerializer to convert to byte[]
             var serializedPackageMetadata = (SerializedPackageMetadata)PackageMetadataXmlSerializer.Deserialize(content.Metadata.CreateReader());
-            var metadataBytes = PackageMetadataSerializer.Serialize(serializedPackageMetadata,
-                content.Content.ToArray());
+            var metadataBytes = PackageMetadataSerializer.Serialize(
+                serializedPackageMetadata,
+                content.Content?.ToArray() ?? new byte[0]
+            );
 
+            Log.Verbose("Generating PackageComponents: {PartsBytes} PartsBytes, {PermissionBytes} PermissionBytes, {MetadataBytes} MetadataBytes"
+                , partsBytes.Length
+                , permissionBytes.Length
+                , metadataBytes.Length);
             var pc = new PackageComponents(partsBytes, permissionBytes, metadataBytes);
+            
             return new StreamablePowerBIPackagePartContent(pc.Serialize());
         }
 
