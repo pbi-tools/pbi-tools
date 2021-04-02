@@ -228,6 +228,24 @@ namespace PbiTools
             Console.WriteLine($"PBIX file written to: {new FileInfo(pbixPath).FullName}");
         }
 
+
+        [ArgActionMethod, ArgShortcut("launch-pbi"), ArgDescription("Starts a new instance of Power BI Desktop with the PBIX/PBIT file specified. Does not support Windows Store installations.")]
+        public void LaunchPbiDesktop(
+            [ArgRequired, ArgExistingFile, ArgDescription("The path to an existing PBIX or PBIT file.")] string pbixPath
+        )
+        {
+            var defaultInstall = _dependenciesResolver.PBIInstalls.FirstOrDefault(x => x.Location != PowerBIDesktopInstallationLocation.WindowsStore);
+            if (defaultInstall == null) {
+                throw new Exception("No suitable installation found.");
+            }
+            var pbiExePath = Path.Combine(defaultInstall.InstallDir, "PBIDesktop.exe");
+            Log.Verbose("Attempting to start PBI Desktop from: {Path}", pbiExePath);
+
+            var proc = Process.Start(pbiExePath, $"\"{pbixPath}\""); // Note the enclosing quotes are required
+            Log.Information("Launched Power BI Desktop, Process ID: {ProcessID}, Arguments: {Arguments}", proc.Id, proc.StartInfo.Arguments);
+        }
+
+
         [ArgActionMethod, ArgShortcut("info"), ArgDescription("Collects diagnostic information about the local system and writes a JSON object to StdOut.")]
         [ArgExample(
             "pbi-tools.exe info check", 
