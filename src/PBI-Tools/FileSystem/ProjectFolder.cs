@@ -24,6 +24,14 @@ namespace PbiTools.FileSystem
         /// </summary>
         string BasePath { get; }
 
+        /// <summary>
+        /// Gets the directory name of the folder.
+        /// </summary>
+        string Name { get; }
+
+        /// <summary>
+        /// Returns <c>true</c> or <c>false</c>, indicating whether or not this folder exists.
+        /// </summary>
         bool Exists();
 
         IProjectFolder GetSubfolder(params string[] segments);
@@ -32,10 +40,16 @@ namespace PbiTools.FileSystem
 
         IEnumerable<IProjectFile> GetFiles(string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly);
 
+        /// <summary>
+        /// Returns a reference to a file at the path specified relative to this folder instance.
+        /// The file may or may not exist. The reference can be used to check whether the file exists, retrieve its contents, 
+        /// overwrite its contents, or create a new file at the location.
+        /// </summary>
         IProjectFile GetFile(string relativePath);
         
         /// <summary>
         /// Provides access to the <see cref="Stream"/> of a project file if it exists.
+        /// Returns <c>true</c> if the file exists, otherwise <c>false</c>.
         /// </summary>
         bool TryReadFile(string path, Action<Stream> streamHandler);
 
@@ -88,15 +102,16 @@ namespace PbiTools.FileSystem
         private static readonly ILogger Log = Serilog.Log.ForContext<ProjectFolder>();
 
         private readonly ProjectRootFolder _root;
+        private readonly DirectoryInfo _directoryInfo;
 
         public ProjectFolder(ProjectRootFolder root, string baseDir)
         {
             _root = root ?? throw new ArgumentNullException(nameof(root));
-            var dir = new DirectoryInfo(baseDir);
-            BasePath = dir.FullName;
+            _directoryInfo = new DirectoryInfo(baseDir);
         }
 
-        public string BasePath { get; }
+        public string BasePath => _directoryInfo.FullName;
+        public string Name => _directoryInfo.Name;
 
         private string GetFullPath(string path) => new FileInfo(Path.Combine(BasePath, SanitizePath(path))).FullName;
 
@@ -156,6 +171,12 @@ namespace PbiTools.FileSystem
             var fullPath = GetFullPath(path);
             Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
 
+            if (Directory.Exists(fullPath))
+            {
+                Log.Verbose("Deleting directory at: {Path} as it conflicts with a new file to be created at the same location.", fullPath);
+                Directory.Delete(fullPath, recursive: true);
+            }
+
             Log.Verbose("Writing file: {Path}", fullPath);
             using (var writer = factory(fullPath))
             {
@@ -189,7 +210,8 @@ namespace PbiTools.FileSystem
 
         public IEnumerable<IProjectFile> GetFiles(string searchPattern, SearchOption searchOption) =>
             this.Exists()
-            ? Directory.EnumerateFiles(this.BasePath, searchPattern, searchOption).Select(path => new ProjectFile(this._root, path))
+            ? Directory.EnumerateFiles(this.BasePath, searchPattern, searchOption)
+                .Select(path => new ProjectFile(this._root, path))
             : new IProjectFile[0];
 
     }
@@ -496,5 +518,11 @@ namespace PbiTools.FileSystem
 
             return default(string);
         }
+
+        public static string GetRelativePath(this IProjectFile file, IProjectFolder folder)
+            => new Uri(folder.BasePath + @"\")
+                .MakeRelativeUri(new Uri(file.Path))
+                .ToString();
+
     }
 }
