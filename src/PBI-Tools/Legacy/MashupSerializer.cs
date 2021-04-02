@@ -31,34 +31,59 @@ namespace PbiTools.Serialization
 
         // ReSharper disable once StringLiteralTypo
         public static string FolderName => "Mashup";
-        internal IProjectFolder Folder { get; }
-        private readonly PbixProjectSettings _settings;
+        internal IProjectFolder MashupFolder { get; }
+        private readonly MashupSettings _settings;
     
+        private static class Names
+        {
+            public static string PackageFolder => "Package";
+            public static string MetadataFolder => "Metadata";
+            public static string MetadataFile => "metadata.xml";
+            public static string ContentsFolder => "Contents";
+            public static string PermissionsFile => "permissions.json";
+            public static string QueryGroupsFile => "Metadata/queryGroups.json";
+        }
 
         private static readonly XmlSerializer PackageMetadataSerializer = new XmlSerializer(typeof(SerializedPackageMetadata));
 
-        public MashupSerializer(IProjectRootFolder rootFolder, PbixProjectSettings settings)
+        public MashupSerializer(IProjectRootFolder rootFolder, MashupSettings settings)
         {
             if (rootFolder == null) throw new ArgumentNullException(nameof(rootFolder));
-            this.Folder = rootFolder.GetFolder(FolderName);
-            _settings = settings;        }
+            this.MashupFolder = rootFolder.GetFolder(FolderName);
+            _settings = settings;
+        }
 
-        public string BasePath => Folder.BasePath;
+        public string BasePath => MashupFolder.BasePath;
 
         #region Package
 
         internal void SerializePackage(ZipArchive archive)
         {
-            var packageFolder = Folder.GetSubfolder("Package");
+            var packageFolder = MashupFolder.GetSubfolder(Names.PackageFolder);
 
             foreach (var entry in archive.Entries)
             {
                 using (var entryStream = entry.Open())
                 {
+                    // *** RAW Serialization Mode ***
+
+                    if (_settings.SerializationMode == MashupSerializationMode.Raw)
+                    {
+                        packageFolder.WriteFile(entry.FullName, stream =>
+                        {
+                            // ReSharper disable once AccessToDisposedClosure
+                            entryStream.CopyTo(stream);
+                        });
+
+                        continue;
+                    }
+
+                    // *** DEFAULT Serialization Mode ***
+
                     if (Path.GetExtension(entry.FullName) == ".xml")
                     {
-                        var xml = XDocument.Load(entryStream);  // XmlException
-                        packageFolder.Write(xml, entry.FullName);
+                        var xml = XDocument.Load(entryStream);       // might throw XmlException
+                        packageFolder.Write(xml, entry.FullName);    // ensures XML is formatted for readability
                     }
                     else if (Path.GetExtension(entry.FullName) == ".m")
                     {
@@ -84,7 +109,7 @@ namespace PbiTools.Serialization
 
                                 // Fallback: Just extract the plain file
                                 // ReSharper disable once AccessToDisposedClosure
-                                packageFolder.WriteFile(entry.FullName, stream => { streamClone.CopyTo(stream); });
+                                packageFolder.WriteFile(entry.FullName, stream => streamClone.CopyTo(stream));
                             }
                         }
                     }
@@ -136,13 +161,13 @@ namespace PbiTools.Serialization
 
         internal void SerializeMetadata(XDocument xmlMetadata)
         {
-            if (_settings.Mashup.SerializationMode == MashupSerializationMode.Raw)
+            if (_settings.SerializationMode == MashupSerializationMode.Raw)
             {
-                this.Folder.Write(xmlMetadata, "metadata.xml");
+                this.MashupFolder.Write(xmlMetadata, Names.MetadataFile);
                 return;
             }
 
-            var metadataFolder = Folder.GetSubfolder("Metadata");
+            var metadataFolder = MashupFolder.GetSubfolder(Names.MetadataFolder);
 
             var metadata = (SerializedPackageMetadata)PackageMetadataSerializer.Deserialize(xmlMetadata.CreateReader());
 
@@ -171,7 +196,11 @@ namespace PbiTools.Serialization
                     : item.ItemLocation.ItemType.ToString();
 
                 // Creates new JObject '"AllFormulas": { .. }' or '"Formulas": { "Section1/Query1": { .. } }' to be populated with item entries
-                var entry = CreateEntry(sectionName, String.IsNullOrEmpty(item.ItemLocation.ItemPath) ? null : WebUtility.UrlDecode(item.ItemLocation.ItemPath));
+                var entry = CreateEntry(sectionName, 
+                    String.IsNullOrEmpty(item.ItemLocation.ItemPath) 
+                    ? null 
+                    : WebUtility.UrlDecode(item.ItemLocation.ItemPath)
+                );
 
                 // emit 'null' if there are no entries
                 if (item.Entries == null || item.Entries.Length == 0)
@@ -208,7 +237,10 @@ namespace PbiTools.Serialization
                             var queriesFolder = itemFolder.GetSubfolder("ReferencedQueries");
                             foreach (var queryProperty in refQueriesObj.Properties())
                             {
-                                queriesFolder.Write(queryProperty.Value.ToString(), $"{EscapeItemPathSegment(queryProperty.Name)}.m");
+                                queriesFolder.Write(
+                                    queryProperty.Value.ToString(), 
+                                    $"{EscapeItemPathSegment(queryProperty.Name)}.m"
+                                );
                             }
                             obj.Remove("ReferencedQueriesFormulaText");
                         }
@@ -348,6 +380,8 @@ namespace PbiTools.Serialization
         public bool Serialize(MashupParts content)
         {
             if (content == null) return false;
+
+            Log.Information("Using mashup serialization mode: {Mode}", _settings.SerializationMode);
             
             /*
              *   /Mashup
@@ -356,6 +390,7 @@ namespace PbiTools.Serialization
              *   -----/Formulas/Section1.m/Query1.m
              *   --/Contents/
              *   --/Metadata/                    {metadataFolder}
+             *   -----/metadata.xml (==='Raw' extraction mode===)
              *   -----/metadata.json
              *   -----/queryGroups.json          [MashupParts.QueryGroups]
              *   -----/Section1/
@@ -380,9 +415,9 @@ namespace PbiTools.Serialization
             }
 
             var contents = content.Content;
-            if (contents != null)
+            if (contents != null && contents.Length > 0)
             {
-                var contentsFolder = Folder.GetSubfolder("Contents");
+                var contentsFolder = MashupFolder.GetSubfolder(Names.ContentsFolder);
                 using (var zip = new ZipArchive(contents, ZipArchiveMode.Read, leaveOpen: true))
                 {
                     foreach (var entry in zip.Entries)
@@ -397,12 +432,12 @@ namespace PbiTools.Serialization
 
             if (content.QueryGroups != null)
             {
-                Folder.Write(content.QueryGroups, "Metadata/queryGroups.json");
+                MashupFolder.Write(content.QueryGroups, Names.QueryGroupsFile);
             }
 
             if (content.Permissions != null)
             {
-                Folder.Write(content.Permissions, "permissions.json");
+                MashupFolder.Write(content.Permissions, Names.PermissionsFile);
             }
 
             return true;
@@ -411,31 +446,118 @@ namespace PbiTools.Serialization
         public bool TryDeserialize(out MashupParts part)
         {
             part = default(MashupParts);
-            if (!this.Folder.Exists()) return false;
+            if (!this.MashupFolder.Exists()) return false;
+
+            Log.Debug("Deserializing Mashup parts...");
 
             part = new MashupParts();
 
-            /*
-                public MemoryStream Package { get; set; }
-                public JObject Permissions { get; set; }
-                public XDocument Metadata { get; set; }
-                public JArray QueryGroups { get; set; }
-                public MemoryStream Content { get; set; }
-             */
+            var packageFolder = this.MashupFolder.GetSubfolder(Names.PackageFolder);
+            if (packageFolder.Exists())
+            { 
+                part.Package = new MemoryStream();
+                using (var zipArchive = new ZipArchive(part.Package, ZipArchiveMode.Create, leaveOpen: true))
+                {
+                    // *** Handle expanded Formulas/SectionX.m files ***
 
-            var packageFolder = this.Folder.GetSubfolder("Package");
-            part.Package = new MemoryStream();
+                    var filesProcessed = new HashSet<string>();
+                    foreach (var formulaFolder in packageFolder.GetSubfolder("Formulas").GetSubfolders("*.m"))
+                    {
+                        var entry = zipArchive.CreateEntry($@"Formulas\{formulaFolder.Name}");
+                        Log.Verbose("Creating PackagePart entry: {ZipEntryPath} from: {FormulaFolder}", entry.FullName, formulaFolder.BasePath);
 
-            // .xml
-            // .m
-            // .*
+                        using (var writer = new StreamWriter(entry.Open()))
+                        {
+                            writer.WriteLine($"section {Path.GetFileNameWithoutExtension(formulaFolder.Name)};");
+                            writer.WriteLine();
+                            foreach (var sectionFile in formulaFolder.GetFiles("*.m"))
+                            {
+                                filesProcessed.Add(sectionFile.Path);
+                                Log.Verbose("Adding file: {Path}", sectionFile.Path);
 
-            var metadataFolder = this.Folder.GetSubfolder("Metadata");
-            var contentsFolder = this.Folder.GetSubfolder("Contents");
-            var queriesFile = this.Folder.GetFile("Metadata/queryGroups.json");
-            var permissionsFile = this.Folder.GetFile("permissions.json");
+                                writer.WriteLine(sectionFile.ReadText());
+                                writer.WriteLine();
+                            }
+                        }
+                    }
 
-            throw new NotImplementedException();
+                    // *** Handle all other files ***
+
+                    foreach (var file in packageFolder.GetFiles("*.*", SearchOption.AllDirectories))
+                    {
+                        if (filesProcessed.Contains(file.Path)) continue;
+
+                        var relativePath = file.GetRelativePath(packageFolder);
+
+                        var entry = zipArchive.CreateEntry(relativePath);
+                        Log.Verbose("Creating PackagePart entry: {ZipEntryPath}, Copying from: {SourceFilePath}", entry.FullName, file.Path);
+
+                        using (var entryStream = entry.Open())
+                        {
+                            if (file.TryReadFile(out var sourceStream))
+                            using (sourceStream)
+                            {
+                                sourceStream.CopyTo(entryStream);
+                            }
+                        }
+                    }
+                }
+            }
+
+            var metadataFolder = this.MashupFolder.GetSubfolder(Names.MetadataFolder);
+            if (metadataFolder.Exists())
+            { 
+                // throw new NotImplementedException("Mashup/Metadata");
+                // Metadata/queryGroups.json exists
+            }
+
+            var metadataFile = this.MashupFolder.GetFile(Names.MetadataFile);
+            if (metadataFile.Exists())
+            {
+                Log.Verbose("Creating MetadataPart from {Path}", metadataFile.Path);
+                part.Metadata = metadataFile.ReadXml();
+            }
+
+            var contentsFolder = this.MashupFolder.GetSubfolder(Names.ContentsFolder);
+            if (contentsFolder.Exists())
+            {
+                part.Content = new MemoryStream();
+                using (var zipArchive = new ZipArchive(part.Content, ZipArchiveMode.Create, leaveOpen: true))
+                {
+                    foreach (var file in contentsFolder.GetFiles("*.*", SearchOption.AllDirectories))
+                    {
+                        var relativePath = file.GetRelativePath(contentsFolder);
+
+                        var entry = zipArchive.CreateEntry(relativePath);
+                        Log.Verbose("Creating ContentPart entry: {ZipEntryPath}, Copying from: {SourceFilePath}", entry.FullName, file.Path);
+
+                        using (var entryStream = entry.Open())
+                        {
+                            if (file.TryReadFile(out var sourceStream))
+                            using (sourceStream)
+                            {
+                                sourceStream.CopyTo(entryStream);
+                            }
+                        }
+                    }
+                }
+            }
+
+            var queryGroupsFile = this.MashupFolder.GetFile(Names.QueryGroupsFile);
+            if (queryGroupsFile.Exists())
+            {
+                Log.Verbose("Reading QueryGroups from {Path}", queryGroupsFile.Path);
+                part.QueryGroups = queryGroupsFile.ReadJsonArray();
+            }
+
+            var permissionsFile = this.MashupFolder.GetFile(Names.PermissionsFile);
+            if (permissionsFile.Exists())
+            {
+                Log.Verbose("Reading Permissions from {Path}", permissionsFile.Path);
+                part.Permissions = permissionsFile.ReadJson();
+            }
+
+            return true;
         }
     }
 }

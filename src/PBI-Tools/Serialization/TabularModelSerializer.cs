@@ -28,11 +28,11 @@ namespace PbiTools.Serialization
         public static string FolderName => "Model";
 
         private readonly IProjectFolder _modelFolder;
-        private readonly PbixProjectSettings _settings;
+        private readonly ModelSettings _settings;
         private readonly IDictionary<string, string> _queries;
 
 
-        public TabularModelSerializer(IProjectRootFolder rootFolder, PbixProjectSettings settings, IDictionary<string, string> queries = null)
+        public TabularModelSerializer(IProjectRootFolder rootFolder, ModelSettings settings, IDictionary<string, string> queries = null)
         {
             if (rootFolder == null) throw new ArgumentNullException(nameof(rootFolder));
             _modelFolder = rootFolder.GetFolder(FolderName);
@@ -48,11 +48,11 @@ namespace PbiTools.Serialization
         {
             if (db == null) return false;
 
-            Log.Information("Using tabular model serialization mode: {Mode}", _settings.Model.SerializationMode);
+            Log.Information("Using tabular model serialization mode: {Mode}", _settings.SerializationMode);
 
-            if (_settings.Model.SerializationMode == ModelSerializationMode.Default)
+            if (_settings.SerializationMode == ModelSerializationMode.Default)
             { 
-                db = db.RemoveProperties(_settings?.Model?.IgnoreProperties);
+                db = db.RemoveProperties(_settings?.IgnoreProperties);
 
                 var dataSources = db.SelectToken("model.dataSources") as JArray ?? new JArray();
                 var idCache = new TabularModelIdCache(dataSources, _queries); // Applies to legacy PBIX files only (is ignored for V3 models)

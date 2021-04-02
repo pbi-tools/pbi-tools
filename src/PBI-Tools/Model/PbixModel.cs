@@ -163,6 +163,7 @@ namespace PbiTools.Model
 
                 pbixModel.Version = serializers.Version.DeserializeSafe(isOptional: false);
                 pbixModel.EnsureV3Model();
+                
                 pbixModel.Connections = serializers.Connections.DeserializeSafe();
                 pbixModel.Report = serializers.ReportDocument.DeserializeSafe(isOptional: false);
                 pbixModel.DiagramLayout = serializers.DiagramLayout.DeserializeSafe();
@@ -174,6 +175,7 @@ namespace PbiTools.Model
                 pbixModel.CustomVisuals = serializers.CustomVisuals.DeserializeSafe();
                 pbixModel.StaticResources = serializers.StaticResources.DeserializeSafe();                
                 pbixModel.DataModel = serializers.DataModel.DeserializeSafe();
+                pbixModel.DataMashup = serializers.DataMashup.DeserializeSafe();
 
                 return pbixModel;
             }
@@ -243,9 +245,10 @@ namespace PbiTools.Model
 
         public void ToFile(string path, PbiFileFormat format, IDependenciesResolver dependenciesResolver = null)
         {
+#if false
             if (this.DataModel != null)
                 throw new NotSupportedException("Files with an embedded data model cannot currently be generated from sources. Only projects with a live connection are supported until further notice.");
-
+#endif
             var modelName = PowerBIPartConverters.ConvertToValidModelName(Path.GetFileNameWithoutExtension(path));
             var converters = new PowerBIPartConverters(modelName, dependenciesResolver ?? DependenciesResolver.Default);
             var pbiPackage = new PbiPackage(this, converters, format);

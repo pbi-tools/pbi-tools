@@ -84,7 +84,7 @@ namespace PbiTools.Actions
         public void ExtractModel(PbixProject pbixProj)
         {
             if (pbixProj.Queries == null) pbixProj.Queries = new Dictionary<string, string>();
-            var serializer = new TabularModelSerializer(_rootFolder, pbixProj.Settings, pbixProj.Queries);
+            var serializer = new TabularModelSerializer(_rootFolder, pbixProj.Settings.Model, pbixProj.Queries);
             serializer.Serialize(_pbixReader.ReadDataModel());
         }
 
@@ -107,7 +107,7 @@ namespace PbiTools.Actions
 
         public void ExtractMashup(PbixProjectSettings settings)
         {
-            var mashupSerializer = new MashupSerializer(_rootFolder, settings);
+            var mashupSerializer = new MashupSerializer(_rootFolder, settings.Mashup);
             mashupSerializer.Serialize(_pbixReader.ReadMashup());
         }
 

@@ -65,7 +65,8 @@ namespace PbiTools
             [ArgRequired, ArgExistingFile, ArgDescription("The path to an existing PBIX file.")] string pbixPath,
             [ArgDescription("The folder to extract the PBIX file to. Only needed to override the default location. Can be relative to current working directory.")] string extractFolder,
             [ArgDescription("The extraction mode."), ArgDefaultValue(ExtractActionCompatibilityMode.Auto)] ExtractActionCompatibilityMode mode,
-            [ArgDescription("The model serialization mode.")] ProjectSystem.ModelSerializationMode modelSerialization
+            [ArgDescription("The model serialization mode.")] ProjectSystem.ModelSerializationMode modelSerialization,
+            [ArgDescription("The mashup serialization mode.")] ProjectSystem.MashupSerializationMode mashupSerialization
         )
         {
             // TODO Support '-parts' parameter, listing specifc parts to extract only
@@ -88,6 +89,10 @@ namespace PbiTools
                         {
                             if (modelSerialization != default(ProjectSystem.ModelSerializationMode))
                                 model.PbixProj.Settings.Model.SerializationMode = modelSerialization;
+
+                            if (mashupSerialization != default(ProjectSystem.MashupSerializationMode))
+                                model.PbixProj.Settings.Mashup.SerializationMode = mashupSerialization;
+
                             model.ToFolder(path: String.IsNullOrWhiteSpace(extractFolder)? null : extractFolder);
                         }
                     }
@@ -169,7 +174,7 @@ namespace PbiTools
         {
             using (var rootFolder = new FileSystem.ProjectRootFolder(folder))
             {
-                var serializer = new Serialization.TabularModelSerializer(rootFolder, ProjectSystem.PbixProject.FromFolder(rootFolder).Settings);
+                var serializer = new Serialization.TabularModelSerializer(rootFolder, ProjectSystem.PbixProject.FromFolder(rootFolder).Settings.Model);
                 if (serializer.TryDeserialize(out var db))  // throws for V1 models
                 {
                     if (!skipDataSources)
