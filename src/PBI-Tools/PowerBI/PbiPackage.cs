@@ -21,7 +21,7 @@ namespace PbiTools.PowerBI
     internal class PbiPackage : IPowerBIPackage
     {
         private static readonly ILogger Log = Serilog.Log.ForContext<PbiPackage>();
-	    private static readonly IStreamablePowerBIPackagePartContent EmptyContent = new StreamablePowerBIPackagePartContent(default(string));
+	    internal static readonly IStreamablePowerBIPackagePartContent EmptyContent = new StreamablePowerBIPackagePartContent(default(string));
 
         private readonly PbixModel _pbixModel;
         private readonly PowerBIPartConverters _converters;
@@ -40,7 +40,7 @@ namespace PbiTools.PowerBI
         }
 
         public IStreamablePowerBIPackagePartContent DataMashup {
-            get => EmptyContent; // TODO Support 0.8 format
+            get => new MashupConverter().ToPackagePart(_pbixModel.DataMashup);
             set => throw new NotSupportedException();
         }
 
