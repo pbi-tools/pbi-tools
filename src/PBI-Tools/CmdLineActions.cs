@@ -210,17 +210,30 @@ namespace PbiTools
         public void CompilePbix(
             [ArgRequired, ArgExistingDirectory, ArgDescription("The PbixProj folder to generate the PBIX from.")] string folder,
             [ArgDescription("The path for the output file. If not provided, creates the file in the current working directory, using the foldername.")] string pbixPath,
-            [ArgDescription("The target file format."), ArgDefaultValue(PbiFileFormat.Pbix)] PbiFileFormat format
+            [ArgDescription("The target file format."), ArgDefaultValue(PbiFileFormat.Pbix)] PbiFileFormat format,
+            [ArgDescription("Overwrite the destination file if it already exists, fail otherwise.")] bool overwrite
         )
         {
             // format: pbix, pbit
             // mode: Create, Merge
             // mashupHandling: Auto, Skip, GenerateFromModel, FromFolder
 
+            // SUCCESS
+            // [x] PBIX from Report-Only
+            // [x] PBIT from PBIT sources (incl Mashup)
+            //
+            // TODO
+            // [ ] PBIT from PBIX sources (no mashup)
+            // [ ] PBIX from source with model
+            // [ ] Merge into PBIX
+
             using (var proj = PbiTools.Model.PbixModel.FromFolder(folder))
             {
                 if (String.IsNullOrEmpty(pbixPath))
                     pbixPath = $"{new DirectoryInfo(proj.SourcePath).Name}.{(format == PbiFileFormat.Pbit ? "pbit" : "pbix")}";
+
+                if (File.Exists(pbixPath) && !overwrite)
+                    throw new Exception($"Destination file '{pbixPath}' exists and the '-overwrite' was not specified.");
 
                 proj.ToFile(pbixPath, format, _dependenciesResolver);
             }
