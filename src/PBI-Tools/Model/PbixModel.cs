@@ -66,6 +66,9 @@ namespace PbiTools.Model
             this.Type = type;
         }
 
+        /// <summary>
+        /// Throws a <see cref="NotSupportedException"/> if this <c>PbixModel</c> was not generated from a V3 PBIX file.
+        /// </summary>
         public void EnsureV3Model()
         {
             if (!PbixReader.IsV3Version(this.Version))
@@ -75,7 +78,7 @@ namespace PbiTools.Model
         }
 
         /// <summary>
-        /// Builds a PbixModel from the PBIX file at the path specified.
+        /// Builds a <c>PbixModel</c> from the PBIX file at the path specified. Only V3 PBIX files are supported.
         /// </summary>
         public static PbixModel FromFile(string path, IDependenciesResolver dependenciesResolver = null)
         {
@@ -85,6 +88,9 @@ namespace PbiTools.Model
             }
         }
 
+        /// <summary>
+        /// Builds a <c>PbixModel</c> from the provided <see cref="PbixReader"/> instance. Only V3 PBIX files are supported.
+        /// </summary>
         public static PbixModel FromReader(PbixReader reader)
         {
             if (reader is null) throw new ArgumentNullException(nameof(reader));
@@ -142,7 +148,7 @@ namespace PbiTools.Model
                 pbixModel.PbixProj = PbixProject.FromFolder(projectFolder);
             }
 
-            pbixModel.PbixProj.Queries = null; // remove 'Queries' from a previous legacy version of the model
+            pbixModel.PbixProj.Queries = null; // remove 'Queries', in case those were inherited from a previous legacy version of the model
 
             return pbixModel;
         }
@@ -152,7 +158,7 @@ namespace PbiTools.Model
             // PBIXPROJ(folder) <==> Serializer <=|PbixModel|=> PbixReader|PbiPackage[Converter] <==> PBIX(file)
             //                       ##########                 ################################
 
-            Log.Debug("Building PbixProj from folder: {Path}", path);
+            Log.Debug("Building PbixModel from folder: {Path}", path);
 
             using (var projectFolder = new ProjectRootFolder(path))
             {
