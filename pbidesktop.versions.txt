@@ -1,3 +1,4 @@
+2.91.884
 2.91.701    # Mar 2021
 2.90.1081.0;https://download.microsoft.com/download/8/8/0/880BCA75-79DD-466A-927D-1ABF1F5454B0/PBIDesktopSetup-2021-02_x64.exe
 2.90.782.0
