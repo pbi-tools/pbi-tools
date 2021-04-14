@@ -63,6 +63,8 @@ namespace PbiTools.Serialization
 
             foreach (var entry in archive.Entries)
             {
+                Log.Debug("Processing Mashup/Package entry: {RelativePath}", entry.FullName);
+
                 using (var entryStream = entry.Open())
                 {
                     // *** RAW Serialization Mode ***

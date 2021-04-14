@@ -254,6 +254,7 @@ namespace PbiTools.Model
 
         public void ToFile(string path, PbiFileFormat format, IDependenciesResolver dependenciesResolver = null)
         {
+            Log.Information("Generating {Format} file at '{Path}'...", format, path);
 #if false
             if (this.DataModel != null)
                 throw new NotSupportedException("Files with an embedded data model cannot currently be generated from sources. Only projects with a live connection are supported until further notice.");

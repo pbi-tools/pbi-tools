@@ -121,6 +121,7 @@ namespace PbiTools.FileSystem
 
         /// <summary>
         /// Return the relative path of this <see cref="IProjectFile"/> in relation to the specified <see cref="IProjectFolder"/>.
+        /// Uses a forward slash <c>/</c> as path separator.
         /// </summary>
         public static string GetRelativePath(this IProjectFile file, IProjectFolder folder)
             => new Uri(folder.BasePath + @"\")
