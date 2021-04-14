@@ -91,7 +91,7 @@ namespace PbiTools.Model
         /// <summary>
         /// Builds a <c>PbixModel</c> from the provided <see cref="PbixReader"/> instance. Only V3 PBIX files are supported.
         /// </summary>
-        public static PbixModel FromReader(PbixReader reader)
+        public static PbixModel FromReader(PbixReader reader, int? portNumber = null)
         {
             if (reader is null) throw new ArgumentNullException(nameof(reader));
 
@@ -138,7 +138,10 @@ namespace PbiTools.Model
             pbixModel.StaticResources = reader.ReadStaticResources();
 
             Log.Debug("Reading DataModel...");
-            pbixModel.DataModel = reader.ReadDataModel();  // will fire up SSAS instance if PBIX has embedded model
+            if (portNumber.HasValue)
+                pbixModel.DataModel = reader.ReadDataModelFromRunningInstance(portNumber.Value);
+            else
+                pbixModel.DataModel = reader.ReadDataModel();  // will fire up SSAS instance if PBIX has embedded model
 
             Log.Debug("Reading DataMashup...");
             pbixModel.DataMashup = reader.ReadMashup();

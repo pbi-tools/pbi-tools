@@ -74,6 +74,12 @@ namespace PbiTools.PowerBI
             return default(JObject);
         }
 
+
+        public JObject ReadDataModelFromRunningInstance(int port)
+        {
+            return DataModelConverter.ExtractModelFromAS($".:{port}", dbs => dbs[0]);
+        }
+
         public MashupParts ReadMashup()
         {
             if (_package.DataMashup != null)
