@@ -12,10 +12,10 @@ namespace PbiTools.PowerBI
 {
     public enum PbiFileFormat
     {
-        [PowerArgs.ArgDescription("Creates a file using the PBIX format. If a data model is loaded into the file it will have no data and will require processing. This is the default format.")]
-        Pbix = 1,
-        [PowerArgs.ArgDescription("Creates a file using the PBIT format. When opened in Power BI Desktop, parameters/credentials need to be provided and a refresh is triggered.")]
-        Pbit = 2
+        [PowerArgs.ArgDescription("Creates a file using the PBIX format. If the file contains a data model it will have no data and will require processing. This is the default format.")]
+        PBIX = 1,
+        [PowerArgs.ArgDescription("Creates a file using the PBIT format. When opened in Power BI Desktop, parameters and/or credentials need to be provided and a refresh is triggered.")]
+        PBIT = 2
     }
 
     internal class PbiPackage : IPowerBIPackage
@@ -27,7 +27,7 @@ namespace PbiTools.PowerBI
         private readonly PowerBIPartConverters _converters;
         private readonly PbiFileFormat _format;
 
-        public PbiPackage(PbixModel pbixModel, PowerBIPartConverters converters, PbiFileFormat format = PbiFileFormat.Pbix)
+        public PbiPackage(PbixModel pbixModel, PowerBIPartConverters converters, PbiFileFormat format = PbiFileFormat.PBIX)
         {
             this._pbixModel = pbixModel ?? throw new ArgumentNullException("pbixModel");
             this._converters = converters ?? throw new ArgumentNullException("converters");
@@ -45,12 +45,12 @@ namespace PbiTools.PowerBI
         }
 
         public IStreamablePowerBIPackagePartContent DataModel {
-            get => _format == PbiFileFormat.Pbix ? _converters.DataModel.ToPackagePart(_pbixModel.DataModel) : EmptyContent;
+            get => _format == PbiFileFormat.PBIX ? _converters.DataModel.ToPackagePart(_pbixModel.DataModel) : EmptyContent;
             set => throw new NotSupportedException();
         }
 
         public IStreamablePowerBIPackagePartContent DataModelSchema {
-            get => _format == PbiFileFormat.Pbit ? _converters.DataModelSchema.ToPackagePart(_pbixModel.DataModel) : EmptyContent;
+            get => _format == PbiFileFormat.PBIT ? _converters.DataModelSchema.ToPackagePart(_pbixModel.DataModel) : EmptyContent;
             set => throw new NotSupportedException();
         }
 
