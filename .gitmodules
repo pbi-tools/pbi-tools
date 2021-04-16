@@ -2,3 +2,7 @@
 	path = data/external/powerbi-desktop-samples
 	url = https://github.com/microsoft/powerbi-desktop-samples.git
 	branch = main
+[submodule "data/external/adventureworksdw2020-pbix"]
+	path = data/external/adventureworksdw2020-pbix
+	url = https://github.com/pbi-tools/adventureworksdw2020-pbix.git
+	branch = main
