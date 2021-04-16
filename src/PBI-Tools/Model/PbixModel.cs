@@ -91,7 +91,7 @@ namespace PbiTools.Model
         /// <summary>
         /// Builds a <c>PbixModel</c> from the provided <see cref="PbixReader"/> instance. Only V3 PBIX files are supported.
         /// </summary>
-        public static PbixModel FromReader(PbixReader reader, int? portNumber = null)
+        public static PbixModel FromReader(PbixReader reader, string targetFolder = null, int? portNumber = null)
         {
             if (reader is null) throw new ArgumentNullException(nameof(reader));
 
@@ -146,7 +146,7 @@ namespace PbiTools.Model
             Log.Debug("Reading DataMashup...");
             pbixModel.DataMashup = reader.ReadMashup();
 
-            using (var projectFolder = new ProjectRootFolder(PbixProject.GetProjectFolderForFile(pbixModel.SourcePath)))
+            using (var projectFolder = new ProjectRootFolder(targetFolder ?? PbixProject.GetProjectFolderForFile(pbixModel.SourcePath)))
             {
                 pbixModel.PbixProj = PbixProject.FromFolder(projectFolder);
             }

@@ -86,7 +86,11 @@ namespace PbiTools
                 {
                     try
                     {
-                        using (var model = Model.PbixModel.FromReader(reader, pbiPort >= 1024 ? pbiPort : null))
+                        var targetFolder = String.IsNullOrEmpty(extractFolder) 
+                            ? null 
+                            : new DirectoryInfo(extractFolder).FullName;
+                        
+                        using (var model = Model.PbixModel.FromReader(reader, targetFolder, pbiPort >= 1024 ? pbiPort : null))
                         {
                             if (modelSerialization != default(ProjectSystem.ModelSerializationMode))
                                 model.PbixProj.Settings.Model.SerializationMode = modelSerialization;
@@ -94,7 +98,7 @@ namespace PbiTools
                             if (mashupSerialization != default(ProjectSystem.MashupSerializationMode))
                                 model.PbixProj.Settings.Mashup.SerializationMode = mashupSerialization;
 
-                            model.ToFolder(path: String.IsNullOrWhiteSpace(extractFolder)? null : extractFolder);
+                            model.ToFolder(path: targetFolder);
                         }
                     }
                     catch (NotSupportedException) when (mode == ExtractActionCompatibilityMode.Auto)

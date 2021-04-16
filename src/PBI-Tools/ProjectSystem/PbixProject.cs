@@ -114,6 +114,8 @@ namespace PbiTools.ProjectSystem
             var file = folder.GetFile(Filename);
             if (file.TryReadFile(out Stream stream))
             {
+                Log.Information("Reading PBIXPROJ settings from: {Path}", file.Path);
+
                 using (var reader = new StreamReader(stream))
                 {
                     try
@@ -127,6 +129,8 @@ namespace PbiTools.ProjectSystem
                     }
                 }
             }
+
+            Log.Debug("No existing or invalid PBIXPROJ file found at {Path}. Generating new project file.", file.Path);
 
             return new PbixProject { Created = DateTimeOffset.Now, Version = CurrentVersion };
         }
