@@ -63,7 +63,7 @@ namespace PbiTools
             Title = "Extract: Default")]
         public void Extract(
             [ArgRequired, ArgExistingFile, ArgDescription("The path to an existing PBIX file.")] string pbixPath,
-            [ArgDescription("The port number from a running Power BI Desktop instance. When specified, the model will be retrieved from the PBI instance. Only supported for V3 PBIX files."), ArgRange(1024, 65535)] int pbiPort,
+            [ArgDescription("The port number from a running Power BI Desktop instance. When specified, the model will not be read from the PBIX file, and will instead be retrieved from the PBI instance. Only supported for V3 PBIX files."), ArgRange(1024, 65535)] int pbiPort,
             [ArgDescription("The folder to extract the PBIX file to. Only needed to override the default location. Can be relative to current working directory.")] string extractFolder,
             [ArgDescription("The extraction mode."), ArgDefaultValue(ExtractActionCompatibilityMode.Auto)] ExtractActionCompatibilityMode mode,
             [ArgDescription("The model serialization mode.")] ProjectSystem.ModelSerializationMode modelSerialization,
