@@ -107,12 +107,14 @@ namespace PbiTools.PowerBI
         }
 
         private IDictionary<Uri, IStreamablePowerBIPackagePartContent> ConvertResources(IDictionary<string, byte[]> resources) =>
-            resources != null
-            ? resources.Aggregate(new Dictionary<Uri, IStreamablePowerBIPackagePartContent>(), (dict, entry) => {
-                    dict.Add(new Uri(entry.Key, UriKind.Relative), _converters.Resources.ToPackagePart(entry.Value)); // TODO Can use alternative ctor with Func<Stream>
+            resources?.Aggregate(new Dictionary<Uri, IStreamablePowerBIPackagePartContent>(), 
+                (dict, entry) => {
+                    dict.Add(
+                        new Uri(entry.Key, UriKind.Relative), 
+                        _converters.Resources.ToPackagePart(entry.Value)); // TODO Could use alternative ctor with Func<Stream>
                     return dict;
                 }) 
-            : new Dictionary<Uri, IStreamablePowerBIPackagePartContent>();
+            ?? new Dictionary<Uri, IStreamablePowerBIPackagePartContent>();
 
         public void Dispose()
         {
