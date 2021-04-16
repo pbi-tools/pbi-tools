@@ -71,7 +71,7 @@ namespace PbiTools
         )
         {
             // TODO Support '-parts' parameter, listing specifc parts to extract only
-            // ReportSerializationMode: Full,ExtractObjets, Raw
+            // ReportSerializationMode: Full, ExtractObjets, Raw
 
             using (var reader = new PbixReader(pbixPath, _dependenciesResolver))
             {

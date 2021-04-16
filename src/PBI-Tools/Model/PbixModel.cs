@@ -200,7 +200,9 @@ namespace PbiTools.Model
             using (var projectFolder = new ProjectRootFolder(rootFolderPath))
             {
                 var serializers = new PowerBIPartSerializers(projectFolder, this.PbixProj.Settings);
-                
+
+                Log.Information("Extracting PBIX file to: {Path}", projectFolder.BasePath);
+
                 // **** Parts ****
                 if (serializers.Version.Serialize(this.Version))
                     Log.Information("Version [{Version}] extracted to: {Path}", this.Version, serializers.Version.BasePath);
