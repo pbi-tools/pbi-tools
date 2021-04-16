@@ -18,7 +18,7 @@ namespace PbiTools.ProjectSystem
         private static readonly ILogger Log = Serilog.Log.ForContext<PbixProject>();
 
         public const string Filename = ".pbixproj.json";
-        public static readonly Version CurrentVersion = Version.Parse("0.8");
+        public static readonly Version CurrentVersion = Version.Parse("0.9");
 
         /*
          * PBIXPROJ Change Log
@@ -47,7 +47,9 @@ namespace PbiTools.ProjectSystem
          *       - Extract model cultures in /Model/cultures/{name}.json
          *       - Control Model serialization settings via settings.model in pbixproj file (Serialization Mode, Ignore Properties)
          * 0.7   - /Report: section and visualContainer folder names
-         * 0.8   - /Mashup extracted from V3 models (when present in PBIX)
+         * 0.8   - /Mashup extracted from V3 models (when present in PBIX/PBIT)
+         * 0.9   - Mashup serialization modes: Default, Raw, Expanded.
+         *       - BREAKING CHANGE: 'Expanded' is now considered legacy and no longer the default serialization mode. (The `compile-pbix` action only supports projects extracted using the _Default_ or _Raw_ Mashup serialization mode.)
          */
 
         /* Entries to add later: */

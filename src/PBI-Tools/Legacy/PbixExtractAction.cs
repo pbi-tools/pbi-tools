@@ -69,7 +69,7 @@ namespace PbiTools.Actions
 
             var pbixProj = PbixProject.FromFolder(_rootFolder);
 
-            this.ExtractMashup(pbixProj.Settings);
+            this.ExtractMashup(pbixProj.Settings.Mashup);
             Log.Information("Mashup extracted");
 
             this.ExtractModel(pbixProj);
@@ -105,9 +105,9 @@ namespace PbiTools.Actions
             }
         }
 
-        public void ExtractMashup(PbixProjectSettings settings)
+        public void ExtractMashup(MashupSettings settings)
         {
-            var mashupSerializer = new MashupSerializer(_rootFolder, settings.Mashup);
+            var mashupSerializer = new MashupSerializer(_rootFolder, settings);
             mashupSerializer.Serialize(_pbixReader.ReadMashup());
         }
 

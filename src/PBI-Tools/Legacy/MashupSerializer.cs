@@ -69,7 +69,7 @@ namespace PbiTools.Serialization
                 {
                     // *** RAW Serialization Mode ***
 
-                    if (_settings.SerializationMode == MashupSerializationMode.Raw)
+                    if (_settings.SerializationMode == MashupSerializationMode.Raw || _settings.SerializationMode == MashupSerializationMode.Default)
                     {
                         packageFolder.WriteFile(entry.FullName, stream =>
                         {
@@ -163,7 +163,7 @@ namespace PbiTools.Serialization
 
         internal void SerializeMetadata(XDocument xmlMetadata)
         {
-            if (_settings.SerializationMode == MashupSerializationMode.Raw)
+            if (_settings.SerializationMode == MashupSerializationMode.Raw || _settings.SerializationMode == MashupSerializationMode.Default)
             {
                 this.MashupFolder.Write(xmlMetadata, Names.MetadataFile);
                 return;
@@ -432,7 +432,7 @@ namespace PbiTools.Serialization
                 }
             }
 
-            if (content.QueryGroups != null)
+            if (content.QueryGroups != null && _settings.SerializationMode != MashupSerializationMode.Raw)
             {
                 MashupFolder.Write(content.QueryGroups, Names.QueryGroupsFile);
             }
@@ -465,7 +465,7 @@ namespace PbiTools.Serialization
                     var filesProcessed = new HashSet<string>();
                     foreach (var formulaFolder in packageFolder.GetSubfolder("Formulas").GetSubfolders("*.m"))
                     {
-                        var entry = zipArchive.CreateEntry($@"Formulas\{formulaFolder.Name}");
+                        var entry = zipArchive.CreateEntry($"Formulas/{formulaFolder.Name}");
                         Log.Verbose("Creating PackagePart entry: {ZipEntryPath} from: {FormulaFolder}", entry.FullName, formulaFolder.BasePath);
 
                         using (var writer = new StreamWriter(entry.Open()))
@@ -508,9 +508,14 @@ namespace PbiTools.Serialization
 
             var metadataFolder = this.MashupFolder.GetSubfolder(Names.MetadataFolder);
             if (metadataFolder.Exists())
-            { 
-                // throw new NotImplementedException("Mashup/Metadata");
-                // Metadata/queryGroups.json exists
+            {
+                // Throw if Mashup was not extracted using Raw serialization mode
+                if (metadataFolder
+                    .GetFiles("*.*", SearchOption.AllDirectories)
+                    .Count(f => Path.GetFileName(f.Path) != "queryGroups.json") > 0)
+                {
+                    throw new NotSupportedException("Deserialization is not supported for projects with Legacy/Expanded Mashup serialization mode. Extract the file using the Default or Raw modes for Mashup.");
+                }
             }
 
             var metadataFile = this.MashupFolder.GetFile(Names.MetadataFile);

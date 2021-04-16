@@ -9,10 +9,12 @@ namespace PbiTools.ProjectSystem
 {
     public enum MashupSerializationMode
     {
-        [ArgDescription("TODO")]
+        [ArgDescription("Similar to 'Raw' mode, with the expection that QueryGroups are extracted into a separate file for readability.")]
         Default = 1,
-        [ArgDescription("TODO")]
-        Raw = 2
+        [ArgDescription("Serializes all Mashup parts with no transformations applied.")]
+        Raw = 2,
+        [ArgDescription("Serializes the Mashup metadata part into a Json document, and embedded M queries into separate files. This mode is not supported for compilation.")]
+        Expanded = 3
     }
 
     public class MashupSettings
