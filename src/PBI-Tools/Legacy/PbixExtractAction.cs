@@ -33,7 +33,7 @@ namespace PbiTools.Actions
         public PbixExtractAction(PbixReader reader)
         {
             _pbixReader = reader ?? throw new ArgumentNullException(nameof(reader));
-            _rootFolder = new ProjectRootFolder(PbixProject.GetProjectFolderForFile(reader.Path));
+            _rootFolder = new ProjectRootFolder(PbixProject.GetDefaultProjectFolderForFile(reader.Path));
         }
 
         public void ExtractAll()

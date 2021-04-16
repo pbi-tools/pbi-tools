@@ -146,7 +146,7 @@ namespace PbiTools.Model
             Log.Debug("Reading DataMashup...");
             pbixModel.DataMashup = reader.ReadMashup();
 
-            using (var projectFolder = new ProjectRootFolder(targetFolder ?? PbixProject.GetProjectFolderForFile(pbixModel.SourcePath)))
+            using (var projectFolder = new ProjectRootFolder(targetFolder ?? PbixProject.GetDefaultProjectFolderForFile(pbixModel.SourcePath)))
             {
                 pbixModel.PbixProj = PbixProject.FromFolder(projectFolder);
             }
@@ -302,7 +302,7 @@ namespace PbiTools.Model
                     return this.SourcePath;
                 case PbixModelSource.PowerBIPackage:
                 case PbixModelSource.LiveSession:
-                    return PbixProject.GetProjectFolderForFile(this.SourcePath);
+                    return PbixProject.GetDefaultProjectFolderForFile(this.SourcePath);
                 default:
                     throw new NotSupportedException();
             }

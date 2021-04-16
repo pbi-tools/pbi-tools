@@ -138,7 +138,7 @@ namespace PbiTools.ProjectSystem
         public void Save(IProjectRootFolder folder)
         {
             var json = JObject.FromObject(this, JsonSerializer.Create(DefaultJsonSerializerSettings));
-            if (this.Settings.IsDefault()) json.Remove("settings"); // TODO Provide setting to enable full expansion
+            if (this.Settings.IsDefault()) json.Remove("settings");
 
             folder.GetFile(Filename).Write(json);
         }
@@ -146,7 +146,7 @@ namespace PbiTools.ProjectSystem
         /// <summary>
         /// Determines the default project folder location for the given PBIX file path.
         /// </summary>
-        public static string GetProjectFolderForFile(string pbixPath) =>
+        public static string GetDefaultProjectFolderForFile(string pbixPath) =>
             // ReSharper disable once AssignNullToNotNullAttribute
             Path.Combine(
                 Path.GetDirectoryName(pbixPath),
