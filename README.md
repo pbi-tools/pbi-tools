@@ -1,10 +1,10 @@
 # pbi-tools-cli
 
-Introduction
+Introduction (TODO)
 
 ## User Notes
 
-## Usage
+### Usage
 
 See [detailed CLI docs here](./docs/Usage.md).
 
@@ -33,7 +33,7 @@ See [detailed CLI docs here](./docs/Usage.md).
 * All build targets are implemented using [FAKE](https://fake.build/).
 * Dependencies are managed using [Paket](https://fsprojects.github.io/Paket/).
 * Main entry point for all build tasks is `.\build.cmd`.
-* The [fake-cli](https://fake.build/fake-commandline.html) tool is installed as a [local .NET Core Tool](https://docs.microsoft.com/en-us/dotnet/core/tools/global-tools#install-a-local-tool), see `.\.config\dotnet-tools.json`. That's why a .Net Core 3.x SDK is required to build the project. The `build.cmd` script handles the tool installation.
+* The [fake-cli](https://fake.build/fake-commandline.html) tool is installed as a [local .NET Core Tool](https://docs.microsoft.com/en-us/dotnet/core/tools/global-tools#install-a-local-tool), see [.\.config\dotnet-tools.json](.\.config\dotnet-tools.json). That's why a .Net Core 3.x SDK is required to build the project. The `build.cmd` script handles the tool installation.
 
 ### Prerequisites
 
@@ -43,6 +43,10 @@ See [detailed CLI docs here](./docs/Usage.md).
 
 ### Versioning
 
+### Build
+
+    .\build.cmd Build
+
 ### Run Tests
 
     .\build.cmd Test
@@ -50,6 +54,8 @@ See [detailed CLI docs here](./docs/Usage.md).
 ### Install Dependencies
 
     dotnet paket install
+
+_That is generally not needed as the `build.cmd` script takes care of fetching dependencies. However, it could be useful to run this manually on a fresh clone or after making changes in the `paket.dependencies` file._
 
 ### Update Dependency to latest version (ex: AMO)
 
@@ -69,10 +75,6 @@ See [detailed CLI docs here](./docs/Usage.md).
     dotnet fake {...}
     dotnet fake -t Build
     dotnet fake --version
-
-### Build
-
-    .\build.cmd Build
 
 ### Extract embedded sample PBIX with local build version and using default settings
 
