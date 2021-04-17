@@ -33,7 +33,7 @@ See [detailed CLI docs here](./docs/Usage.md).
 * All build targets are implemented using [FAKE](https://fake.build/).
 * Dependencies are managed using [Paket](https://fsprojects.github.io/Paket/).
 * Main entry point for all build tasks is `.\build.cmd`.
-* The [fake-cli](https://fake.build/fake-commandline.html) tool is installed as a [local .NET Core Tool](https://docs.microsoft.com/en-us/dotnet/core/tools/global-tools#install-a-local-tool), see [.\.config\dotnet-tools.json](.\.config\dotnet-tools.json). That's why a .Net Core 3.x SDK is required to build the project. The `build.cmd` script handles the tool installation.
+* The [fake-cli](https://fake.build/fake-commandline.html) tool is installed as a [local .NET Core Tool](https://docs.microsoft.com/en-us/dotnet/core/tools/global-tools#install-a-local-tool), see [.config\dotnet-tools.json](./.config/dotnet-tools.json). That's why a .Net Core 3.x SDK is required to build the project. The `build.cmd` script handles the tool installation.
 
 ### Prerequisites
 
