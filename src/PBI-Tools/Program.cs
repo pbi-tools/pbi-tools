@@ -152,6 +152,7 @@ namespace PbiTools
         Success = 0,
         FileNotFound = 1,
         DependenciesNotInstalled = 2,
+        FileExists = 3,
     }
 
 }

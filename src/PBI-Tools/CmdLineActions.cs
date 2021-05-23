@@ -214,8 +214,9 @@ namespace PbiTools
         [ArgActionMethod, ArgShortcut("compile-pbix"), ArgDescription("*EXPERIMENTAL* Generates a PBIX/PBIT file from sources in the specified PbixProj folder. Currently, only PBIX projects with a live connection are supported.")]
         public void CompilePbix(
             [ArgRequired, ArgExistingDirectory, ArgDescription("The PbixProj folder to generate the PBIX from.")] string folder,
-            [ArgDescription("The path for the output file. If not provided, creates the file in the current working directory, using the foldername.")] string pbixPath,
-            [ArgDescription("The target file format."), ArgDefaultValue(PbiFileFormat.Pbix)] PbiFileFormat format,
+            [ArgDescription("The path for the output file. If not provided, creates the file in the current working directory, using the foldername. A directory or file name can be provided. The full output path is created if it does not exist.")]
+                string outPath,
+            [ArgDescription("The target file format."), ArgDefaultValue(PbiFileFormat.PBIX)] PbiFileFormat format,
             [ArgDescription("Overwrite the destination file if it already exists, fail otherwise.")] bool overwrite
         )
         {
@@ -232,18 +233,45 @@ namespace PbiTools
             // [ ] PBIX from source with model
             // [ ] Merge into PBIX
 
+            FileInfo outputFile;
+
             using (var proj = PbiTools.Model.PbixModel.FromFolder(folder))
             {
-                if (String.IsNullOrEmpty(pbixPath))
-                    pbixPath = $"{new DirectoryInfo(proj.SourcePath).Name}.{(format == PbiFileFormat.Pbit ? "pbit" : "pbix")}";
+                var filenameFromPbixProj = $"{new DirectoryInfo(proj.SourcePath).Name}.{(format == PbiFileFormat.PBIT ? "pbit" : "pbix")}";
 
-                if (File.Exists(pbixPath) && !overwrite)
-                    throw new Exception($"Destination file '{pbixPath}' exists and the '-overwrite' was not specified.");
+                if (String.IsNullOrEmpty(outPath))
+                    outputFile = new FileInfo(filenameFromPbixProj);
+                else 
+                {
+                    var pathAsDirectory = new DirectoryInfo(outPath);
+                    var pathAsFile = new FileInfo(outPath);
 
-                proj.ToFile(pbixPath, format, _dependenciesResolver);
+                    if (pathAsFile.Exists)
+                        /* Existing File */
+                        outputFile = pathAsFile;
+
+                    else if (pathAsDirectory.Exists)
+                        /* Existing Directory: Use generated filename */
+                        outputFile = new FileInfo(Path.Combine(pathAsDirectory.FullName, filenameFromPbixProj));
+                    
+                    else if (!String.IsNullOrEmpty(pathAsFile.Extension))
+                        /* Path with extension provided: Use as file path */
+                        outputFile = pathAsFile;
+                    
+                    else
+                        /* Path w/o extension provided: Use as directory, generate filename */
+                        outputFile = new FileInfo(Path.Combine(pathAsDirectory.FullName, filenameFromPbixProj));
+                }
+
+                if (outputFile.Exists && !overwrite)
+                    throw new PbiToolsCliException(ExitCode.FileExists, $"Destination file '{outputFile.FullName}' exists and the '-overwrite' option was not specified.");
+
+                outputFile.Directory.Create();
+
+                proj.ToFile(outputFile.FullName, format, _dependenciesResolver);
             }
 
-            Console.WriteLine($"PBIX file written to: {new FileInfo(pbixPath).FullName}");
+            Console.WriteLine($"{format} file written to: {outputFile.FullName}");
         }
 
 

@@ -257,13 +257,10 @@ namespace PbiTools.Model
         public void ToFile(string path, PbiFileFormat format, IDependenciesResolver dependenciesResolver = null)
         {
             Log.Information("Generating {Format} file at '{Path}'...", format, path);
-#if false
-            if (this.DataModel != null)
-                throw new NotSupportedException("Files with an embedded data model cannot currently be generated from sources. Only projects with a live connection are supported until further notice.");
-#endif
+
             var modelName = PowerBIPartConverters.ConvertToValidModelName(Path.GetFileNameWithoutExtension(path));
             var converters = new PowerBIPartConverters(modelName, dependenciesResolver ?? DependenciesResolver.Default);
-            var pbiPackage = new PbiPackage(this, converters, format);
+            var pbiPackage = new PbiPackage(this, converters, format); // TODO Handle missing Report part
 
             using (var pbixFile = File.Create(path))
             {
