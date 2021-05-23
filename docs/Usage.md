@@ -2,22 +2,24 @@
 
     pbi-tools <action> -options
 
-_pbi-tools-cli, 1.0.0-beta.4_
+_pbi-tools-cli, 1.0.0-beta.5_
 
 ### Actions
 
 #### extract
 
-    extract <pbixPath> [<extractFolder>] [<mode>] [<modelSerialization>] 
+    extract <pbixPath> [<pbiPort>] [<extractFolder>] [<mode>] [<modelSerialization>] [<mashupSerialization>] 
 
 Extracts the contents of a PBIX/PBIT file into a folder structure suitable for source control. By default, this will create a sub-folder in the directory of the *.pbix file with the same name without the extension.
 
 | Option | Default Value | Is Switch | Description |
 | --- | --- | --- | --- |
 | pbixPath* |  |  | The path to an existing PBIX file. |
+| pbiPort |  |  | The port number from a running Power BI Desktop instance. When specified, the model will not be read from the PBIX file, and will instead be retrieved from the PBI instance. Only supported for V3 PBIX files. |
 | extractFolder |  |  | The folder to extract the PBIX file to. Only needed to override the default location. Can be relative to current working directory. |
 | mode | `Auto` |  | The extraction mode. <br> `Auto`  - Attempts extraction using the V3 model, and falls back to Legacy mode in case the PBIX file does not have V3 format. <br> `V3`  - Extracts V3 PBIX files only. Fails if the file provided has a legacy format. <br> `Legacy`  - Extracts legacy PBIX files only. Fails if the file provided has the V3 format. |
 | modelSerialization |  |  | The model serialization mode. <br> `Default`  - Serializes the tabular model into a standard folder structure and performs various transformations to optimize file contents for source control. <br> `Raw`  - Serializes the tabular model into a single JSON file containing the full TMSL payload from the PBIX model. |
+| mashupSerialization |  |  | The mashup serialization mode. <br> `Default`  - Similar to 'Raw' mode, with the expection that QueryGroups are extracted into a separate file for readability. <br> `Raw`  - Serializes all Mashup parts with no transformations applied. <br> `Expanded`  - Serializes the Mashup metadata part into a Json document, and embedded M queries into separate files. This mode is not supported for compilation. |
 
 **Extract: Custom folder and settings**
 
@@ -41,7 +43,7 @@ Extract data from all tables in a tabular model, either from within a PBIX file,
 | --- | --- | --- | --- |
 | port |  |  | The port number of a local Tabular Server instance. |
 | pbixPath* |  |  | The PBIX file to extract data from. |
-| outPath |  |  | The output directory. Uses working directory if not provided. |
+| outPath |  |  | The output directory. Uses PBIX file directory if not provided, or the current working directory when connecting to Tabular Server instance. |
 | dateTimeFormat | `s` |  | The format to use for DateTime values. Must be a valid .Net format string. |
 
 **Extract data from local workspace instance**
@@ -70,15 +72,26 @@ Converts the Model artifacts to a TMSL/BIM file.
 
 #### compile-pbix
 
-    compile-pbix <folder> [<pbixPath>] [<format>] 
+    compile-pbix <folder> [<outPath>] [<format>] [<overwrite>] 
 
 *EXPERIMENTAL* Generates a PBIX/PBIT file from sources in the specified PbixProj folder. Currently, only PBIX projects with a live connection are supported.
 
 | Option | Default Value | Is Switch | Description |
 | --- | --- | --- | --- |
 | folder* |  |  | The PbixProj folder to generate the PBIX from. |
-| pbixPath |  |  | The path for the output file. If not provided, creates the file in the current working directory, using the foldername. |
-| format | `Pbix` |  | The target file format. <br> `Pbix`  - Creates a file using the PBIX format. If a data model is loaded into the file it will have no data and will require processing. This is the default format. <br> `Pbit`  - Creates a file using the PBIT format. When opened in Power BI Desktop, parameters/credentials need to be provided and a refresh is triggered. |
+| outPath |  |  | The path for the output file. If not provided, creates the file in the current working directory, using the foldername. A directory or file name can be provided. The full output path is created if it does not exist. |
+| format | `PBIX` |  | The target file format. <br> `PBIX`  - Creates a file using the PBIX format. If the file contains a data model it will have no data and will require processing. This is the default format. <br> `PBIT`  - Creates a file using the PBIT format. When opened in Power BI Desktop, parameters and/or credentials need to be provided and a refresh is triggered. |
+| overwrite |  | X | Overwrite the destination file if it already exists, fail otherwise. |
+
+#### launch-pbi
+
+    launch-pbi <pbixPath> 
+
+Starts a new instance of Power BI Desktop with the PBIX/PBIT file specified. Does not support Windows Store installations.
+
+| Option | Default Value | Is Switch | Description |
+| --- | --- | --- | --- |
+| pbixPath* |  |  | The path to an existing PBIX or PBIT file. |
 
 #### info
 
