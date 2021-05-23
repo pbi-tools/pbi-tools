@@ -51,6 +51,10 @@ See [detailed CLI docs here](./docs/Usage.md).
 
     .\build.cmd Test
 
+### Run only the specified build target
+
+    .\build.cmd UsageDocs -s
+
 ### Install Dependencies
 
     dotnet paket install

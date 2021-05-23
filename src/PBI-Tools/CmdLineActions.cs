@@ -282,7 +282,7 @@ namespace PbiTools
         {
             var defaultInstall = _dependenciesResolver.PBIInstalls.FirstOrDefault(x => x.Location != PowerBIDesktopInstallationLocation.WindowsStore);
             if (defaultInstall == null) {
-                throw new Exception("No suitable installation found.");
+                throw new PbiToolsCliException(ExitCode.DependenciesNotInstalled, "No suitable installation found.");
             }
             var pbiExePath = Path.Combine(defaultInstall.InstallDir, "PBIDesktop.exe");
             Log.Verbose("Attempting to start PBI Desktop from: {Path}", pbiExePath);
@@ -513,9 +513,11 @@ namespace PbiTools
     }
 
     public enum ExternalToolAction
-    { 
-        Install,
-        Uninstall,
-        ExtractCurrentProject
+    {
+        List = 1,
+        Install = 2,
+        Uninstall = 3,
+        ExtractCurrentProject = 4,
+        LaunchInteractive = 5
     }
 }
