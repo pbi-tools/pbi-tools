@@ -127,7 +127,7 @@ namespace PbiTools
         public void ExtractData(
             [ArgCantBeCombinedWith("pbixPath"), ArgDescription("The port number of a local Tabular Server instance.")] int port,
             [ArgRequired(IfNot = "port"), ArgExistingFile, ArgDescription("The PBIX file to extract data from.")] string pbixPath,
-            [ArgDescription("The output directory. Uses working directory if not provided.")] string outPath,
+            [ArgDescription("The output directory. Uses PBIX file directory if not provided, or the current working directory when connecting to Tabular Server instance.")] string outPath,
             [ArgDescription("The format to use for DateTime values. Must be a valid .Net format string."), ArgDefaultValue("s")] string dateTimeFormat
         )
         {
