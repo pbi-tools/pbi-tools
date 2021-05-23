@@ -1,14 +1,33 @@
 
+## 1.0.0-beta.5 - 2021-05-23
+* Upgraded dependencies: Newtonsoft.Json, CsvHelper, Moq, Fody, Costura.Fody, Polly
+* Upgraded AMO/TOM libraries to 19.21
+* PbixProj v0.9 Format
+  - New Mashup serialization settings supported: `Default`, `Raw`, `Expanded`. Mode is persisted in PBIXPROJ settings, and can be provided as a command-line argument to the `extract` action.
+  - **BREAKING CHANGE**: 'Expanded' is now considered legacy and no longer the default serialization mode. The `compile-pbix` action only supports projects extracted using the _Default_ or _Raw_ Mashup serialization mode.
+* New action: `launch-pbi` (Only supports classic installer, not Windows Store version)
+* `compile-pbix` Action
+  - 'outPath' not specified: Derive from project folder
+  - 'outPath' is existing file: Overwrite existing file if '-overwrite' is specified, fail otherwise
+  - 'outPath' is existing directory: Generate file name from project folder, and place in directory. Fail if file exists and '-overwrite' is not specified
+  - 'outPath' has extension: Assume to be file path
+  - 'outPath' has no extension: Assume to be directory, generate file name from project folder
+  - Sources containing a tabular model are suported.
+* `extract` Action
+  - #14 Support reading model from running Power BI Desktop instance. Specify port number via optional '-pbiPort' argument.
+* Tested with Power BI Desktop 2.91, 2.92, 2.93
+
 ## 1.0.0-beta.4 - 2021-03-28
 * PbixProj v0.8 Format
   - /Mashup extracted from V3 models (when present in PBIX)
 * Fix bug in Report serializer: 64-bit id values
+* Prevented `compile-pbix` from running when sources contain Model (files generated would currently be invalid)
 
 ## 1.0.0-beta.3 - 2021-03-26
 * PbixProj v0.7 Format
   * Generate /Report/sections sub-folders using page index and title (e.g.: "000_Introduction")
-  * Generate /Report/../visualContainers sub-folders using unique combination of visual tabOrder, title, type, name (e.g.: "00000_textbox (dbb7a)")
-* New feature: 'compile-pbix' action (EXPERIMENTAL)
+  * Generate /Report/../visualContainers sub-folders using unique combination of visual `tabOrder`, `title`, `type`, `name` (e.g.: "00000_textbox (dbb7a)")
+* FEATURE: `compile-pbix` action (EXPERIMENTAL)
   * Compile PBIX or PBIT file from PbixProj sources
 * Improved diagnostic logging
 

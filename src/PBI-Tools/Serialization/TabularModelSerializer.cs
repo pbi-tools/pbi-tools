@@ -28,11 +28,11 @@ namespace PbiTools.Serialization
         public static string FolderName => "Model";
 
         private readonly IProjectFolder _modelFolder;
-        private readonly PbixProjectSettings _settings;
+        private readonly ModelSettings _settings;
         private readonly IDictionary<string, string> _queries;
 
 
-        public TabularModelSerializer(IProjectRootFolder rootFolder, PbixProjectSettings settings, IDictionary<string, string> queries = null)
+        public TabularModelSerializer(IProjectRootFolder rootFolder, ModelSettings settings, IDictionary<string, string> queries = null)
         {
             if (rootFolder == null) throw new ArgumentNullException(nameof(rootFolder));
             _modelFolder = rootFolder.GetFolder(FolderName);
@@ -48,11 +48,11 @@ namespace PbiTools.Serialization
         {
             if (db == null) return false;
 
-            Log.Information("Using tabular model serialization mode: {Mode}", _settings.Model.SerializationMode);
+            Log.Information("Using tabular model serialization mode: {Mode}", _settings.SerializationMode);
 
-            if (_settings.Model.SerializationMode == ModelSerializationMode.Default)
+            if (_settings.SerializationMode == ModelSerializationMode.Default)
             { 
-                db = db.RemoveProperties(_settings?.Model?.IgnoreProperties);
+                db = db.RemoveProperties(_settings?.IgnoreProperties);
 
                 var dataSources = db.SelectToken("model.dataSources") as JArray ?? new JArray();
                 var idCache = new TabularModelIdCache(dataSources, _queries); // Applies to legacy PBIX files only (is ignored for V3 models)
@@ -761,29 +761,5 @@ namespace PbiTools.Serialization
             if (sb.Length > 0) sb[0] = Char.ToUpper(s[0]);
             return sb.ToString();
         }
-    }
-
-    public static class PathExtensions
-    {
-
-        private static readonly Dictionary<char, string> FilenameCharReplace = "\"<>|:*?/\\".ToCharArray().ToDictionary(c => c, c => $"%{((int)c):X}");
-        // Note - This can be reversed via WebUtility.UrlDecode()
-
-        public static string SanitizeFilename(this string name)
-        {
-            if (name == null) return default(string);
-            var sb = new StringBuilder();
-            foreach (var c in name)
-            {
-                if (FilenameCharReplace.TryGetValue(c, out var s))
-                    sb.Append(s);
-                else
-                    sb.Append(c);
-            }
-            return sb.ToString();
-        }
-
-        public static string UnsanitizeFilename(this string name) => System.Net.WebUtility.UrlDecode(name);
-
     }
 }

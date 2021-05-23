@@ -5,12 +5,13 @@ using System;
 using System.IO;
 using Microsoft.PowerBI.Packaging;
 using Newtonsoft.Json.Linq;
-using PbiTools.Utils;
 using AMO = Microsoft.AnalysisServices;
 using TOM = Microsoft.AnalysisServices.Tabular;
 
 namespace PbiTools.PowerBI
 {
+    using Utils;
+
     public class DataModelConverter : IPowerBIPartConverter<JObject>
     {
         private static readonly Serilog.ILogger Log = Serilog.Log.ForContext<DataModelConverter>();
@@ -28,24 +29,28 @@ namespace PbiTools.PowerBI
             LaunchTabularServerAndExecuteCallback(msmdsrv => 
             {
                 msmdsrv.LoadPbixModel(part, _modelName, _modelName);
-
-                using (var server = new TOM.Server())
-                {
-                    server.Connect(msmdsrv.ConnectionString);
-
-                    using (var db = server.Databases[_modelName])
-                    {
-                        var json = TOM.JsonSerializer.SerializeDatabase(db, new TOM.SerializeOptions
-                        {
-                            IgnoreTimestamps = true, // that way we don't have to strip them out later
-                            IgnoreInferredObjects = true,
-                            IgnoreInferredProperties = true,
-                            SplitMultilineStrings = true
-                        });
-                        return JObject.Parse(json);
-                    }
-                }
+                return ExtractModelFromAS(msmdsrv.ConnectionString, databases => databases[_modelName]);
             });
+
+        internal static JObject ExtractModelFromAS(string connectionString, Func<TOM.DatabaseCollection, TOM.Database> selectDb)
+        { 
+            using (var server = new TOM.Server())
+            {
+                server.Connect(connectionString);
+
+                using (var db = selectDb(server.Databases))
+                {
+                    var json = TOM.JsonSerializer.SerializeDatabase(db, new TOM.SerializeOptions
+                    {
+                        IgnoreTimestamps = true, // that way we don't have to strip them out later
+                        IgnoreInferredObjects = true,
+                        IgnoreInferredProperties = true,
+                        SplitMultilineStrings = true
+                    });
+                    return JObject.Parse(json);
+                }
+            }
+        }
 
         private T LaunchTabularServerAndExecuteCallback<T>(Func<AnalysisServicesServer, T> callback)
         { 
@@ -76,7 +81,9 @@ namespace PbiTools.PowerBI
                 {
                     server.Connect(msmdsrv.ConnectionString);
 
-                    Log.Debug("Successfully connected to local MSMDSRV instance. ConnectionString: {ConnectionString}, DefaultCompatibilityLevel: {DefaultCompatibilityLevel}", msmdsrv.ConnectionString, server.DefaultCompatibilityLevel);
+                    Log.Debug("Successfully connected to local MSMDSRV instance. ConnectionString: {ConnectionString}, DefaultCompatibilityLevel: {DefaultCompatibilityLevel}"
+                        , msmdsrv.ConnectionString
+                        , server.DefaultCompatibilityLevel);
 
                     using (var db = TOM.JsonSerializer.DeserializeDatabase(content.ToString()))
                     using (var stream = new MemoryStream())

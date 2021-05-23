@@ -63,13 +63,15 @@ namespace PbiTools
             Title = "Extract: Default")]
         public void Extract(
             [ArgRequired, ArgExistingFile, ArgDescription("The path to an existing PBIX file.")] string pbixPath,
+            [ArgDescription("The port number from a running Power BI Desktop instance. When specified, the model will not be read from the PBIX file, and will instead be retrieved from the PBI instance. Only supported for V3 PBIX files."), ArgRange(1024, 65535)] int pbiPort,
             [ArgDescription("The folder to extract the PBIX file to. Only needed to override the default location. Can be relative to current working directory.")] string extractFolder,
             [ArgDescription("The extraction mode."), ArgDefaultValue(ExtractActionCompatibilityMode.Auto)] ExtractActionCompatibilityMode mode,
-            [ArgDescription("The model serialization mode.")] ProjectSystem.ModelSerializationMode modelSerialization
+            [ArgDescription("The model serialization mode.")] ProjectSystem.ModelSerializationMode modelSerialization,
+            [ArgDescription("The mashup serialization mode.")] ProjectSystem.MashupSerializationMode mashupSerialization
         )
         {
             // TODO Support '-parts' parameter, listing specifc parts to extract only
-            // ReportSerializationMode: Full,ExtractObjets, Raw
+            // ReportSerializationMode: Full, ExtractObjets, Raw
 
             using (var reader = new PbixReader(pbixPath, _dependenciesResolver))
             {
@@ -84,11 +86,19 @@ namespace PbiTools
                 {
                     try
                     {
-                        using (var model = Model.PbixModel.FromReader(reader))
+                        var targetFolder = String.IsNullOrEmpty(extractFolder) 
+                            ? null 
+                            : new DirectoryInfo(extractFolder).FullName;
+                        
+                        using (var model = Model.PbixModel.FromReader(reader, targetFolder, pbiPort >= 1024 ? pbiPort : null))
                         {
                             if (modelSerialization != default(ProjectSystem.ModelSerializationMode))
                                 model.PbixProj.Settings.Model.SerializationMode = modelSerialization;
-                            model.ToFolder(path: String.IsNullOrWhiteSpace(extractFolder)? null : extractFolder);
+
+                            if (mashupSerialization != default(ProjectSystem.MashupSerializationMode))
+                                model.PbixProj.Settings.Mashup.SerializationMode = mashupSerialization;
+
+                            model.ToFolder(path: targetFolder);
                         }
                     }
                     catch (NotSupportedException) when (mode == ExtractActionCompatibilityMode.Auto)
@@ -117,7 +127,7 @@ namespace PbiTools
         public void ExtractData(
             [ArgCantBeCombinedWith("pbixPath"), ArgDescription("The port number of a local Tabular Server instance.")] int port,
             [ArgRequired(IfNot = "port"), ArgExistingFile, ArgDescription("The PBIX file to extract data from.")] string pbixPath,
-            [ArgDescription("The output directory. Uses working directory if not provided.")] string outPath,
+            [ArgDescription("The output directory. Uses PBIX file directory if not provided, or the current working directory when connecting to Tabular Server instance.")] string outPath,
             [ArgDescription("The format to use for DateTime values. Must be a valid .Net format string."), ArgDefaultValue("s")] string dateTimeFormat
         )
         {
@@ -169,7 +179,7 @@ namespace PbiTools
         {
             using (var rootFolder = new FileSystem.ProjectRootFolder(folder))
             {
-                var serializer = new Serialization.TabularModelSerializer(rootFolder, ProjectSystem.PbixProject.FromFolder(rootFolder).Settings);
+                var serializer = new Serialization.TabularModelSerializer(rootFolder, ProjectSystem.PbixProject.FromFolder(rootFolder).Settings.Model);
                 if (serializer.TryDeserialize(out var db))  // throws for V1 models
                 {
                     if (!skipDataSources)
@@ -204,24 +214,83 @@ namespace PbiTools
         [ArgActionMethod, ArgShortcut("compile-pbix"), ArgDescription("*EXPERIMENTAL* Generates a PBIX/PBIT file from sources in the specified PbixProj folder. Currently, only PBIX projects with a live connection are supported.")]
         public void CompilePbix(
             [ArgRequired, ArgExistingDirectory, ArgDescription("The PbixProj folder to generate the PBIX from.")] string folder,
-            [ArgDescription("The path for the output file. If not provided, creates the file in the current working directory, using the foldername.")] string pbixPath,
-            [ArgDescription("The target file format."), ArgDefaultValue(PbiFileFormat.Pbix)] PbiFileFormat format
+            [ArgDescription("The path for the output file. If not provided, creates the file in the current working directory, using the foldername. A directory or file name can be provided. The full output path is created if it does not exist.")]
+                string outPath,
+            [ArgDescription("The target file format."), ArgDefaultValue(PbiFileFormat.PBIX)] PbiFileFormat format,
+            [ArgDescription("Overwrite the destination file if it already exists, fail otherwise.")] bool overwrite
         )
         {
             // format: pbix, pbit
             // mode: Create, Merge
             // mashupHandling: Auto, Skip, GenerateFromModel, FromFolder
 
+            // SUCCESS
+            // [x] PBIX from Report-Only
+            // [x] PBIT from PBIT sources (incl Mashup)
+            //
+            // TODO
+            // [ ] PBIT from PBIX sources (no mashup)
+            // [ ] PBIX from source with model
+            // [ ] Merge into PBIX
+
+            FileInfo outputFile;
+
             using (var proj = PbiTools.Model.PbixModel.FromFolder(folder))
             {
-                if (String.IsNullOrEmpty(pbixPath))
-                    pbixPath = $"{new DirectoryInfo(proj.SourcePath).Name}.{(format == PbiFileFormat.Pbit ? "pbit" : "pbix")}";
+                var filenameFromPbixProj = $"{new DirectoryInfo(proj.SourcePath).Name}.{(format == PbiFileFormat.PBIT ? "pbit" : "pbix")}";
 
-                proj.ToFile(pbixPath, format, _dependenciesResolver);
+                if (String.IsNullOrEmpty(outPath))
+                    outputFile = new FileInfo(filenameFromPbixProj);
+                else 
+                {
+                    var pathAsDirectory = new DirectoryInfo(outPath);
+                    var pathAsFile = new FileInfo(outPath);
+
+                    if (pathAsFile.Exists)
+                        /* Existing File */
+                        outputFile = pathAsFile;
+
+                    else if (pathAsDirectory.Exists)
+                        /* Existing Directory: Use generated filename */
+                        outputFile = new FileInfo(Path.Combine(pathAsDirectory.FullName, filenameFromPbixProj));
+                    
+                    else if (!String.IsNullOrEmpty(pathAsFile.Extension))
+                        /* Path with extension provided: Use as file path */
+                        outputFile = pathAsFile;
+                    
+                    else
+                        /* Path w/o extension provided: Use as directory, generate filename */
+                        outputFile = new FileInfo(Path.Combine(pathAsDirectory.FullName, filenameFromPbixProj));
+                }
+
+                if (outputFile.Exists && !overwrite)
+                    throw new PbiToolsCliException(ExitCode.FileExists, $"Destination file '{outputFile.FullName}' exists and the '-overwrite' option was not specified.");
+
+                outputFile.Directory.Create();
+
+                proj.ToFile(outputFile.FullName, format, _dependenciesResolver);
             }
 
-            Console.WriteLine($"PBIX file written to: {new FileInfo(pbixPath).FullName}");
+            Console.WriteLine($"{format} file written to: {outputFile.FullName}");
         }
+
+
+        [ArgActionMethod, ArgShortcut("launch-pbi"), ArgDescription("Starts a new instance of Power BI Desktop with the PBIX/PBIT file specified. Does not support Windows Store installations.")]
+        public void LaunchPbiDesktop(
+            [ArgRequired, ArgExistingFile, ArgDescription("The path to an existing PBIX or PBIT file.")] string pbixPath
+        )
+        {
+            var defaultInstall = _dependenciesResolver.PBIInstalls.FirstOrDefault(x => x.Location != PowerBIDesktopInstallationLocation.WindowsStore);
+            if (defaultInstall == null) {
+                throw new PbiToolsCliException(ExitCode.DependenciesNotInstalled, "No suitable installation found.");
+            }
+            var pbiExePath = Path.Combine(defaultInstall.InstallDir, "PBIDesktop.exe");
+            Log.Verbose("Attempting to start PBI Desktop from: {Path}", pbiExePath);
+
+            var proc = Process.Start(pbiExePath, $"\"{pbixPath}\""); // Note the enclosing quotes are required
+            Log.Information("Launched Power BI Desktop, Process ID: {ProcessID}, Arguments: {Arguments}", proc.Id, proc.StartInfo.Arguments);
+        }
+
 
         [ArgActionMethod, ArgShortcut("info"), ArgDescription("Collects diagnostic information about the local system and writes a JSON object to StdOut.")]
         [ArgExample(
@@ -444,9 +513,11 @@ namespace PbiTools
     }
 
     public enum ExternalToolAction
-    { 
-        Install,
-        Uninstall,
-        ExtractCurrentProject
+    {
+        List = 1,
+        Install = 2,
+        Uninstall = 3,
+        ExtractCurrentProject = 4,
+        LaunchInteractive = 5
     }
 }

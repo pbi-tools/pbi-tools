@@ -17,7 +17,12 @@ namespace PbiTools.ProjectSystem
         [JsonProperty("model")]
         public ModelSettings Model { get; set; } = new ModelSettings();
 
-        public bool IsDefault() => Model == null || Model.IsDefault;
+        [JsonProperty("mashup")]
+        public MashupSettings Mashup { get; set; } = new MashupSettings();
+
+        public bool IsDefault() => 
+            (Model == null || Model.IsDefault) 
+            && (Mashup == null || Mashup.IsDefault);
 
     }
 

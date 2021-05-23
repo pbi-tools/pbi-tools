@@ -78,6 +78,7 @@ namespace PbiTools.Tests
 
 
         public string BasePath { get; }
+        public string Name { get; }
 
         public IProjectFolder GetSubfolder(params string[] segments)
         {

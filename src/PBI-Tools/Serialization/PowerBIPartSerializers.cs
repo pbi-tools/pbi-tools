@@ -30,9 +30,9 @@ namespace PbiTools.Serialization
             this.LinguisticSchema = new JsonPartSerializer(rootFolder, nameof(IPowerBIPackage.LinguisticSchema));
             this.LinguisticSchemaXml = new XmlPartSerializer(rootFolder, nameof(IPowerBIPackage.LinguisticSchema));
 
-            this.DataModel = new TabularModelSerializer(rootFolder, settings);
+            this.DataModel = new TabularModelSerializer(rootFolder, settings.Model);
             this.ReportDocument = new ReportSerializer(rootFolder);
-            this.DataMashup = new MashupSerializer(rootFolder);
+            this.DataMashup = new MashupSerializer(rootFolder, settings.Mashup);
         }
 
 

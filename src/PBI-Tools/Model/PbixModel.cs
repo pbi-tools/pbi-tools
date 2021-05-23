@@ -66,6 +66,9 @@ namespace PbiTools.Model
             this.Type = type;
         }
 
+        /// <summary>
+        /// Throws a <see cref="NotSupportedException"/> if this <c>PbixModel</c> was not generated from a V3 PBIX file.
+        /// </summary>
         public void EnsureV3Model()
         {
             if (!PbixReader.IsV3Version(this.Version))
@@ -75,7 +78,7 @@ namespace PbiTools.Model
         }
 
         /// <summary>
-        /// Builds a PbixModel from the PBIX file at the path specified.
+        /// Builds a <c>PbixModel</c> from the PBIX file at the path specified. Only V3 PBIX files are supported.
         /// </summary>
         public static PbixModel FromFile(string path, IDependenciesResolver dependenciesResolver = null)
         {
@@ -85,7 +88,10 @@ namespace PbiTools.Model
             }
         }
 
-        public static PbixModel FromReader(PbixReader reader)
+        /// <summary>
+        /// Builds a <c>PbixModel</c> from the provided <see cref="PbixReader"/> instance. Only V3 PBIX files are supported.
+        /// </summary>
+        public static PbixModel FromReader(PbixReader reader, string targetFolder = null, int? portNumber = null)
         {
             if (reader is null) throw new ArgumentNullException(nameof(reader));
 
@@ -132,17 +138,20 @@ namespace PbiTools.Model
             pbixModel.StaticResources = reader.ReadStaticResources();
 
             Log.Debug("Reading DataModel...");
-            pbixModel.DataModel = reader.ReadDataModel();  // will fire up SSAS instance if PBIX has embedded model
+            if (portNumber.HasValue)
+                pbixModel.DataModel = reader.ReadDataModelFromRunningInstance(portNumber.Value);
+            else
+                pbixModel.DataModel = reader.ReadDataModel();  // will fire up SSAS instance if PBIX has embedded model
 
             Log.Debug("Reading DataMashup...");
             pbixModel.DataMashup = reader.ReadMashup();
 
-            using (var projectFolder = new ProjectRootFolder(PbixProject.GetProjectFolderForFile(pbixModel.SourcePath)))
+            using (var projectFolder = new ProjectRootFolder(targetFolder ?? PbixProject.GetDefaultProjectFolderForFile(pbixModel.SourcePath)))
             {
                 pbixModel.PbixProj = PbixProject.FromFolder(projectFolder);
             }
 
-            pbixModel.PbixProj.Queries = null; // remove 'Queries' from a previous legacy version of the model
+            pbixModel.PbixProj.Queries = null; // remove 'Queries', in case those were inherited from a previous legacy version of the model
 
             return pbixModel;
         }
@@ -152,7 +161,7 @@ namespace PbiTools.Model
             // PBIXPROJ(folder) <==> Serializer <=|PbixModel|=> PbixReader|PbiPackage[Converter] <==> PBIX(file)
             //                       ##########                 ################################
 
-            Log.Debug("Building PbixProj from folder: {Path}", path);
+            Log.Debug("Building PbixModel from folder: {Path}", path);
 
             using (var projectFolder = new ProjectRootFolder(path))
             {
@@ -163,6 +172,7 @@ namespace PbiTools.Model
 
                 pbixModel.Version = serializers.Version.DeserializeSafe(isOptional: false);
                 pbixModel.EnsureV3Model();
+                
                 pbixModel.Connections = serializers.Connections.DeserializeSafe();
                 pbixModel.Report = serializers.ReportDocument.DeserializeSafe(isOptional: false);
                 pbixModel.DiagramLayout = serializers.DiagramLayout.DeserializeSafe();
@@ -174,6 +184,7 @@ namespace PbiTools.Model
                 pbixModel.CustomVisuals = serializers.CustomVisuals.DeserializeSafe();
                 pbixModel.StaticResources = serializers.StaticResources.DeserializeSafe();                
                 pbixModel.DataModel = serializers.DataModel.DeserializeSafe();
+                pbixModel.DataMashup = serializers.DataMashup.DeserializeSafe();
 
                 return pbixModel;
             }
@@ -189,7 +200,9 @@ namespace PbiTools.Model
             using (var projectFolder = new ProjectRootFolder(rootFolderPath))
             {
                 var serializers = new PowerBIPartSerializers(projectFolder, this.PbixProj.Settings);
-                
+
+                Log.Information("Extracting PBIX file to: {Path}", projectFolder.BasePath);
+
                 // **** Parts ****
                 if (serializers.Version.Serialize(this.Version))
                     Log.Information("Version [{Version}] extracted to: {Path}", this.Version, serializers.Version.BasePath);
@@ -243,12 +256,11 @@ namespace PbiTools.Model
 
         public void ToFile(string path, PbiFileFormat format, IDependenciesResolver dependenciesResolver = null)
         {
-            if (this.DataModel != null)
-                throw new NotSupportedException("Files with an embedded data model cannot currently be generated from sources. Only projects with a live connection are supported until further notice.");
+            Log.Information("Generating {Format} file at '{Path}'...", format, path);
 
             var modelName = PowerBIPartConverters.ConvertToValidModelName(Path.GetFileNameWithoutExtension(path));
             var converters = new PowerBIPartConverters(modelName, dependenciesResolver ?? DependenciesResolver.Default);
-            var pbiPackage = new PbiPackage(this, converters, format);
+            var pbiPackage = new PbiPackage(this, converters, format); // TODO Handle missing Report part
 
             using (var pbixFile = File.Create(path))
             {
@@ -287,7 +299,7 @@ namespace PbiTools.Model
                     return this.SourcePath;
                 case PbixModelSource.PowerBIPackage:
                 case PbixModelSource.LiveSession:
-                    return PbixProject.GetProjectFolderForFile(this.SourcePath);
+                    return PbixProject.GetDefaultProjectFolderForFile(this.SourcePath);
                 default:
                     throw new NotSupportedException();
             }

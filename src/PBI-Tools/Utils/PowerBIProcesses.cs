@@ -46,9 +46,17 @@ namespace PbiTools.Utils
 
                     using (var parent = proc.GetParent())
                     {
-                        var pbixPath = SystemUtility.GetHandles(new[] { parent.Id })
+                        var pbixPathCandidates = SystemUtility.GetHandles(new[] { parent.Id })
                             .Where(f => Path.GetExtension(f.DosFilePath ?? "").StartsWith(".pbi"))
-                            .FirstOrDefault()?.DosFilePath;
+                            .ToArray();
+
+                        if (Log.IsEnabled(Serilog.Events.LogEventLevel.Debug))
+                        {
+                            Array.ForEach(
+                                pbixPathCandidates, 
+                                h => Log.Debug("Found PBIx handle: {Path}; Is File: {IsFile}", h.DosFilePath, File.Exists(h.DosFilePath))
+                            );
+                        }
 
                         yield return new PowerBIProcess
                         {
@@ -59,7 +67,7 @@ namespace PbiTools.Utils
                             Port = port,
                             WorkspaceName = args["-n"],
                             WorkspaceDir = args["-s"],
-                            PbixPath = pbixPath
+                            PbixPath = pbixPathCandidates.FirstOrDefault(h => File.Exists(h.DosFilePath))?.DosFilePath
                         };
                     }
                 }

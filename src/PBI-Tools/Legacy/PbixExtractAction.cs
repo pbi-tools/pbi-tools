@@ -33,7 +33,7 @@ namespace PbiTools.Actions
         public PbixExtractAction(PbixReader reader)
         {
             _pbixReader = reader ?? throw new ArgumentNullException(nameof(reader));
-            _rootFolder = new ProjectRootFolder(PbixProject.GetProjectFolderForFile(reader.Path));
+            _rootFolder = new ProjectRootFolder(PbixProject.GetDefaultProjectFolderForFile(reader.Path));
         }
 
         public void ExtractAll()
@@ -44,9 +44,6 @@ namespace PbiTools.Actions
 
             this.ExtractConnections();
             Log.Information("Connections extracted");
-
-            this.ExtractMashup();
-            Log.Information("Mashup extracted");
 
             this.ExtractReport();
             Log.Information("Report extracted");
@@ -72,6 +69,9 @@ namespace PbiTools.Actions
 
             var pbixProj = PbixProject.FromFolder(_rootFolder);
 
+            this.ExtractMashup(pbixProj.Settings.Mashup);
+            Log.Information("Mashup extracted");
+
             this.ExtractModel(pbixProj);
             Log.Information("Model extracted");
 
@@ -84,7 +84,7 @@ namespace PbiTools.Actions
         public void ExtractModel(PbixProject pbixProj)
         {
             if (pbixProj.Queries == null) pbixProj.Queries = new Dictionary<string, string>();
-            var serializer = new TabularModelSerializer(_rootFolder, pbixProj.Settings, pbixProj.Queries);
+            var serializer = new TabularModelSerializer(_rootFolder, pbixProj.Settings.Model, pbixProj.Queries);
             serializer.Serialize(_pbixReader.ReadDataModel());
         }
 
@@ -105,9 +105,9 @@ namespace PbiTools.Actions
             }
         }
 
-        public void ExtractMashup()
+        public void ExtractMashup(MashupSettings settings)
         {
-            var mashupSerializer = new MashupSerializer(_rootFolder);
+            var mashupSerializer = new MashupSerializer(_rootFolder, settings);
             mashupSerializer.Serialize(_pbixReader.ReadMashup());
         }
 

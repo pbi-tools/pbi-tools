@@ -44,7 +44,7 @@ namespace PbiTools.IntegrationTests
                 using (var reader = new PowerBI.PbixReader(pbixPath, _fixture.DependenciesResolver))
                 using (var extractor = new PbixExtractAction(reader))
                 {
-                    extractor.ExtractMashup(); // This one will require to load the Mashup.Packaging dll
+                    extractor.ExtractMashup(new ProjectSystem.MashupSettings { SerializationMode = ProjectSystem.MashupSerializationMode.Expanded }); // This one will require to load the Mashup.Packaging dll
                 }
 
                 // Double-check that the M script has actually be extracted

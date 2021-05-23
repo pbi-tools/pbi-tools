@@ -33,7 +33,7 @@ namespace PbiTools.Tests
                 var project = PbixProject.FromFolder(rootFolder);
                 var serializer = new TabularModelSerializer(
                     rootFolder,
-                    project.Settings
+                    project.Settings.Model
                 );
                 
                 if (!serializer.TryDeserialize(out var dbJson))

@@ -18,7 +18,7 @@ namespace PbiTools.ProjectSystem
         private static readonly ILogger Log = Serilog.Log.ForContext<PbixProject>();
 
         public const string Filename = ".pbixproj.json";
-        public static readonly Version CurrentVersion = Version.Parse("0.8");
+        public static readonly Version CurrentVersion = Version.Parse("0.9");
 
         /*
          * PBIXPROJ Change Log
@@ -47,7 +47,9 @@ namespace PbiTools.ProjectSystem
          *       - Extract model cultures in /Model/cultures/{name}.json
          *       - Control Model serialization settings via settings.model in pbixproj file (Serialization Mode, Ignore Properties)
          * 0.7   - /Report: section and visualContainer folder names
-         * 0.8   - /Mashup extracted from V3 models (when present in PBIX)
+         * 0.8   - /Mashup extracted from V3 models (when present in PBIX/PBIT)
+         * 0.9   - Mashup serialization modes: Default, Raw, Expanded.
+         *       - BREAKING CHANGE: 'Expanded' is now considered legacy and no longer the default serialization mode. (The `compile-pbix` action only supports projects extracted using the _Default_ or _Raw_ Mashup serialization mode.)
          */
 
         /* Entries to add later: */
@@ -112,6 +114,8 @@ namespace PbiTools.ProjectSystem
             var file = folder.GetFile(Filename);
             if (file.TryReadFile(out Stream stream))
             {
+                Log.Information("Reading PBIXPROJ settings from: {Path}", file.Path);
+
                 using (var reader = new StreamReader(stream))
                 {
                     try
@@ -126,13 +130,15 @@ namespace PbiTools.ProjectSystem
                 }
             }
 
+            Log.Debug("No existing or invalid PBIXPROJ file found at {Path}. Generating new project file.", file.Path);
+
             return new PbixProject { Created = DateTimeOffset.Now, Version = CurrentVersion };
         }
 
         public void Save(IProjectRootFolder folder)
         {
             var json = JObject.FromObject(this, JsonSerializer.Create(DefaultJsonSerializerSettings));
-            if (this.Settings.IsDefault()) json.Remove("settings"); // TODO Provide setting to enable full expansion
+            if (this.Settings.IsDefault()) json.Remove("settings");
 
             folder.GetFile(Filename).Write(json);
         }
@@ -140,7 +146,7 @@ namespace PbiTools.ProjectSystem
         /// <summary>
         /// Determines the default project folder location for the given PBIX file path.
         /// </summary>
-        public static string GetProjectFolderForFile(string pbixPath) =>
+        public static string GetDefaultProjectFolderForFile(string pbixPath) =>
             // ReSharper disable once AssignNullToNotNullAttribute
             Path.Combine(
                 Path.GetDirectoryName(pbixPath),
