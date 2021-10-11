@@ -23,6 +23,8 @@ namespace PbiTools
     [ArgExceptionBehavior(ArgExceptionPolicy.StandardExceptionHandling)]  // PowerArgs will print the user friendly error message as well as the auto-generated usage documentation for the program.
 #endif
     [ArgDescription(AssemblyVersionInformation.AssemblyProduct + ", " + AssemblyVersionInformation.AssemblyInformationalVersion)]
+    [ArgProductVersion(AssemblyVersionInformation.AssemblyVersion)]
+    [ArgProductName(AssemblyVersionInformation.AssemblyProduct)]
     [ApplyDefinitionTransforms]
     public class CmdLineActions
     {

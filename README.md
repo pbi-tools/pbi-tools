@@ -1,4 +1,4 @@
-# pbi-tools-cli
+# Action BI toolkit | pbi-tools
 
 Introduction (TODO)
 

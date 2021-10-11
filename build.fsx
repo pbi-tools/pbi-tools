@@ -31,7 +31,7 @@ open System.IO
 
 // The name of the project
 // (used by attributes in AssemblyInfo, name of a NuGet package and directory in 'src')
-let project = "pbi-tools-cli"
+let project = "Action BI Toolkit | pbi-tools"
 
 // Short summary of the project
 // (used as description in AssemblyInfo and as a short summary for NuGet package)
@@ -43,6 +43,7 @@ let description = "A command-line tool to work with Power BI Desktop files. Enab
 
 // List of author names (for NuGet package)
 let authors = [ "Mathias Thierbach" ]
+let company = "Action BI Toolkit Ltd"
 
 // Tags for your project (for NuGet package)
 let tags = "powerbi, pbix, source-control, automation"
@@ -133,7 +134,7 @@ let genCSAssemblyInfo (projectPath : string) =
     AssemblyInfoFile.createCSharp fileName
       [ AssemblyInfo.Title (projectName)
         AssemblyInfo.Product project
-        AssemblyInfo.Company (authors |> String.concat ", ")
+        AssemblyInfo.Company company
         AssemblyInfo.Copyright (sprintf "Copyright \u00A9 Mathias Thierbach 2018-%i" (let today = DateTime.Today in today.Year)) // Avoids warning FS0052, see: https://github.com/fsharp/FAKE/issues/1803
         AssemblyInfo.Description summary
         AssemblyInfo.Version release.AssemblyVersion
