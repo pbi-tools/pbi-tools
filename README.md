@@ -80,6 +80,10 @@ _That is generally not needed as the `build.cmd` script takes care of fetching d
     dotnet fake -t Build
     dotnet fake --version
 
+### Run single build target
+
+    dotnet fake build -s -t SmokeTest
+
 ### Extract embedded sample PBIX with local build version and using default settings
 
     .\pbi-tools.local.cmd extract '.\data\Samples\Adventure Works DW 2020.pbix'

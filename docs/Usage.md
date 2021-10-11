@@ -2,7 +2,7 @@
 
     pbi-tools <action> -options
 
-_pbi-tools-cli, 1.0.0-beta.5_
+_Action BI Toolkit | pbi-tools, 1.0.0-beta.6_
 
 ### Actions
 
@@ -19,7 +19,7 @@ Extracts the contents of a PBIX/PBIT file into a folder structure suitable for s
 | extractFolder |  |  | The folder to extract the PBIX file to. Only needed to override the default location. Can be relative to current working directory. |
 | mode | `Auto` |  | The extraction mode. <br> `Auto`  - Attempts extraction using the V3 model, and falls back to Legacy mode in case the PBIX file does not have V3 format. <br> `V3`  - Extracts V3 PBIX files only. Fails if the file provided has a legacy format. <br> `Legacy`  - Extracts legacy PBIX files only. Fails if the file provided has the V3 format. |
 | modelSerialization |  |  | The model serialization mode. <br> `Default`  - Serializes the tabular model into a standard folder structure and performs various transformations to optimize file contents for source control. <br> `Raw`  - Serializes the tabular model into a single JSON file containing the full TMSL payload from the PBIX model. |
-| mashupSerialization |  |  | The mashup serialization mode. <br> `Default`  - Similar to 'Raw' mode, with the expection that QueryGroups are extracted into a separate file for readability. <br> `Raw`  - Serializes all Mashup parts with no transformations applied. <br> `Expanded`  - Serializes the Mashup metadata part into a Json document, and embedded M queries into separate files. This mode is not supported for compilation. |
+| mashupSerialization |  |  | The mashup serialization mode. <br> `Default`  - Similar to 'Raw' mode, with the exception that QueryGroups are extracted into a separate file for readability. <br> `Raw`  - Serializes all Mashup parts with no transformations applied. <br> `Expanded`  - Serializes the Mashup metadata part into a Json document, and embedded M queries into separate files. This mode is not supported for compilation. |
 
 **Extract: Custom folder and settings**
 
@@ -60,14 +60,14 @@ _Extracts all records from each table from the model embedded in the specified P
 
 #### export-bim
 
-    export-bim <folder> [<skipDataSources>] [<transforms>] 
+    export-bim <folder> [<generateDataSources>] [<transforms>] 
 
 Converts the Model artifacts to a TMSL/BIM file.
 
 | Option | Default Value | Is Switch | Description |
 | --- | --- | --- | --- |
 | folder* |  |  | The PbixProj folder to export the BIM file from. |
-| skipDataSources |  | X | Do not generate model data sources. The is required for deployment to Power BI Premium via the XMLA endpoint. |
+| generateDataSources |  | X | Generate model data sources. Only required for deployment to Azure Analysis Services, but not for Power BI Premium via the XMLA endpoint. |
 | transforms |  |  | List transformations to be applied to TMSL document. <br> `RemovePBIDataSourceVersion`  - Removes the 'defaultPowerBIDataSourceVersion' model property, making the exported BIM file compatible with Azure Analysis Services. |
 
 #### compile-pbix
