@@ -10,6 +10,7 @@ using PbiTools.Serialization;
 using PbiTools.Utils;
 using Xunit;
 
+#if NETFRAMEWORK
 namespace PbiTools.Tests
 {
     public class TabularModelSerializerTests : HasTempFolder
@@ -366,9 +367,9 @@ namespace PbiTools.Tests
                 var table2 = _folder.GetAsJson(@"dataSources\Table2\dataSource.json");
 
                 var connStr1 = new OleDbConnectionStringBuilder(table1["connectionString"].Value<string>());
-                Assert.False(connStr1.ContainsKey("Global Pipe"));
+                Assert.False(connStr1.ContainsKey("global pipe"));
                 var connStr2 = new OleDbConnectionStringBuilder(table2["connectionString"].Value<string>());
-                Assert.False(connStr2.ContainsKey("Global Pipe"));
+                Assert.False(connStr2.ContainsKey("global pipe"));
             }
 
             [Fact]
@@ -378,9 +379,9 @@ namespace PbiTools.Tests
                 var table2 = _folder.GetAsJson(@"dataSources\Table2\dataSource.json");
 
                 var connStr1 = new OleDbConnectionStringBuilder(table1["connectionString"].Value<string>());
-                Assert.False(connStr1.ContainsKey("Mashup"));
+                Assert.False(connStr1.ContainsKey("mashup"));
                 var connStr2 = new OleDbConnectionStringBuilder(table2["connectionString"].Value<string>());
-                Assert.False(connStr2.ContainsKey("Mashup"));
+                Assert.False(connStr2.ContainsKey("mashup"));
             }
 
         }
@@ -388,3 +389,4 @@ namespace PbiTools.Tests
     }
 
 }
+#endif

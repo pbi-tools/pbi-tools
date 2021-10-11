@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Mathias Thierbach
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+#if NETFRAMEWORK
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -55,7 +56,7 @@ namespace PbiTools.Serialization
 
         public string BasePath => MashupFolder.BasePath;
 
-        #region Package
+#region Package
 
         internal void SerializePackage(ZipArchive archive)
         {
@@ -157,9 +158,9 @@ namespace PbiTools.Serialization
             return false;
         }
 
-        #endregion
+#endregion
 
-        #region Metadata
+#region Metadata
 
         internal void SerializeMetadata(XDocument xmlMetadata)
         {
@@ -327,7 +328,7 @@ namespace PbiTools.Serialization
         }
         
 
-        #endregion
+#endregion
 
         /// <summary>
         /// Extracts the mashup blob from a Power BI OleDb connection string into the given location of a ProjectFolder.
@@ -568,3 +569,4 @@ namespace PbiTools.Serialization
         }
     }
 }
+#endif

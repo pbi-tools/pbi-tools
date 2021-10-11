@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Mathias Thierbach
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+#if NETFRAMEWORK
 using System;
 using System.Collections.Generic;
 using Microsoft.Mashup.Host.Document;
@@ -40,7 +41,7 @@ namespace PbiTools.Actions
         {
             var versionStr = this.ExtractVersion();
             Log.Information($"Version extracted: {versionStr}");
-            var isV3 = PbixReader.IsV3Version(versionStr);
+            var isV3 = Model.PbixModel.IsV3Version(versionStr);
 
             this.ExtractConnections();
             Log.Information("Connections extracted");
@@ -177,3 +178,4 @@ namespace PbiTools.Actions
 
     }
 }
+#endif

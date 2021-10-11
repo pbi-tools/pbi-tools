@@ -7,7 +7,7 @@ namespace PbiTools.Utils
 {
     public static class MashupHelpers
     {
-
+#if NETFRAMEWORK
         // ReSharper disable once InconsistentNaming
         public static string BuildPowerBIConnectionString(string globalPipe, byte[] mashup, string location)
         {
@@ -21,6 +21,7 @@ namespace PbiTools.Utils
 
             return bldr.ConnectionString;
         }
+#endif
 
         public static string ReplaceEscapeSeqences(string m)
         {

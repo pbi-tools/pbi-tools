@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Mathias Thierbach
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+#if NETFRAMEWORK
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -22,7 +23,6 @@ namespace PbiTools.PowerBI
     public class PbixReader : IDisposable
     {
         private static readonly ILogger Log = Serilog.Log.ForContext<PbixReader>();
-        private static readonly Version V3ModelVersion = new Version(1, 19);
 
         private readonly Stream _pbixStream;
         private readonly IPowerBIPackage _package;
@@ -139,7 +139,7 @@ namespace PbiTools.PowerBI
             return _converters.Version.FromPackagePart(_package.Version);
         }
 
-        #region Resources
+#region Resources
 
         public IDictionary<string, byte[]> ReadCustomVisuals()
         {
@@ -162,16 +162,9 @@ namespace PbiTools.PowerBI
                 });
         }
 
-        #endregion
+#endregion
 
-        public static bool IsV3Version(string versionString)
-        {
-            if (Version.TryParse(versionString, out var version))
-            {
-                return version >= V3ModelVersion;
-            }
-            return false;
-        }
+
 
         public void Dispose()
         {
@@ -193,3 +186,4 @@ namespace PbiTools.PowerBI
        ------------------------------------
      */
 }
+#endif

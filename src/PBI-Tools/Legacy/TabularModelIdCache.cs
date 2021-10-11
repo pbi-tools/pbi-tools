@@ -18,6 +18,7 @@ namespace PbiTools.Serialization
         string LookupOriginalDataSourceId(string currentDataSourceId);
     }
 
+#if NETFRAMEWORK
     public class TabularModelIdCache : IQueriesLookup
     {
         // TODO Must convert this into two separate components, 1 - PBIXPROJ file, 2 - IdCache
@@ -105,4 +106,5 @@ namespace PbiTools.Serialization
         // partition: lookup dataSource/location, then name (guid) from cache; keep current value if no cache
         // add new dataSources as they appear (remove old ones?)
     }
+#endif
 }

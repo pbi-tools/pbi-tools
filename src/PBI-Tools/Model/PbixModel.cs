@@ -71,11 +71,25 @@ namespace PbiTools.Model
         /// </summary>
         public void EnsureV3Model()
         {
-            if (!PbixReader.IsV3Version(this.Version))
+            if (!IsV3Version(this.Version))
             {
                 throw new NotSupportedException("The PBIX file does not contain a V3 model. This API only supports V3 PBIX files.");
             }
         }
+
+
+        private static readonly Version V3ModelVersion = new Version(1, 19);
+
+        public static bool IsV3Version(string versionString)
+        {
+            if (System.Version.TryParse(versionString, out var version))
+            {
+                return version >= V3ModelVersion;
+            }
+            return false;
+        }
+
+#if NETFRAMEWORK
 
         /// <summary>
         /// Builds a <c>PbixModel</c> from the PBIX file at the path specified. Only V3 PBIX files are supported.
@@ -156,6 +170,8 @@ namespace PbiTools.Model
             return pbixModel;
         }
 
+#endif
+
         public static PbixModel FromFolder(string path)
         {
             // PBIXPROJ(folder) <==> Serializer <=|PbixModel|=> PbixReader|PbiPackage[Converter] <==> PBIX(file)
@@ -184,8 +200,9 @@ namespace PbiTools.Model
                 pbixModel.CustomVisuals = serializers.CustomVisuals.DeserializeSafe();
                 pbixModel.StaticResources = serializers.StaticResources.DeserializeSafe();                
                 pbixModel.DataModel = serializers.DataModel.DeserializeSafe();
+#if NETFRAMEWORK
                 pbixModel.DataMashup = serializers.DataMashup.DeserializeSafe();
-
+#endif
                 return pbixModel;
             }
         }
@@ -233,10 +250,10 @@ namespace PbiTools.Model
 
                 if (serializers.DataModel.Serialize(this.DataModel))
                     Log.Information("DataModel extracted to: {Path}", serializers.DataModel.BasePath);
-
+#if NETFRAMEWORK
                 if (serializers.DataMashup.Serialize(this.DataMashup))
                     Log.Information("DataMashup extracted to: {Path}", serializers.DataMashup.BasePath);
-
+#endif
                 if (serializers.CustomVisuals.Serialize(this.CustomVisuals))
                     Log.Information("CustomVisuals extracted to: {Path}", serializers.CustomVisuals.BasePath);
 
@@ -254,18 +271,25 @@ namespace PbiTools.Model
             }
         }
 
+        /// <summary>
+        /// Generates a PBIX/PBIT file from the model.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="format"></param>
+        /// <param name="dependenciesResolver"></param>
         public void ToFile(string path, PbiFileFormat format, IDependenciesResolver dependenciesResolver = null)
         {
+#if NETFRAMEWORK
             Log.Information("Generating {Format} file at '{Path}'...", format, path);
 
             var modelName = PowerBIPartConverters.ConvertToValidModelName(Path.GetFileNameWithoutExtension(path));
             var converters = new PowerBIPartConverters(modelName, dependenciesResolver ?? DependenciesResolver.Default);
             var pbiPackage = new PbiPackage(this, converters, format); // TODO Handle missing Report part
 
-            using (var pbixFile = File.Create(path))
-            {
-                Microsoft.PowerBI.Packaging.PowerBIPackager.Save(pbiPackage, pbixFile);
-            }
+            pbiPackage.Save(path);
+#elif NET
+            throw new NotImplementedException();
+#endif
         }
 
         #region IPbixModel
@@ -286,7 +310,7 @@ namespace PbiTools.Model
 
         public PbixProject PbixProj { get; private set; }
 
-        #endregion
+#endregion
 
         /// <summary>
         /// Returns the default folder location for this instance.

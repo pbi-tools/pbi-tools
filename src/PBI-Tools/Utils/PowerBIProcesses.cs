@@ -12,6 +12,7 @@ using System.Text;
 
 namespace PbiTools.Utils
 {
+#if NETFRAMEWORK
     public class PowerBIProcesses
     {
         private static readonly ILogger Log = Serilog.Log.ForContext<PowerBIProcesses>();
@@ -75,6 +76,7 @@ namespace PbiTools.Utils
 
         }
     }
+#endif
 
     public class PowerBIProcess
     {

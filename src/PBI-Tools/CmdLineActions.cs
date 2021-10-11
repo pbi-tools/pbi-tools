@@ -10,7 +10,6 @@ using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using PbiTools.Actions;
 using PbiTools.PowerBI;
 using PbiTools.Rpc;
 using PbiTools.Utils;
@@ -50,7 +49,7 @@ namespace PbiTools
 
 
 
-
+#if NETFRAMEWORK
         [ArgActionMethod, ArgShortcut("extract")]
         [ArgDescription("Extracts the contents of a PBIX/PBIT file into a folder structure suitable for source control. By default, this will create a sub-folder in the directory of the *.pbix file with the same name without the extension.")]
         [ArgExample(
@@ -77,7 +76,7 @@ namespace PbiTools
             {
                 if (mode == ExtractActionCompatibilityMode.Legacy)
                 {
-                    using (var extractor = new PbixExtractAction(reader))
+                    using (var extractor = new Actions.PbixExtractAction(reader))
                     {
                         extractor.ExtractAll();
                     }
@@ -103,7 +102,7 @@ namespace PbiTools
                     }
                     catch (NotSupportedException) when (mode == ExtractActionCompatibilityMode.Auto)
                     {
-                        using (var extractor = new PbixExtractAction(reader))
+                        using (var extractor = new Actions.PbixExtractAction(reader))
                         {
                             extractor.ExtractAll();
                         }
@@ -113,6 +112,7 @@ namespace PbiTools
 
             Console.WriteLine($"Completed in {_stopWatch.Elapsed}.");
         }
+#endif
 
 
         [ArgActionMethod, ArgShortcut("extract-data"), ArgDescription("Extract data from all tables in a tabular model, either from within a PBIX file, or from a live session.")]
@@ -140,6 +140,7 @@ namespace PbiTools
 
             if (pbixPath != null)
             {
+#if NETFRAMEWORK
                 using (var file = File.OpenRead(pbixPath))
                 using (var package = Microsoft.PowerBI.Packaging.PowerBIPackager.Open(file, skipValidation: true))
                 using (var msmdsrv = new AnalysisServicesServer(new ASInstanceConfig
@@ -159,6 +160,7 @@ namespace PbiTools
                         reader.ExtractTableData(outPath, dateTimeFormat);
                     }
                 }
+#endif
             }
             else
             {
@@ -184,8 +186,12 @@ namespace PbiTools
                 {
                     if (!skipDataSources)
                     {
+#if NETFRAMEWORK
                         var dataSources = TabularModel.TabularModelConversions.GenerateDataSources(db);
                         db["model"]["dataSources"] = dataSources;
+#elif NET
+                        throw new PlatformNotSupportedException("Generating DataSources is not supported by the .Net Core version.");
+#endif
                     }
 
                     if (transforms.HasFlag(ExportTransforms.RemovePBIDataSourceVersion))
@@ -274,7 +280,7 @@ namespace PbiTools
             Console.WriteLine($"{format} file written to: {outputFile.FullName}");
         }
 
-
+#if NETFRAMEWORK
         [ArgActionMethod, ArgShortcut("launch-pbi"), ArgDescription("Starts a new instance of Power BI Desktop with the PBIX/PBIT file specified. Does not support Windows Store installations.")]
         public void LaunchPbiDesktop(
             [ArgRequired, ArgExistingFile, ArgDescription("The path to an existing PBIX or PBIT file.")] string pbixPath
@@ -290,7 +296,7 @@ namespace PbiTools
             var proc = Process.Start(pbiExePath, $"\"{pbixPath}\""); // Note the enclosing quotes are required
             Log.Information("Launched Power BI Desktop, Process ID: {ProcessID}, Arguments: {Arguments}", proc.Id, proc.StartInfo.Arguments);
         }
-
+#endif
 
         [ArgActionMethod, ArgShortcut("info"), ArgDescription("Collects diagnostic information about the local system and writes a JSON object to StdOut.")]
         [ArgExample(
@@ -313,9 +319,16 @@ namespace PbiTools
                         { AppSettings.Environment.LogLevel, AppSettings.GetEnvironmentSetting(AppSettings.Environment.LogLevel) },
                         { AppSettings.Environment.PbiInstallDir, AppSettings.GetEnvironmentSetting(AppSettings.Environment.PbiInstallDir) },
                     }},
+                    { "runtime", new JObject {
+                        { "platform", System.Runtime.InteropServices.RuntimeInformation.OSDescription },
+                        { "architecture", System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString() },
+                        { "framework", System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription },
+                    }},
+#if NETFRAMEWORK
                     { "pbiInstalls", JArray.FromObject(_dependenciesResolver.PBIInstalls) },
                     { "effectivePbiInstallDir", _dependenciesResolver.GetEffectivePowerBiInstallDir() },
                     { "pbiSessions", JArray.FromObject(PowerBIProcesses.EnumerateProcesses().ToArray()) },
+#endif
                 };
 
                 if (checkDownloadVersion)

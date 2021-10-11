@@ -1,0 +1,15 @@
+Serilog
+Serilog.Sinks.Console
+Newtonsoft.Json
+PowerArgs
+System.ValueTuple
+Polly
+StreamJsonRpc
+Castle.Core
+Costura.Fody
+Moq
+HtmlAgilityPack
+PeNet
+CsvHelper
+Microsoft.AnalysisServices.NetCore.retail.amd64
+Microsoft.AnalysisServices.AdomdClient.NetCore.retail.amd64

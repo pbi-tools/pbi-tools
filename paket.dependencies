@@ -1,15 +1,13 @@
-version 5.249.0
+version 6.1.3
 
 group Main
   source https://api.nuget.org/v3/index.json
-  framework: net472,netcoreapp3.1
+  framework: net472,net5.0
   storage: none
   content: none
 
   nuget Serilog
   nuget Serilog.Sinks.Console
-  nuget Microsoft.AnalysisServices.retail.amd64
-  nuget Microsoft.AnalysisServices.AdomdClient.retail.amd64
   nuget Newtonsoft.Json
   nuget CsvHelper
   nuget PowerArgs
@@ -17,6 +15,7 @@ group Main
   nuget System.ValueTuple
   nuget Polly
   nuget StreamJsonRpc
+  nuget Castle.Core
   nuget Costura.Fody copy_local: true
   nuget Fody
   nuget System.IO.Compression
@@ -25,10 +24,25 @@ group Main
   nuget PeNet < 2.0         // 2.x is netstandard2.1 only
   nuget PeNet.Asn1 == 1.3.3 // 1.3.4 is netstandard2.1 only
   nuget CommandLineParser
+  nuget Microsoft.AnalysisServices.retail.amd64 framework: net472
+  nuget Microsoft.AnalysisServices.AdomdClient.retail.amd64 framework: net472
+  nuget Microsoft.AnalysisServices.NetCore.retail.amd64 framework: net5.0
+  nuget Microsoft.AnalysisServices.AdomdClient.NetCore.retail.amd64 framework: net5.0
+  //nuget System.Data.SqlClient framework: net5.0
 
 group Tests
   source https://api.nuget.org/v3/index.json
   framework: net472
+  storage: none
+  content: none
+
+  nuget xunit
+  nuget xunit.runner.visualstudio
+  nuget Microsoft.NET.Test.Sdk
+
+group Tests-netcore
+  source https://api.nuget.org/v3/index.json
+  framework: net5.0
   storage: none
   content: none
 

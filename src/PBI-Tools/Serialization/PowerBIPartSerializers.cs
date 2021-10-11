@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
-using Microsoft.PowerBI.Packaging;
 using Newtonsoft.Json.Linq;
 
 namespace PbiTools.Serialization
@@ -19,20 +18,22 @@ namespace PbiTools.Serialization
         {
             if (rootFolder is null) throw new ArgumentNullException(nameof(rootFolder));
 
-            this.Version = new StringPartSerializer(rootFolder, nameof(IPowerBIPackage.Version));
-            this.CustomVisuals = new ResourcesSerializer(rootFolder, nameof(IPowerBIPackage.CustomVisuals));
-            this.StaticResources = new ResourcesSerializer(rootFolder, nameof(IPowerBIPackage.StaticResources));
-            this.Connections = new JsonPartSerializer(rootFolder, nameof(IPowerBIPackage.Connections));
-            this.ReportMetadata = new JsonPartSerializer(rootFolder, nameof(IPowerBIPackage.ReportMetadata));
-            this.ReportSettings = new JsonPartSerializer(rootFolder, nameof(IPowerBIPackage.ReportSettings));
-            this.DiagramViewState = new JsonPartSerializer(rootFolder, nameof(IPowerBIPackage.DiagramViewState));
-            this.DiagramLayout = new JsonPartSerializer(rootFolder, nameof(IPowerBIPackage.DiagramLayout));
-            this.LinguisticSchema = new JsonPartSerializer(rootFolder, nameof(IPowerBIPackage.LinguisticSchema));
-            this.LinguisticSchemaXml = new XmlPartSerializer(rootFolder, nameof(IPowerBIPackage.LinguisticSchema));
+            this.Version = new StringPartSerializer(rootFolder, nameof(Version));
+            this.CustomVisuals = new ResourcesSerializer(rootFolder, nameof(CustomVisuals));
+            this.StaticResources = new ResourcesSerializer(rootFolder, nameof(StaticResources));
+            this.Connections = new JsonPartSerializer(rootFolder, nameof(Connections));
+            this.ReportMetadata = new JsonPartSerializer(rootFolder, nameof(ReportMetadata));
+            this.ReportSettings = new JsonPartSerializer(rootFolder, nameof(ReportSettings));
+            this.DiagramViewState = new JsonPartSerializer(rootFolder, nameof(DiagramViewState));
+            this.DiagramLayout = new JsonPartSerializer(rootFolder, nameof(DiagramLayout));
+            this.LinguisticSchema = new JsonPartSerializer(rootFolder, nameof(LinguisticSchema));
+            this.LinguisticSchemaXml = new XmlPartSerializer(rootFolder, nameof(LinguisticSchema));
 
             this.DataModel = new TabularModelSerializer(rootFolder, settings.Model);
             this.ReportDocument = new ReportSerializer(rootFolder);
+#if NETFRAMEWORK
             this.DataMashup = new MashupSerializer(rootFolder, settings.Mashup);
+#endif
         }
 
 
@@ -46,10 +47,12 @@ namespace PbiTools.Serialization
         public IPowerBIPartSerializer<JObject> DiagramLayout { get; }
         public IPowerBIPartSerializer<JObject> ReportDocument { get; }
         public IPowerBIPartSerializer<JObject> DataModel { get; }
-        public IPowerBIPartSerializer<MashupParts> DataMashup { get; }
         public IPowerBIPartSerializer<JObject> Connections { get; }
         public IPowerBIPartSerializer<IDictionary<string, byte[]>> CustomVisuals { get; }
         public IPowerBIPartSerializer<IDictionary<string, byte[]>> StaticResources { get; }
+#if NETFRAMEWORK
+        public IPowerBIPartSerializer<MashupParts> DataMashup { get; }
+#endif
 
     }
 }

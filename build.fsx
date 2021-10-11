@@ -72,6 +72,8 @@ BuildServer.install [
 let buildDir = ".build"
 let outDir = buildDir @@ "out"
 let distDir = buildDir @@ "dist"
+let distFullDir = distDir @@ "full"
+let distCoreDir = distDir @@ "core"
 let testDir = buildDir @@ "test"
 let tempDir = ".temp"
 
@@ -152,21 +154,24 @@ Target.create "AssemblyInfo" (fun _ ->
 // Clean build results
 
 Target.create "Clean" (fun _ ->
-    !! "src/**/bin"
-    ++ "tests/**/bin"
-    ++ "src/**/obj"
-    ++ "tests/**/obj"
+    !! "src/*/bin"
+    ++ "tests/*/bin"
+    ++ "src/*/obj"
+    ++ "tests/*/obj"
     ++ buildDir 
     ++ tempDir
     |> Shell.cleanDirs
-
-    !! "**/obj/**/*.nuspec"
-    |> File.deleteAll
 )
 
 
 // --------------------------------------------------------------------------------------
 // Build library & test project
+
+Target.create "ZipSampleData" (fun _ ->
+    !! "data/Samples/Adventure Works DW 2020/**/*.*"
+    |> Zip.zip "data/Samples/Adventure Works DW 2020" (tempDir @@ "Adventure Works DW 2020.zip")
+)
+
 
 // Including 'Restore' target addresses issue: https://github.com/fsprojects/Paket/issues/2697
 // Previously, msbuild would fail not being able to find **\obj\project.assets.json
@@ -175,23 +180,35 @@ Target.create "Build" (fun _ ->
                        | Some dir -> Trace.logfn "Using assembly ReferencePath: %s" dir
                                      [ "ReferencePath", dir ]
                        | _ -> []
+    let setParams (defaults:MSBuildParams) =
+        { defaults with
+            MaxCpuCount = None 
+        }
 
     !! solutionFile
-    |> MSBuild.runReleaseExt id outDir msbuildProps "Restore;Rebuild"
+    |> MSBuild.runReleaseExt setParams null msbuildProps "Restore;Rebuild"
     |> ignore
+
+    // !! "src/PBI-Tools/*.csproj"
+    // |> MSBuild.runReleaseExt id distFullDir msbuildProps "Restore;Rebuild"
+    // |> ignore
 
     // Could not get Fody to do its thing unless when building the entire solution, so we're grabbing the dist files here explicitly
     // TODO Revisit after upgrade to Fody 6.4 
-    !! (outDir @@ "pbi-tools.*")
-    -- (outDir @@ "*test*")
-    -- (outDir @@ "*.runtimeconfig.*")
-    |> Shell.copy distDir
+    !! ("src/PBI-Tools/bin/Release/**/pbi-tools.*")
+    |> Shell.copy distFullDir
+
+    // TODO Investigate why 'pbi-tools.core.dll' copy is incomplete
+    !! ("src/PBI-Tools.NETCore/bin/Release/**/pbi-tools.core*.*")
+    |> Shell.copy distCoreDir
 )
 
 Target.create "Test" (fun _ ->
-    !! testAssemblies
+    !! "tests/*/bin/Release/**/pbi-tools*tests.dll"
+    -- "tests/*/bin/Release/**/*netcore*.dll"
     |> XUnit2.run (fun p -> { p with HtmlOutputPath = Some (testDir @@ "xunit.html")
-                                     XmlOutputPath = Some (testDir @@ "xunit.xml") } )
+                                     XmlOutputPath = Some (testDir @@ "xunit.xml")
+                                     ToolPath = "packages/fake-tools/xunit.runner.console/tools/net472/xunit.console.exe" } )
 )
 
 Target.create "SmokeTest" (fun _ ->
@@ -228,8 +245,10 @@ Target.create "UsageDocs" (fun _ ->
 )
 
 Target.create "Pack" (fun _ ->
-    !! (distDir @@ "*.*")
-    |> Zip.zip distDir (sprintf @"%s\pbi-tools.%s.zip" buildDir release.NugetVersion)
+    !! (distFullDir @@ "*.*")
+    |> Zip.zip distFullDir (sprintf @"%s\pbi-tools.%s.zip" buildDir release.NugetVersion)
+
+    // TODO Add Publish builds for pbi-tools.core
 )
 
 Target.create "Help" (fun _ ->
@@ -242,6 +261,7 @@ open Fake.Core.TargetOperators
 
 "Clean"
   ==> "AssemblyInfo"
+  ==> "ZipSampleData"
   ==> "Build"
   ==> "Test"
   ==> "UsageDocs"
@@ -253,4 +273,4 @@ open Fake.Core.TargetOperators
 // --------------------------------------------------------------------------------------
 // Show help by default. Invoke 'fake build -t <Target>' to override
 
-Target.runOrDefault "Help"
+Target.runOrDefaultWithArguments "Help"

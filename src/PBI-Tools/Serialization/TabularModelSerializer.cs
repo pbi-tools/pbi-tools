@@ -3,7 +3,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data.OleDb;
+using System.Data.Common;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -55,8 +55,11 @@ namespace PbiTools.Serialization
                 db = db.RemoveProperties(_settings?.IgnoreProperties);
 
                 var dataSources = db.SelectToken("model.dataSources") as JArray ?? new JArray();
+#if NETFRAMEWORK
                 var idCache = new TabularModelIdCache(dataSources, _queries); // Applies to legacy PBIX files only (is ignored for V3 models)
-
+#elif NET
+                var idCache = default(IQueriesLookup);
+#endif
                 db = SerializeDataSources(db, _modelFolder, idCache);
                 db = SerializeTables(db, _modelFolder, idCache);
                 db = SerializeExpressions(db, _modelFolder);
@@ -257,7 +260,7 @@ namespace PbiTools.Serialization
                 var name = dataSource["name"]?.Value<string>();  //TODO replace name using IDCache
                 if (name == null) continue;
                 var dir = name;
-
+#if NETFRAMEWORK
                 // connectionString: Global Pipe, Mashup
                 var connectionStringToken = dataSource["connectionString"] as JValue;
                 var connectionString = connectionStringToken?.Value<string>();
@@ -268,9 +271,9 @@ namespace PbiTools.Serialization
                     dataSource["name"] = name;
                     dir = location;
                     // strip values:
-                    var bldr = new OleDbConnectionStringBuilder(connectionString);
-                    bldr.Remove("global pipe");
-                    bldr.Remove("mashup");
+                    var bldr = new DbConnectionStringBuilder() { ConnectionString = connectionString };
+                    bldr.Remove("Global Pipe");
+                    bldr.Remove("Mashup");
                     // keep Provider, Location
                     connectionStringToken.Value = bldr.ConnectionString;
 
@@ -280,7 +283,7 @@ namespace PbiTools.Serialization
                         "mashup");
                     MashupSerializer.ExtractMashup(modelFolder, mashupPrefix, mashup);
                 }
-
+#endif
                 modelFolder.Write(dataSource, $@"dataSources\{dir.SanitizeFilename()}\dataSource.json");
             }
 
@@ -318,10 +321,11 @@ namespace PbiTools.Serialization
         {
             try
             {
-                var bldr = new OleDbConnectionStringBuilder(connectionString);
-                if (bldr.Provider.Equals("Microsoft.PowerBI.OleDb", StringComparison.InvariantCultureIgnoreCase)
-                    && bldr.TryGetValue("mashup", out var _mashup)
-                    && bldr.TryGetValue("location", out var _location))
+                var bldr = new DbConnectionStringBuilder() { ConnectionString = connectionString };
+                if (bldr.TryGetValue("Provider", out var provider)
+                    && provider.ToString().Equals("Microsoft.PowerBI.OleDb", StringComparison.InvariantCultureIgnoreCase)
+                    && bldr.TryGetValue("Mashup", out var _mashup)
+                    && bldr.TryGetValue("Location", out var _location))
                 {
                     location = _location.ToString();
                     mashup = _mashup.ToString();
@@ -344,9 +348,9 @@ namespace PbiTools.Serialization
             folder.Write(db, "database.json");
         }
 
-        #endregion
+#endregion
 
-        #region Model Deserialization
+#region Model Deserialization
 
         public bool TryDeserialize(out JObject database)
         {
@@ -583,9 +587,9 @@ namespace PbiTools.Serialization
             }
         }
 
-        #endregion
+#endregion
 
-        #region DAX Expressions
+#region DAX Expressions
 
         /// <summary>
         /// Converts an M expression from a TMSL payload into a single string, accounting for both single and multi-line expressions.
@@ -605,9 +609,9 @@ namespace PbiTools.Serialization
             return new JArray(lines);
         }
 
-        #endregion
+#endregion
 
-        #region Measures
+#region Measures
 
         private static Action<TextWriter> WriteMeasureXml(JToken json)
         {
@@ -747,7 +751,7 @@ namespace PbiTools.Serialization
             return measure;
         }
 
-        #endregion
+#endregion
 
         // TODO place AAS conversions into TabularModelConversion.ToAASModel(JObject db, JObject extensions)
 

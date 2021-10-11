@@ -1,4 +1,8 @@
 {
   "editor.tabSize": 4,
-  "editor.formatOnType": true
+  "editor.formatOnType": true,
+  "csharp.suppressDotnetRestoreNotification": true,
+  "csharp.suppressBuildAssetsNotification": true,
+  "omnisharp.organizeImportsOnFormat": true,
+  "omnisharp.enableMsBuildLoadProjectsOnDemand": true
 }
