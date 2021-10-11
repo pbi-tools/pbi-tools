@@ -229,7 +229,7 @@ Target.create "SmokeTest" (fun _ ->
     !! (tempDir @@ "**/*.pbix")
     |> Seq.iter (fun path ->
         [ "extract"; path ]
-        |> CreateProcess.fromRawCommand "./.build/dist/pbi-tools.exe"
+        |> CreateProcess.fromRawCommand (distFullDir @@ "pbi-tools.exe")
         |> CreateProcess.ensureExitCode
         |> Proc.run
         |> ignore
@@ -238,7 +238,7 @@ Target.create "SmokeTest" (fun _ ->
 
 Target.create "UsageDocs" (fun _ ->
     [ "export-usage"; "-outPath"; "./docs/Usage.md" ]
-    |> CreateProcess.fromRawCommand "./.build/dist/pbi-tools.exe"
+    |> CreateProcess.fromRawCommand (distFullDir @@ "pbi-tools.exe")
     |> CreateProcess.ensureExitCode
     |> Proc.run
     |> ignore
