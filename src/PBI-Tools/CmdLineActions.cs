@@ -233,45 +233,45 @@ namespace PbiTools
             // SUCCESS
             // [x] PBIX from Report-Only
             // [x] PBIT from PBIT sources (incl Mashup)
+            // [x] PBIT from PBIX sources (no mashup)
             //
             // TODO
-            // [ ] PBIT from PBIX sources (no mashup)
             // [ ] PBIX from source with model
             // [ ] Merge into PBIX
 
             FileInfo outputFile;
 
+            var filenameFromPbixProj = $"{new DirectoryInfo(folder).Name}.{(format == PbiFileFormat.PBIT ? "pbit" : "pbix")}";
+
+            if (String.IsNullOrEmpty(outPath))
+                outputFile = new FileInfo(filenameFromPbixProj);
+            else 
+            {
+                var pathAsDirectory = new DirectoryInfo(outPath);
+                var pathAsFile = new FileInfo(outPath);
+
+                if (pathAsFile.Exists)
+                    /* Existing File */
+                    outputFile = pathAsFile;
+
+                else if (pathAsDirectory.Exists)
+                    /* Existing Directory: Use generated filename */
+                    outputFile = new FileInfo(Path.Combine(pathAsDirectory.FullName, filenameFromPbixProj));
+                
+                else if (!String.IsNullOrEmpty(pathAsFile.Extension))
+                    /* Path with extension provided: Use as file path */
+                    outputFile = pathAsFile;
+                
+                else
+                    /* Path w/o extension provided: Use as directory, generate filename */
+                    outputFile = new FileInfo(Path.Combine(pathAsDirectory.FullName, filenameFromPbixProj));
+            }
+
+            if (outputFile.Exists && !overwrite)
+                throw new PbiToolsCliException(ExitCode.FileExists, $"Destination file '{outputFile.FullName}' exists and the '-overwrite' option was not specified.");
+
             using (var proj = PbiTools.Model.PbixModel.FromFolder(folder))
             {
-                var filenameFromPbixProj = $"{new DirectoryInfo(proj.SourcePath).Name}.{(format == PbiFileFormat.PBIT ? "pbit" : "pbix")}";
-
-                if (String.IsNullOrEmpty(outPath))
-                    outputFile = new FileInfo(filenameFromPbixProj);
-                else 
-                {
-                    var pathAsDirectory = new DirectoryInfo(outPath);
-                    var pathAsFile = new FileInfo(outPath);
-
-                    if (pathAsFile.Exists)
-                        /* Existing File */
-                        outputFile = pathAsFile;
-
-                    else if (pathAsDirectory.Exists)
-                        /* Existing Directory: Use generated filename */
-                        outputFile = new FileInfo(Path.Combine(pathAsDirectory.FullName, filenameFromPbixProj));
-                    
-                    else if (!String.IsNullOrEmpty(pathAsFile.Extension))
-                        /* Path with extension provided: Use as file path */
-                        outputFile = pathAsFile;
-                    
-                    else
-                        /* Path w/o extension provided: Use as directory, generate filename */
-                        outputFile = new FileInfo(Path.Combine(pathAsDirectory.FullName, filenameFromPbixProj));
-                }
-
-                if (outputFile.Exists && !overwrite)
-                    throw new PbiToolsCliException(ExitCode.FileExists, $"Destination file '{outputFile.FullName}' exists and the '-overwrite' option was not specified.");
-
                 outputFile.Directory.Create();
 
                 proj.ToFile(outputFile.FullName, format, _dependenciesResolver);
