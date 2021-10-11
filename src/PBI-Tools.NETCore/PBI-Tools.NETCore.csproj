@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+    <AssemblyName>pbi-tools.core</AssemblyName>
+    <RootNamespace>PbiTools</RootNamespace>
+    <StartupObject>PbiTools.Program</StartupObject>
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>latest</LangVersion>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <ApplicationIcon>..\PBI-Tools\pbi-tools.ico</ApplicationIcon>
+    <!-- <RuntimeIdentifiers>win-x64;linux-x64</RuntimeIdentifiers> -->
+    <RuntimeIdentifier>win7-x64</RuntimeIdentifier>
+    <PublishSingleFile>false</PublishSingleFile>
+    <SelfContained>false</SelfContained>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- See: https://github.com/dotnet/sdk/issues/2809 -->
+    <AssemblySearchPaths>$(ReferencePath);$(AssemblySearchPaths)</AssemblySearchPaths>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\PBI-Tools\**\*.cs" Exclude="..\PBI-Tools\obj\**\*.*;..\PBI-Tools\Properties\**\*.*" />
+  </ItemGroup>
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
+</Project>

@@ -1,0 +1,7 @@
+SUMMARIZECOLUMNS (
+    Product[Color],
+    Reseller[Business Type],
+    FILTER ( ALL ( Product[List Price] ), Product[List Price] > 150.00 ),
+    TREATAS ( { "Accessories", "Bikes" }, 'Product'[Category] ),
+    "Total Sales", SUM ( Sales[Sales Amount] )
+)

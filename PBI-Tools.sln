@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2036
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31702.278
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PBI-Tools", "src\PBI-Tools\PBI-Tools.csproj", "{66F1431D-0811-483D-8F8A-69354E9BF3BD}"
 EndProject
@@ -17,6 +17,10 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{F954DB52-327A-47E5-A804-B13B6042F449}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PBI-Tools.IntegrationTests", "tests\PBI-Tools.IntegrationTests\PBI-Tools.IntegrationTests.csproj", "{D326ECF1-0D05-46F5-9537-A677618DFB06}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PBI-Tools.NetCore.Tests", "tests\PBI-Tools.NetCore.Tests\PBI-Tools.NetCore.Tests.csproj", "{4B66BDA5-F0A4-44D2-9DF6-568723685FBC}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PBI-Tools.NETCore", "src\PBI-Tools.NETCore\PBI-Tools.NETCore.csproj", "{7F47598F-A98A-4EC8-853E-EF499CB1242D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,6 +40,14 @@ Global
 		{D326ECF1-0D05-46F5-9537-A677618DFB06}.Debug|x64.Build.0 = Debug|x64
 		{D326ECF1-0D05-46F5-9537-A677618DFB06}.Release|x64.ActiveCfg = Release|x64
 		{D326ECF1-0D05-46F5-9537-A677618DFB06}.Release|x64.Build.0 = Release|x64
+		{4B66BDA5-F0A4-44D2-9DF6-568723685FBC}.Debug|x64.ActiveCfg = Debug|x64
+		{4B66BDA5-F0A4-44D2-9DF6-568723685FBC}.Debug|x64.Build.0 = Debug|x64
+		{4B66BDA5-F0A4-44D2-9DF6-568723685FBC}.Release|x64.ActiveCfg = Release|x64
+		{4B66BDA5-F0A4-44D2-9DF6-568723685FBC}.Release|x64.Build.0 = Release|x64
+		{7F47598F-A98A-4EC8-853E-EF499CB1242D}.Debug|x64.ActiveCfg = Debug|x64
+		{7F47598F-A98A-4EC8-853E-EF499CB1242D}.Debug|x64.Build.0 = Debug|x64
+		{7F47598F-A98A-4EC8-853E-EF499CB1242D}.Release|x64.ActiveCfg = Release|x64
+		{7F47598F-A98A-4EC8-853E-EF499CB1242D}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -43,6 +55,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{69D4E7D3-261B-4581-A388-2B0BE237335D} = {F954DB52-327A-47E5-A804-B13B6042F449}
 		{D326ECF1-0D05-46F5-9537-A677618DFB06} = {F954DB52-327A-47E5-A804-B13B6042F449}
+		{4B66BDA5-F0A4-44D2-9DF6-568723685FBC} = {F954DB52-327A-47E5-A804-B13B6042F449}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E2944C94-DCE9-41DF-A671-6F38744A17D2}

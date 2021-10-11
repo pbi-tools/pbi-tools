@@ -1,4 +1,13 @@
-2.93.641  # May 2021
+2.97.921 # Sep '21
+2.97.861
+2.97.801
+2.96.1061;https://download.microsoft.com/download/8/8/0/880BCA75-79DD-466A-927D-1ABF1F5454B0/PBIDesktopSetup-2021-08_x64.exe # Aug '21
+2.96.901
+2.95.983;https://download.microsoft.com/download/8/8/0/880BCA75-79DD-466A-927D-1ABF1F5454B0/PBIDesktopSetup-2021-07_x64.exe # Jul '21
+2.95.804
+2.94.921;https://download.microsoft.com/download/8/8/0/880BCA75-79DD-466A-927D-1ABF1F5454B0/PBIDesktopSetup-2021-06_x64.exe # Jun '21
+2.93.981;https://download.microsoft.com/download/8/8/0/880BCA75-79DD-466A-927D-1ABF1F5454B0/PBIDesktopSetup-2021-05_x64.exe # May '21
+2.93.641
 2.92.1067;https://download.microsoft.com/download/8/8/0/880BCA75-79DD-466A-927D-1ABF1F5454B0/PBIDesktopSetup-2021-04_x64.exe # Apr '21
 2.92.706
 2.91.884;https://download.microsoft.com/download/8/8/0/880BCA75-79DD-466A-927D-1ABF1F5454B0/PBIDesktopSetup-2021-03_x64.exe # Mar '21

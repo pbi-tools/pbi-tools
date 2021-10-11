@@ -3,8 +3,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using Castle.DynamicProxy;
+#if NETFRAMEWORK
 using Microsoft.PowerBI.Packaging;
+#endif
 using PbiTools.Model;
 using Serilog;
 
@@ -18,7 +22,9 @@ namespace PbiTools.PowerBI
         PBIT = 2
     }
 
-    internal class PbiPackage : IPowerBIPackage
+#if NETFRAMEWORK
+
+    internal class PbiPackage
     {
         private static readonly ILogger Log = Serilog.Log.ForContext<PbiPackage>();
 	    internal static readonly IStreamablePowerBIPackagePartContent EmptyContent = new StreamablePowerBIPackagePartContent(default(string));
@@ -34,77 +40,46 @@ namespace PbiTools.PowerBI
             this._format = format;
         }
 
-        public IStreamablePowerBIPackagePartContent Connections { 
-            get => _converters.Connections.ToPackagePart(_pbixModel.Connections); 
-            set => throw new NotSupportedException();
-        }
+        public IStreamablePowerBIPackagePartContent Connections
+            => _converters.Connections.ToPackagePart(_pbixModel.Connections); 
 
-        public IStreamablePowerBIPackagePartContent DataMashup {
-            get => new MashupConverter().ToPackagePart(_pbixModel.DataMashup);
-            set => throw new NotSupportedException();
-        }
+        public IStreamablePowerBIPackagePartContent DataMashup
+            => new MashupConverter().ToPackagePart(_pbixModel.DataMashup);
 
-        public IStreamablePowerBIPackagePartContent DataModel {
-            get => _format == PbiFileFormat.PBIX ? _converters.DataModel.ToPackagePart(_pbixModel.DataModel) : EmptyContent;
-            set => throw new NotSupportedException();
-        }
+        public IStreamablePowerBIPackagePartContent DataModel
+            => _format == PbiFileFormat.PBIX ? _converters.DataModel.ToPackagePart(_pbixModel.DataModel) : EmptyContent;
 
-        public IStreamablePowerBIPackagePartContent DataModelSchema {
-            get => _format == PbiFileFormat.PBIT ? _converters.DataModelSchema.ToPackagePart(_pbixModel.DataModel) : EmptyContent;
-            set => throw new NotSupportedException();
-        }
+        public IStreamablePowerBIPackagePartContent DataModelSchema
+            => _format == PbiFileFormat.PBIT ? _converters.DataModelSchema.ToPackagePart(_pbixModel.DataModel) : EmptyContent;
 
-        public IStreamablePowerBIPackagePartContent DiagramViewState {
-            get => _converters.DiagramViewState.ToPackagePart(_pbixModel.DiagramViewState); 
-            set => throw new NotSupportedException();
-        }
+        public IStreamablePowerBIPackagePartContent DiagramViewState
+            => _converters.DiagramViewState.ToPackagePart(_pbixModel.DiagramViewState); 
 
-        public IStreamablePowerBIPackagePartContent DiagramLayout {
-            get => _converters.DiagramLayout.ToPackagePart(_pbixModel.DiagramLayout); 
-            set => throw new NotSupportedException();
-        }
+        public IStreamablePowerBIPackagePartContent DiagramLayout
+            => _converters.DiagramLayout.ToPackagePart(_pbixModel.DiagramLayout); 
 
-        public IStreamablePowerBIPackagePartContent ReportDocument {
-            get => _converters.ReportDocument.ToPackagePart(_pbixModel.Report); 
-            set => throw new NotSupportedException();
-        }
+        public IStreamablePowerBIPackagePartContent ReportDocument
+            => _converters.ReportDocument.ToPackagePart(_pbixModel.Report); 
 
-        public IStreamablePowerBIPackagePartContent LinguisticSchema {
-            get => _pbixModel.LinguisticSchemaXml == null
+        public IStreamablePowerBIPackagePartContent LinguisticSchema
+            => _pbixModel.LinguisticSchemaXml == null
                 ? _converters.LinguisticSchemaV3.ToPackagePart(_pbixModel.LinguisticSchema)
                 : _converters.LinguisticSchema.ToPackagePart(_pbixModel.LinguisticSchemaXml); 
-            set => throw new NotSupportedException();
-        }
 
-        public IStreamablePowerBIPackagePartContent ReportMetadata {
-            get => _converters.ReportMetadataV3.ToPackagePart(_pbixModel.ReportMetadata); 
-            set => throw new NotSupportedException();
-        }
+        public IStreamablePowerBIPackagePartContent ReportMetadata
+            => _converters.ReportMetadataV3.ToPackagePart(_pbixModel.ReportMetadata); 
 
-        public IStreamablePowerBIPackagePartContent ReportSettings {
-            get => _converters.ReportSettingsV3.ToPackagePart(_pbixModel.ReportSettings); 
-            set => throw new NotSupportedException();
-        }
+        public IStreamablePowerBIPackagePartContent ReportSettings
+            => _converters.ReportSettingsV3.ToPackagePart(_pbixModel.ReportSettings); 
 
-        public IStreamablePowerBIPackagePartContent Version {
-            get => _converters.Version.ToPackagePart(_pbixModel.Version); 
-            set => throw new NotSupportedException();
-        }
+        public IStreamablePowerBIPackagePartContent Version
+            => _converters.Version.ToPackagePart(_pbixModel.Version); 
 
-        public IStreamablePowerBIPackagePartContent CustomProperties {
-            get => EmptyContent; 
-            set => throw new NotSupportedException();
-        }
+        public IDictionary<Uri, IStreamablePowerBIPackagePartContent> CustomVisuals
+            => ConvertResources(_pbixModel.CustomVisuals); 
 
-        public IDictionary<Uri, IStreamablePowerBIPackagePartContent> CustomVisuals {
-            get => ConvertResources(_pbixModel.CustomVisuals); 
-            set => throw new NotSupportedException();
-        }
-
-        public IDictionary<Uri, IStreamablePowerBIPackagePartContent> StaticResources {
-            get => ConvertResources(_pbixModel.StaticResources); 
-            set => throw new NotSupportedException();
-        }
+        public IDictionary<Uri, IStreamablePowerBIPackagePartContent> StaticResources
+            => ConvertResources(_pbixModel.StaticResources); 
 
         private IDictionary<Uri, IStreamablePowerBIPackagePartContent> ConvertResources(IDictionary<string, byte[]> resources) =>
             resources?.Aggregate(new Dictionary<Uri, IStreamablePowerBIPackagePartContent>(), 
@@ -116,8 +91,61 @@ namespace PbiTools.PowerBI
                 }) 
             ?? new Dictionary<Uri, IStreamablePowerBIPackagePartContent>();
 
-        public void Dispose()
+
+        public void Save(string path)
         {
+            using (var pbixFile = File.Create(path))
+            {
+                var proxy = new ProxyGenerator();
+                var powerbiPackage = proxy.CreateInterfaceProxyWithoutTarget<IPowerBIPackage>(new PowerBIPackageInterceptor(this));
+
+                // TODO
+                // - Generate empty Report part
+                // - Generate Mashup part if pbix has DataModel
+
+                Microsoft.PowerBI.Packaging.PowerBIPackager.Save(powerbiPackage, pbixFile);
+            }
+        }
+
+
+        private class PowerBIPackageInterceptor : IInterceptor
+        {
+            private static readonly ILogger Log = Serilog.Log.ForContext<PowerBIPackageInterceptor>();
+            private readonly PbiPackage _package;
+            private readonly System.Collections.Concurrent.ConcurrentDictionary<string, object> _propertyCache
+                = new System.Collections.Concurrent.ConcurrentDictionary<string, object>();
+
+            internal PowerBIPackageInterceptor(PbiPackage package)
+            {
+                this._package = package ?? throw new NullReferenceException("package");
+            }
+
+            void IInterceptor.Intercept(IInvocation invocation)
+            {
+                if (!invocation.Method.Name.StartsWith("get_"))
+                    return;
+
+                var propertyName = invocation.Method.Name.Substring("get_".Length);
+                Log.Debug("PowerBIPackage - Intercepting: {PropertyName}", propertyName);
+
+                var t = typeof(PbiPackage);
+                var property = t.GetProperty(propertyName);
+
+                Log.Debug("ReturnValue empty: {Empty}", invocation.ReturnValue == null);
+
+                if (property != null)
+                {
+                    invocation.ReturnValue = _propertyCache.GetOrAdd(propertyName, _ => property.GetValue(_package));
+                    Log.Debug("PowerBIPackage - Assigned value for: {PropertyName} from PbiPackage", propertyName);
+                }
+                else if (invocation.Method.ReturnType == typeof(IStreamablePowerBIPackagePartContent))
+                {
+                    invocation.ReturnValue = PbiPackage.EmptyContent;
+                    Log.Debug("PowerBIPackage - Assigned empty content for: {PropertyName}", propertyName);
+                }
+            }
         }
     }
+
+#endif
 }

@@ -31,7 +31,7 @@ open System.IO
 
 // The name of the project
 // (used by attributes in AssemblyInfo, name of a NuGet package and directory in 'src')
-let project = "pbi-tools-cli"
+let project = "Action BI Toolkit | pbi-tools"
 
 // Short summary of the project
 // (used as description in AssemblyInfo and as a short summary for NuGet package)
@@ -43,6 +43,7 @@ let description = "A command-line tool to work with Power BI Desktop files. Enab
 
 // List of author names (for NuGet package)
 let authors = [ "Mathias Thierbach" ]
+let company = "Action BI Toolkit Ltd"
 
 // Tags for your project (for NuGet package)
 let tags = "powerbi, pbix, source-control, automation"
@@ -72,6 +73,8 @@ BuildServer.install [
 let buildDir = ".build"
 let outDir = buildDir @@ "out"
 let distDir = buildDir @@ "dist"
+let distFullDir = distDir @@ "full"
+let distCoreDir = distDir @@ "core"
 let testDir = buildDir @@ "test"
 let tempDir = ".temp"
 
@@ -131,7 +134,7 @@ let genCSAssemblyInfo (projectPath : string) =
     AssemblyInfoFile.createCSharp fileName
       [ AssemblyInfo.Title (projectName)
         AssemblyInfo.Product project
-        AssemblyInfo.Company (authors |> String.concat ", ")
+        AssemblyInfo.Company company
         AssemblyInfo.Copyright (sprintf "Copyright \u00A9 Mathias Thierbach 2018-%i" (let today = DateTime.Today in today.Year)) // Avoids warning FS0052, see: https://github.com/fsharp/FAKE/issues/1803
         AssemblyInfo.Description summary
         AssemblyInfo.Version release.AssemblyVersion
@@ -152,21 +155,24 @@ Target.create "AssemblyInfo" (fun _ ->
 // Clean build results
 
 Target.create "Clean" (fun _ ->
-    !! "src/**/bin"
-    ++ "tests/**/bin"
-    ++ "src/**/obj"
-    ++ "tests/**/obj"
+    !! "src/*/bin"
+    ++ "tests/*/bin"
+    ++ "src/*/obj"
+    ++ "tests/*/obj"
     ++ buildDir 
     ++ tempDir
     |> Shell.cleanDirs
-
-    !! "**/obj/**/*.nuspec"
-    |> File.deleteAll
 )
 
 
 // --------------------------------------------------------------------------------------
 // Build library & test project
+
+Target.create "ZipSampleData" (fun _ ->
+    !! "data/Samples/Adventure Works DW 2020/**/*.*"
+    |> Zip.zip "data/Samples/Adventure Works DW 2020" (tempDir @@ "Adventure Works DW 2020.zip")
+)
+
 
 // Including 'Restore' target addresses issue: https://github.com/fsprojects/Paket/issues/2697
 // Previously, msbuild would fail not being able to find **\obj\project.assets.json
@@ -175,23 +181,35 @@ Target.create "Build" (fun _ ->
                        | Some dir -> Trace.logfn "Using assembly ReferencePath: %s" dir
                                      [ "ReferencePath", dir ]
                        | _ -> []
+    let setParams (defaults:MSBuildParams) =
+        { defaults with
+            MaxCpuCount = None 
+        }
 
     !! solutionFile
-    |> MSBuild.runReleaseExt id outDir msbuildProps "Restore;Rebuild"
+    |> MSBuild.runReleaseExt setParams null msbuildProps "Restore;Rebuild"
     |> ignore
+
+    // !! "src/PBI-Tools/*.csproj"
+    // |> MSBuild.runReleaseExt id distFullDir msbuildProps "Restore;Rebuild"
+    // |> ignore
 
     // Could not get Fody to do its thing unless when building the entire solution, so we're grabbing the dist files here explicitly
     // TODO Revisit after upgrade to Fody 6.4 
-    !! (outDir @@ "pbi-tools.*")
-    -- (outDir @@ "*test*")
-    -- (outDir @@ "*.runtimeconfig.*")
-    |> Shell.copy distDir
+    !! ("src/PBI-Tools/bin/Release/**/pbi-tools.*")
+    |> Shell.copy distFullDir
+
+    // TODO Investigate why 'pbi-tools.core.dll' copy is incomplete
+    !! ("src/PBI-Tools.NETCore/bin/Release/**/pbi-tools.core*.*")
+    |> Shell.copy distCoreDir
 )
 
 Target.create "Test" (fun _ ->
-    !! testAssemblies
+    !! "tests/*/bin/Release/**/pbi-tools*tests.dll"
+    -- "tests/*/bin/Release/**/*netcore*.dll"
     |> XUnit2.run (fun p -> { p with HtmlOutputPath = Some (testDir @@ "xunit.html")
-                                     XmlOutputPath = Some (testDir @@ "xunit.xml") } )
+                                     XmlOutputPath = Some (testDir @@ "xunit.xml")
+                                     ToolPath = "packages/fake-tools/xunit.runner.console/tools/net472/xunit.console.exe" } )
 )
 
 Target.create "SmokeTest" (fun _ ->
@@ -212,7 +230,7 @@ Target.create "SmokeTest" (fun _ ->
     !! (tempDir @@ "**/*.pbix")
     |> Seq.iter (fun path ->
         [ "extract"; path ]
-        |> CreateProcess.fromRawCommand "./.build/dist/pbi-tools.exe"
+        |> CreateProcess.fromRawCommand (distFullDir @@ "pbi-tools.exe")
         |> CreateProcess.ensureExitCode
         |> Proc.run
         |> ignore
@@ -221,15 +239,17 @@ Target.create "SmokeTest" (fun _ ->
 
 Target.create "UsageDocs" (fun _ ->
     [ "export-usage"; "-outPath"; "./docs/Usage.md" ]
-    |> CreateProcess.fromRawCommand "./.build/dist/pbi-tools.exe"
+    |> CreateProcess.fromRawCommand (distFullDir @@ "pbi-tools.exe")
     |> CreateProcess.ensureExitCode
     |> Proc.run
     |> ignore
 )
 
 Target.create "Pack" (fun _ ->
-    !! (distDir @@ "*.*")
-    |> Zip.zip distDir (sprintf @"%s\pbi-tools.%s.zip" buildDir release.NugetVersion)
+    !! (distFullDir @@ "*.*")
+    |> Zip.zip distFullDir (sprintf @"%s\pbi-tools.%s.zip" buildDir release.NugetVersion)
+
+    // TODO Add Publish builds for pbi-tools.core
 )
 
 Target.create "Help" (fun _ ->
@@ -242,6 +262,7 @@ open Fake.Core.TargetOperators
 
 "Clean"
   ==> "AssemblyInfo"
+  ==> "ZipSampleData"
   ==> "Build"
   ==> "Test"
   ==> "UsageDocs"
@@ -253,4 +274,4 @@ open Fake.Core.TargetOperators
 // --------------------------------------------------------------------------------------
 // Show help by default. Invoke 'fake build -t <Target>' to override
 
-Target.runOrDefault "Help"
+Target.runOrDefaultWithArguments "Help"

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Microsoft.NET.Sdk" InitialTargets="ZipSampleData">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <TargetFramework>net472</TargetFramework>
@@ -15,13 +15,6 @@
     <!-- See: https://github.com/dotnet/sdk/issues/2809 -->
     <AssemblySearchPaths>$(ReferencePath);$(AssemblySearchPaths)</AssemblySearchPaths>
   </PropertyGroup>
-  <Target Name="ZipSampleData">
-      <MakeDir Directories="..\..\.temp" />
-      <ZipDirectory
-          SourceDirectory="..\..\data\Samples\Adventure Works DW 2020\"
-          DestinationFile="..\..\.temp\Adventure Works DW 2020.zip"
-          Overwrite="True" />
-  </Target>
   <ItemGroup>
     <None Remove="TestResources\**\*.*" />
     <EmbeddedResource Include="TestResources\**\*.*" />

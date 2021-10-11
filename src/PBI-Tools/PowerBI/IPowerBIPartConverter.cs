@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Mathias Thierbach
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+#if NETFRAMEWORK
 using Microsoft.PowerBI.Packaging;
 
 namespace PbiTools.PowerBI
@@ -17,3 +18,4 @@ namespace PbiTools.PowerBI
         IStreamablePowerBIPackagePartContent ToPackagePart(T content);
     }
 }
+#endif

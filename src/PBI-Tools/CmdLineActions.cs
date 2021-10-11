@@ -10,7 +10,6 @@ using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using PbiTools.Actions;
 using PbiTools.PowerBI;
 using PbiTools.Rpc;
 using PbiTools.Utils;
@@ -24,6 +23,8 @@ namespace PbiTools
     [ArgExceptionBehavior(ArgExceptionPolicy.StandardExceptionHandling)]  // PowerArgs will print the user friendly error message as well as the auto-generated usage documentation for the program.
 #endif
     [ArgDescription(AssemblyVersionInformation.AssemblyProduct + ", " + AssemblyVersionInformation.AssemblyInformationalVersion)]
+    [ArgProductVersion(AssemblyVersionInformation.AssemblyVersion)]
+    [ArgProductName(AssemblyVersionInformation.AssemblyProduct)]
     [ApplyDefinitionTransforms]
     public class CmdLineActions
     {
@@ -50,7 +51,7 @@ namespace PbiTools
 
 
 
-
+#if NETFRAMEWORK
         [ArgActionMethod, ArgShortcut("extract")]
         [ArgDescription("Extracts the contents of a PBIX/PBIT file into a folder structure suitable for source control. By default, this will create a sub-folder in the directory of the *.pbix file with the same name without the extension.")]
         [ArgExample(
@@ -77,7 +78,7 @@ namespace PbiTools
             {
                 if (mode == ExtractActionCompatibilityMode.Legacy)
                 {
-                    using (var extractor = new PbixExtractAction(reader))
+                    using (var extractor = new Actions.PbixExtractAction(reader))
                     {
                         extractor.ExtractAll();
                     }
@@ -103,7 +104,7 @@ namespace PbiTools
                     }
                     catch (NotSupportedException) when (mode == ExtractActionCompatibilityMode.Auto)
                     {
-                        using (var extractor = new PbixExtractAction(reader))
+                        using (var extractor = new Actions.PbixExtractAction(reader))
                         {
                             extractor.ExtractAll();
                         }
@@ -113,6 +114,7 @@ namespace PbiTools
 
             Console.WriteLine($"Completed in {_stopWatch.Elapsed}.");
         }
+#endif
 
 
         [ArgActionMethod, ArgShortcut("extract-data"), ArgDescription("Extract data from all tables in a tabular model, either from within a PBIX file, or from a live session.")]
@@ -140,6 +142,7 @@ namespace PbiTools
 
             if (pbixPath != null)
             {
+#if NETFRAMEWORK
                 using (var file = File.OpenRead(pbixPath))
                 using (var package = Microsoft.PowerBI.Packaging.PowerBIPackager.Open(file, skipValidation: true))
                 using (var msmdsrv = new AnalysisServicesServer(new ASInstanceConfig
@@ -159,6 +162,7 @@ namespace PbiTools
                         reader.ExtractTableData(outPath, dateTimeFormat);
                     }
                 }
+#endif
             }
             else
             {
@@ -173,7 +177,7 @@ namespace PbiTools
         [ArgActionMethod, ArgShortcut("export-bim"), ArgDescription("Converts the Model artifacts to a TMSL/BIM file.")]
         public void ExportBim(
             [ArgRequired, ArgExistingDirectory, ArgDescription("The PbixProj folder to export the BIM file from.")] string folder,
-            [ArgDescription("Do not generate model data sources. The is required for deployment to Power BI Premium via the XMLA endpoint.")] bool skipDataSources,
+            [ArgDescription("Generate model data sources. Only required for deployment to Azure Analysis Services, but not for Power BI Premium via the XMLA endpoint.")] bool generateDataSources,
             [ArgDescription("List transformations to be applied to TMSL document.")] ExportTransforms transforms
         )
         {
@@ -182,10 +186,14 @@ namespace PbiTools
                 var serializer = new Serialization.TabularModelSerializer(rootFolder, ProjectSystem.PbixProject.FromFolder(rootFolder).Settings.Model);
                 if (serializer.TryDeserialize(out var db))  // throws for V1 models
                 {
-                    if (!skipDataSources)
+                    if (generateDataSources)
                     {
+#if NETFRAMEWORK
                         var dataSources = TabularModel.TabularModelConversions.GenerateDataSources(db);
                         db["model"]["dataSources"] = dataSources;
+#elif NET
+                        throw new PlatformNotSupportedException("Generating DataSources is not supported by the .Net Core version.");
+#endif
                     }
 
                     if (transforms.HasFlag(ExportTransforms.RemovePBIDataSourceVersion))
@@ -204,8 +212,7 @@ namespace PbiTools
                 }
                 else
                 {
-                    // TODO Fail action?
-                    Console.WriteLine("A BIM file could not be exported.");
+                    throw new PbiToolsCliException(ExitCode.UnspecifiedError, "A BIM file could not be exported.");
                 }
             }
         }
@@ -227,45 +234,45 @@ namespace PbiTools
             // SUCCESS
             // [x] PBIX from Report-Only
             // [x] PBIT from PBIT sources (incl Mashup)
+            // [x] PBIT from PBIX sources (no mashup)
             //
             // TODO
-            // [ ] PBIT from PBIX sources (no mashup)
             // [ ] PBIX from source with model
             // [ ] Merge into PBIX
 
             FileInfo outputFile;
 
+            var filenameFromPbixProj = $"{new DirectoryInfo(folder).Name}.{(format == PbiFileFormat.PBIT ? "pbit" : "pbix")}";
+
+            if (String.IsNullOrEmpty(outPath))
+                outputFile = new FileInfo(filenameFromPbixProj);
+            else 
+            {
+                var pathAsDirectory = new DirectoryInfo(outPath);
+                var pathAsFile = new FileInfo(outPath);
+
+                if (pathAsFile.Exists)
+                    /* Existing File */
+                    outputFile = pathAsFile;
+
+                else if (pathAsDirectory.Exists)
+                    /* Existing Directory: Use generated filename */
+                    outputFile = new FileInfo(Path.Combine(pathAsDirectory.FullName, filenameFromPbixProj));
+                
+                else if (!String.IsNullOrEmpty(pathAsFile.Extension))
+                    /* Path with extension provided: Use as file path */
+                    outputFile = pathAsFile;
+                
+                else
+                    /* Path w/o extension provided: Use as directory, generate filename */
+                    outputFile = new FileInfo(Path.Combine(pathAsDirectory.FullName, filenameFromPbixProj));
+            }
+
+            if (outputFile.Exists && !overwrite)
+                throw new PbiToolsCliException(ExitCode.FileExists, $"Destination file '{outputFile.FullName}' exists and the '-overwrite' option was not specified.");
+
             using (var proj = PbiTools.Model.PbixModel.FromFolder(folder))
             {
-                var filenameFromPbixProj = $"{new DirectoryInfo(proj.SourcePath).Name}.{(format == PbiFileFormat.PBIT ? "pbit" : "pbix")}";
-
-                if (String.IsNullOrEmpty(outPath))
-                    outputFile = new FileInfo(filenameFromPbixProj);
-                else 
-                {
-                    var pathAsDirectory = new DirectoryInfo(outPath);
-                    var pathAsFile = new FileInfo(outPath);
-
-                    if (pathAsFile.Exists)
-                        /* Existing File */
-                        outputFile = pathAsFile;
-
-                    else if (pathAsDirectory.Exists)
-                        /* Existing Directory: Use generated filename */
-                        outputFile = new FileInfo(Path.Combine(pathAsDirectory.FullName, filenameFromPbixProj));
-                    
-                    else if (!String.IsNullOrEmpty(pathAsFile.Extension))
-                        /* Path with extension provided: Use as file path */
-                        outputFile = pathAsFile;
-                    
-                    else
-                        /* Path w/o extension provided: Use as directory, generate filename */
-                        outputFile = new FileInfo(Path.Combine(pathAsDirectory.FullName, filenameFromPbixProj));
-                }
-
-                if (outputFile.Exists && !overwrite)
-                    throw new PbiToolsCliException(ExitCode.FileExists, $"Destination file '{outputFile.FullName}' exists and the '-overwrite' option was not specified.");
-
                 outputFile.Directory.Create();
 
                 proj.ToFile(outputFile.FullName, format, _dependenciesResolver);
@@ -274,7 +281,7 @@ namespace PbiTools
             Console.WriteLine($"{format} file written to: {outputFile.FullName}");
         }
 
-
+#if NETFRAMEWORK
         [ArgActionMethod, ArgShortcut("launch-pbi"), ArgDescription("Starts a new instance of Power BI Desktop with the PBIX/PBIT file specified. Does not support Windows Store installations.")]
         public void LaunchPbiDesktop(
             [ArgRequired, ArgExistingFile, ArgDescription("The path to an existing PBIX or PBIT file.")] string pbixPath
@@ -290,7 +297,7 @@ namespace PbiTools
             var proc = Process.Start(pbiExePath, $"\"{pbixPath}\""); // Note the enclosing quotes are required
             Log.Information("Launched Power BI Desktop, Process ID: {ProcessID}, Arguments: {Arguments}", proc.Id, proc.StartInfo.Arguments);
         }
-
+#endif
 
         [ArgActionMethod, ArgShortcut("info"), ArgDescription("Collects diagnostic information about the local system and writes a JSON object to StdOut.")]
         [ArgExample(
@@ -309,13 +316,21 @@ namespace PbiTools
                     { "pbiBuildVersion", AssemblyVersionInformation.AssemblyMetadata_PBIBuildVersion },
                     { "amoVersion", typeof(Microsoft.AnalysisServices.Tabular.Server).Assembly
                         .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion },
+                    { "toolPath", Process.GetCurrentProcess().MainModule.FileName },
                     { "settings", new JObject {
                         { AppSettings.Environment.LogLevel, AppSettings.GetEnvironmentSetting(AppSettings.Environment.LogLevel) },
                         { AppSettings.Environment.PbiInstallDir, AppSettings.GetEnvironmentSetting(AppSettings.Environment.PbiInstallDir) },
                     }},
+                    { "runtime", new JObject {
+                        { "platform", System.Runtime.InteropServices.RuntimeInformation.OSDescription },
+                        { "architecture", System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString() },
+                        { "framework", System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription },
+                    }},
+#if NETFRAMEWORK
                     { "pbiInstalls", JArray.FromObject(_dependenciesResolver.PBIInstalls) },
                     { "effectivePbiInstallDir", _dependenciesResolver.GetEffectivePowerBiInstallDir() },
                     { "pbiSessions", JArray.FromObject(PowerBIProcesses.EnumerateProcesses().ToArray()) },
+#endif
                 };
 
                 if (checkDownloadVersion)

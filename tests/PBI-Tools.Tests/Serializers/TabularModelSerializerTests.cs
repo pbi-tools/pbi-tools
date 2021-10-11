@@ -366,9 +366,9 @@ namespace PbiTools.Tests
                 var table2 = _folder.GetAsJson(@"dataSources\Table2\dataSource.json");
 
                 var connStr1 = new OleDbConnectionStringBuilder(table1["connectionString"].Value<string>());
-                Assert.False(connStr1.ContainsKey("global pipe"));
+                Assert.False(connStr1.ContainsKey("Global Pipe"));
                 var connStr2 = new OleDbConnectionStringBuilder(table2["connectionString"].Value<string>());
-                Assert.False(connStr2.ContainsKey("global pipe"));
+                Assert.False(connStr2.ContainsKey("Global Pipe"));
             }
 
             [Fact]
@@ -378,9 +378,9 @@ namespace PbiTools.Tests
                 var table2 = _folder.GetAsJson(@"dataSources\Table2\dataSource.json");
 
                 var connStr1 = new OleDbConnectionStringBuilder(table1["connectionString"].Value<string>());
-                Assert.False(connStr1.ContainsKey("mashup"));
+                Assert.False(connStr1.ContainsKey("Mashup"));
                 var connStr2 = new OleDbConnectionStringBuilder(table2["connectionString"].Value<string>());
-                Assert.False(connStr2.ContainsKey("mashup"));
+                Assert.False(connStr2.ContainsKey("Mashup"));
             }
 
         }

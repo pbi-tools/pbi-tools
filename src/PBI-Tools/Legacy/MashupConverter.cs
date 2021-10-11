@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Mathias Thierbach
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+#if NETFRAMEWORK
 using System;
 using System.Globalization;
 using System.IO;
@@ -128,3 +129,4 @@ namespace PbiTools.PowerBI
         }
     }
 }
+#endif

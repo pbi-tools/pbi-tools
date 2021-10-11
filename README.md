@@ -1,4 +1,4 @@
-# pbi-tools-cli
+# Action BI toolkit | pbi-tools
 
 Introduction (TODO)
 
@@ -79,6 +79,10 @@ _That is generally not needed as the `build.cmd` script takes care of fetching d
     dotnet fake {...}
     dotnet fake -t Build
     dotnet fake --version
+
+### Run single build target
+
+    dotnet fake build -s -t SmokeTest
 
 ### Extract embedded sample PBIX with local build version and using default settings
 

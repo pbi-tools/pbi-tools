@@ -39,7 +39,12 @@ namespace PbiTools.Utils
             {
                 lock (_syncObj)
                 { 
-                    if (_defaultInstance == null) _defaultInstance = new DependenciesResolver();
+                    if (_defaultInstance == null)
+#if NETFRAMEWORK
+                        _defaultInstance = new DependenciesResolver();
+#elif NET
+                        _defaultInstance = new NetCoreDependenciesResolver();
+#endif
                     return _defaultInstance;
                 }
             }
@@ -183,6 +188,26 @@ namespace PbiTools.Utils
             return _effectivePbiInstall.InstallDir;
         }
 
+#if NET
+        internal class NetCoreDependenciesResolver : IDependenciesResolver
+        {
+            PowerBIDesktopInstallation[] IDependenciesResolver.PBIInstalls => throw new NotImplementedException();
 
+            string IDependenciesResolver.GetEffectivePowerBiInstallDir()
+            {
+                throw new NotImplementedException();
+            }
+
+            string IDependenciesResolver.ShadowCopyMsmdsrv(string path)
+            {
+                throw new NotImplementedException();
+            }
+
+            bool IDependenciesResolver.TryFindMsmdsrv(out string path)
+            {
+                throw new NotImplementedException();
+            }
+        }
+#endif
     }
 }
