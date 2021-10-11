@@ -9,7 +9,7 @@ namespace PbiTools.ProjectSystem
 {
     public enum MashupSerializationMode
     {
-        [ArgDescription("Similar to 'Raw' mode, with the expection that QueryGroups are extracted into a separate file for readability.")]
+        [ArgDescription("Similar to 'Raw' mode, with the exception that QueryGroups are extracted into a separate file for readability.")]
         Default = 1,
         [ArgDescription("Serializes all Mashup parts with no transformations applied.")]
         Raw = 2,
