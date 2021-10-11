@@ -175,7 +175,7 @@ namespace PbiTools
         [ArgActionMethod, ArgShortcut("export-bim"), ArgDescription("Converts the Model artifacts to a TMSL/BIM file.")]
         public void ExportBim(
             [ArgRequired, ArgExistingDirectory, ArgDescription("The PbixProj folder to export the BIM file from.")] string folder,
-            [ArgDescription("Do not generate model data sources. The is required for deployment to Power BI Premium via the XMLA endpoint.")] bool skipDataSources,
+            [ArgDescription("Generate model data sources. Only required for deployment to Azure Analysis Services, but not for Power BI Premium via the XMLA endpoint.")] bool generateDataSources,
             [ArgDescription("List transformations to be applied to TMSL document.")] ExportTransforms transforms
         )
         {
@@ -184,7 +184,7 @@ namespace PbiTools
                 var serializer = new Serialization.TabularModelSerializer(rootFolder, ProjectSystem.PbixProject.FromFolder(rootFolder).Settings.Model);
                 if (serializer.TryDeserialize(out var db))  // throws for V1 models
                 {
-                    if (!skipDataSources)
+                    if (generateDataSources)
                     {
 #if NETFRAMEWORK
                         var dataSources = TabularModel.TabularModelConversions.GenerateDataSources(db);
