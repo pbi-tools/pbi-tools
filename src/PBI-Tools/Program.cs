@@ -147,6 +147,7 @@ namespace PbiTools
     public enum ExitCode
     {
         UnexpectedError = -9,
+        UnspecifiedError = -8,
         InvalidArgs = -2,
         NoArgsProvided = -1,
         Success = 0,

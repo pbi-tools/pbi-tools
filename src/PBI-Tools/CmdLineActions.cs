@@ -212,8 +212,7 @@ namespace PbiTools
                 }
                 else
                 {
-                    // TODO Fail action?
-                    Console.WriteLine("A BIM file could not be exported.");
+                    throw new PbiToolsCliException(ExitCode.UnspecifiedError, "A BIM file could not be exported.");
                 }
             }
         }
