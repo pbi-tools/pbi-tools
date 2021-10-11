@@ -316,6 +316,7 @@ namespace PbiTools
                     { "pbiBuildVersion", AssemblyVersionInformation.AssemblyMetadata_PBIBuildVersion },
                     { "amoVersion", typeof(Microsoft.AnalysisServices.Tabular.Server).Assembly
                         .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion },
+                    { "toolPath", Process.GetCurrentProcess().MainModule.FileName },
                     { "settings", new JObject {
                         { AppSettings.Environment.LogLevel, AppSettings.GetEnvironmentSetting(AppSettings.Environment.LogLevel) },
                         { AppSettings.Environment.PbiInstallDir, AppSettings.GetEnvironmentSetting(AppSettings.Environment.PbiInstallDir) },
