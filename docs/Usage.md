@@ -74,7 +74,7 @@ Converts the Model artifacts to a TMSL/BIM file.
 
     compile-pbix <folder> [<outPath>] [<format>] [<overwrite>] 
 
-*EXPERIMENTAL* Generates a PBIX/PBIT file from sources in the specified PbixProj folder. Currently, only PBIX projects with a live connection are supported.
+*EXPERIMENTAL* Generates a PBIX/PBIT file from sources in the specified PbixProj folder. Currently, the PBIX output is supported only for report-only projects, and PBIT for projects containing a data model.
 
 | Option | Default Value | Is Switch | Description |
 | --- | --- | --- | --- |
