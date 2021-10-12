@@ -6,6 +6,8 @@ An example project is available here: <https://github.com/action-bi-toolkit/adve
 
 Watch <https://www.action-bi.com/action-bi-toolkit> for further info (coming).
 
+Download the tool as a ZIP file (no installer required) from [Releases](https://github.com/action-bi-toolkit/pbi-tools/releases/latest) (under _Assets_).
+
 ## User Notes
 
 ### Tool Actions
