@@ -1,10 +1,23 @@
 # Action BI toolkit | pbi-tools
 
-Introduction (TODO)
+`pbi-tools` is a command-line tool bringing source-control features to Power BI. It works alongside Power BI Desktop and enables mature enterprise workflows for Power BI projects.
+
+An example project is available here: <https://github.com/action-bi-toolkit/adventureworksdw2020-pbix>
+
+Watch <https://www.action-bi.com/action-bi-toolkit> for further info (coming).
 
 ## User Notes
 
-### Usage
+### Tool Actions
+
+* **[extract](./docs/Usage.md#extract)** • _Extracts the contents of a PBIX/PBIT file into a folder structure optimized for source control_
+* **[compile-pbix](./docs/Usage.md#compile-pbix)** • _Generates a PBIX/PBIT file from sources. PBIX is supported for report-only files, PBIT for files containing models_
+* **[export-bim](./docs/Usage.md#export-bim)** • _Generates a BIM file deployable to an XMLA endpoint from sources. Supports both Power BI Premium and Azure Analysis Services_
+* **[extract-data](./docs/Usage.md#extract-data)** • _Exports all tables into CSV files from either an offline PBIX file or a running Power BI Desktop session_
+* **[info](./docs/Usage.md#info)** • _Prints diagnostics info about the local Power BI environments. Optionally checks for the latest Power BI Desktop release available from Microsoft Downloads_
+* **[lanch-pbi](./docs/Usage.md#launch-pbi)** • _Launch a new Power BI Desktop instance with a given PBIX/PBIT file. Does not support Windows Store version_
+
+### Detailed Usage Notes
 
 See [detailed CLI docs here](./docs/Usage.md).
 
@@ -38,7 +51,7 @@ See [detailed CLI docs here](./docs/Usage.md).
 ### Prerequisites
 
 * Visual Studio 2019 (for MSBuild dependencies)
-* .Net Core SDK 3.x
+* .Net Core SDK 3.x or later
 * Power BI Desktop x64 (Must be installed in default location for local development: `C:\Program Files\Microsoft Power BI Desktop\`)
 
 ### Versioning
