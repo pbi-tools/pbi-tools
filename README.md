@@ -1,4 +1,4 @@
-# Action BI toolkit | pbi-tools
+# Action BI Toolkit | pbi-tools
 
 `pbi-tools` is a command-line tool bringing source-control features to Power BI. It works alongside Power BI Desktop and enables mature enterprise workflows for Power BI projects.
 
