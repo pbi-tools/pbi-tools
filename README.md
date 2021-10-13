@@ -39,6 +39,8 @@ Running `pbi-tools {action} -?` prints usage details for that specific action.
 * Power BI Desktop 64-bit. Installer version (default location) and/or Windows Store version supported. Optionally, `pbi-tools` works with Power BI Desktop in a custom location, provided the path is specified in the `PBITOOLS_PbiInstallDir` environment variable.
 * .Net Framework Runtime 4.7.2 (Comes with Power BI Desktop)
 
+_A cross-platform .Net 5 version is currently under development._
+
 ### Command-line Syntax
 
     -argumentName argumentValue
