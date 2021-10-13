@@ -4,11 +4,15 @@
 
 An example project is available here: <https://github.com/action-bi-toolkit/adventureworksdw2020-pbix>
 
-Watch <https://www.action-bi.com/action-bi-toolkit> for further info (coming).
-
-Download the tool as a ZIP file (no installer required) from [Releases](https://github.com/action-bi-toolkit/pbi-tools/releases/latest) (under _Assets_).
+Watch <https://www.action-bi.com/action-bi-toolkit> for further info. More docs are coming!
 
 ## User Notes
+
+### Installation
+
+Download the tool as a ZIP file (no installer required) from [Releases](https://github.com/action-bi-toolkit/pbi-tools/releases/latest) (under _Assets_). Extract and run from a command prompt.
+
+Make sure to [unblock the ZIP file before extracting](https://singularlabs.com/tips/how-to-unblock-a-zip-file-on-windows-10/).
 
 ### Tool Actions
 
@@ -17,11 +21,23 @@ Download the tool as a ZIP file (no installer required) from [Releases](https://
 * **[export-bim](./docs/Usage.md#export-bim)** • _Generates a BIM file deployable to an XMLA endpoint from sources. Supports both Power BI Premium and Azure Analysis Services_
 * **[extract-data](./docs/Usage.md#extract-data)** • _Exports all tables into CSV files from either an offline PBIX file or a running Power BI Desktop session_
 * **[info](./docs/Usage.md#info)** • _Prints diagnostics info about the local Power BI environments. Optionally checks for the latest Power BI Desktop release available from Microsoft Downloads_
-* **[lanch-pbi](./docs/Usage.md#launch-pbi)** • _Launch a new Power BI Desktop instance with a given PBIX/PBIT file. Does not support Windows Store version_
+* **[launch-pbi](./docs/Usage.md#launch-pbi)** • _Launch a new Power BI Desktop instance with a given PBIX/PBIT file. Does not support Windows Store version_
 
 ### Detailed Usage Notes
 
 See [detailed CLI docs here](./docs/Usage.md).
+
+Running `pbi-tools.exe` with no actions specified prints all available options.
+
+Running `pbi-tools {action} -?` prints usage details for that specific action.
+
+![Extract Usage Screenshot](./docs/assets/extract-usage-screenshot.png)
+
+### Prerequisites
+
+* Windows 64-bit
+* Power BI Desktop 64-bit. Installer version (default location) and/or Windows Store version supported. Optionally, `pbi-tools` works with Power BI Desktop in a custom location, provided the path is specified in the `PBITOOLS_PbiInstallDir` environment variable.
+* .Net Framework Runtime 4.7.2 (Comes with Power BI Desktop)
 
 ### Command-line Syntax
 
