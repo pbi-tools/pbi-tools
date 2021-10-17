@@ -195,17 +195,17 @@ namespace PbiTools.Utils
 
             string IDependenciesResolver.GetEffectivePowerBiInstallDir()
             {
-                throw new NotImplementedException();
+                throw new PlatformNotSupportedException("Not supported in the pbi-tools Core version.");
             }
 
             string IDependenciesResolver.ShadowCopyMsmdsrv(string path)
             {
-                throw new NotImplementedException();
+                throw new PlatformNotSupportedException("Not supported in the pbi-tools Core version.");
             }
 
             bool IDependenciesResolver.TryFindMsmdsrv(out string path)
             {
-                throw new NotImplementedException();
+                throw new PlatformNotSupportedException("Not supported in the pbi-tools Core version.");
             }
         }
 #endif

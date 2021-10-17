@@ -192,7 +192,7 @@ namespace PbiTools
                         var dataSources = TabularModel.TabularModelConversions.GenerateDataSources(db);
                         db["model"]["dataSources"] = dataSources;
 #elif NET
-                        throw new PlatformNotSupportedException("Generating DataSources is not supported by the .Net Core version.");
+                        throw new PlatformNotSupportedException("Generating DataSources is not supported by the pbi-tools Core version.");
 #endif
                     }
 
