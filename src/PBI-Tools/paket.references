@@ -13,3 +13,5 @@ Moq
 HtmlAgilityPack
 PeNet
 CsvHelper
+Microsoft.Identity.Client
+Microsoft.PowerBI.API

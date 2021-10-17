@@ -29,6 +29,8 @@ group Main
   nuget Microsoft.AnalysisServices.NetCore.retail.amd64 framework: net5.0
   nuget Microsoft.AnalysisServices.AdomdClient.NetCore.retail.amd64 framework: net5.0
   nuget System.IO.Packaging
+  nuget Microsoft.Identity.Client
+  nuget Microsoft.PowerBI.API
 
 group Tests
   source https://api.nuget.org/v3/index.json

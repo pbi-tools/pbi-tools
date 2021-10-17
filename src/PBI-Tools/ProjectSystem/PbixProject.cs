@@ -103,11 +103,21 @@ namespace PbiTools.ProjectSystem
 
         #endregion
 
+        #region Deployments
+
+        [JsonProperty("deployments", NullValueHandling = NullValueHandling.Ignore)]
+        public IDictionary<string, JToken> Deployments { get; set; }
+
+        #endregion
+
         public PbixProject()
         {
             this.Version = CurrentVersion;
         }
 
+
+        [JsonIgnore]
+        internal string OriginalPath { get; private set; }
 
         public static PbixProject FromFolder(IProjectRootFolder folder)
         {
@@ -120,7 +130,9 @@ namespace PbiTools.ProjectSystem
                 {
                     try
                     {
-                        return JsonConvert.DeserializeObject<PbixProject>(reader.ReadToEnd(), DefaultJsonSerializerSettings);
+                        var proj = JsonConvert.DeserializeObject<PbixProject>(reader.ReadToEnd(), DefaultJsonSerializerSettings);
+                        proj.OriginalPath = file.Path;
+                        return proj;
                         // at this stage we could perform version compatibility checks
                     }
                     catch (JsonReaderException e)

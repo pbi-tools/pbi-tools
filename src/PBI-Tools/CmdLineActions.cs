@@ -281,6 +281,24 @@ namespace PbiTools
             Log.Information("{Format} file written to: {Path}", format, outputFile.FullName);
         }
 
+
+        [ArgActionMethod, ArgShortcut("deploy"), ArgDescription("Deploys artifacts to Power BI Service.")]
+        public void Deploy(
+            [ArgRequired, ArgExistingDirectory, ArgDescription("The PbixProj folder containing the deployment manifest.")] string folder,
+            [ArgDescription("Name of a section in the deployment manifest.")] string label,
+            [ArgDescription("The target deployment environment."), ArgDefaultValue("Development")] string environment
+        )
+        {
+            using (var rootFolder = new FileSystem.ProjectRootFolder(folder))
+            {
+                var proj = ProjectSystem.PbixProject.FromFolder(rootFolder);
+                var deploymentManager = new Deployments.DeploymentManager();
+
+                deploymentManager.DeployAsync(proj, environment, label).Wait();
+            }
+        }
+
+
 #if NETFRAMEWORK
         [ArgActionMethod, ArgShortcut("launch-pbi"), ArgDescription("Starts a new instance of Power BI Desktop with the PBIX/PBIT file specified. Does not support Windows Store installations.")]
         public void LaunchPbiDesktop(
