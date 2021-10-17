@@ -53,11 +53,11 @@ let solutionFile  = "PBI-TOOLS.sln"
 
 // Git configuration (used for publishing documentation in gh-pages branch)
 // The profile where the project is posted
-let gitOwner = "pbi-tools"
+let gitOwner = "action-bi-toolkit"
 let gitHome = "https://github.com/" + gitOwner
 
 // The name of the project on GitHub
-let gitName = "pbi-tools-cli"
+let gitName = "pbi-tools"
 
 // The url for the raw files hosted
 let gitRaw = Environment.environVarOrDefault "gitRaw" ("https://raw.github.com/" + gitOwner)
@@ -67,7 +67,7 @@ let gitRaw = Environment.environVarOrDefault "gitRaw" ("https://raw.github.com/"
 // --------------------------------------------------------------------------------------
 
 BuildServer.install [
-    TeamFoundation.Installer
+    TeamFoundation.Installer  // Adds support for Azure DevOps
 ]
 
 let buildDir = ".build"
@@ -187,20 +187,17 @@ Target.create "Build" (fun _ ->
         }
 
     !! solutionFile
-    |> MSBuild.runReleaseExt setParams null msbuildProps "Restore;Rebuild"
+    |> MSBuild.runReleaseExt id null msbuildProps "Restore;Rebuild;Publish"
     |> ignore
 
     // !! "src/PBI-Tools/*.csproj"
     // |> MSBuild.runReleaseExt id distFullDir msbuildProps "Restore;Rebuild"
     // |> ignore
 
-    // Could not get Fody to do its thing unless when building the entire solution, so we're grabbing the dist files here explicitly
-    // TODO Revisit after upgrade to Fody 6.4 
-    !! ("src/PBI-Tools/bin/Release/**/pbi-tools.*")
+    !! ("src/PBI-Tools/bin/Release/net472/win7-x64/publish/*.*")
     |> Shell.copy distFullDir
 
-    // TODO Investigate why 'pbi-tools.core.dll' copy is incomplete
-    !! ("src/PBI-Tools.NETCore/bin/Release/**/pbi-tools.core*.*")
+    !! ("src/PBI-Tools.NETCore/bin/Release/net5.0/win10-x64/publish/*.*")
     |> Shell.copy distCoreDir
 )
 
