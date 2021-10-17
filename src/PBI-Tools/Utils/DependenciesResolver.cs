@@ -18,18 +18,8 @@ namespace PbiTools.Utils
         PowerBIDesktopInstallation[] PBIInstalls { get; }
     }
 
-    public class DependenciesResolver : IDependenciesResolver
-    {
-        private const string MSMDSRV_EXE = "msmdsrv.exe";
-
-        private static readonly ILogger Log = Serilog.Log.ForContext<DependenciesResolver>();
-
-
-        private readonly Lazy<PowerBIDesktopInstallation[]> _pbiInstalls = new Lazy<PowerBIDesktopInstallation[]>(PowerBILocator.FindInstallations);
-        private PowerBIDesktopInstallation _effectivePbiInstall;
-
-        public PowerBIDesktopInstallation[] PBIInstalls => _pbiInstalls.Value;
-
+    public partial class DependenciesResolver
+    { 
         private static IDependenciesResolver _defaultInstance;
         private static object _syncObj = new object();
 
@@ -53,6 +43,23 @@ namespace PbiTools.Utils
                 _defaultInstance = value;
             }
         }
+    }
+
+
+#if NETFRAMEWORK
+    public partial class DependenciesResolver : IDependenciesResolver
+    {
+        private const string MSMDSRV_EXE = "msmdsrv.exe";
+
+        private static readonly ILogger Log = Serilog.Log.ForContext<DependenciesResolver>();
+
+
+        private readonly Lazy<PowerBIDesktopInstallation[]> _pbiInstalls = new Lazy<PowerBIDesktopInstallation[]>(PowerBILocator.FindInstallations);
+        private PowerBIDesktopInstallation _effectivePbiInstall;
+
+        public PowerBIDesktopInstallation[] PBIInstalls => _pbiInstalls.Value;
+
+
 
         public DependenciesResolver() // TODO Initialize with PbixProj reference (which has settings)
         {
@@ -188,26 +195,28 @@ namespace PbiTools.Utils
             return _effectivePbiInstall.InstallDir;
         }
 
-#if NET
-        internal class NetCoreDependenciesResolver : IDependenciesResolver
-        {
-            PowerBIDesktopInstallation[] IDependenciesResolver.PBIInstalls => throw new NotImplementedException();
-
-            string IDependenciesResolver.GetEffectivePowerBiInstallDir()
-            {
-                throw new PlatformNotSupportedException("Not supported in the pbi-tools Core version.");
-            }
-
-            string IDependenciesResolver.ShadowCopyMsmdsrv(string path)
-            {
-                throw new PlatformNotSupportedException("Not supported in the pbi-tools Core version.");
-            }
-
-            bool IDependenciesResolver.TryFindMsmdsrv(out string path)
-            {
-                throw new PlatformNotSupportedException("Not supported in the pbi-tools Core version.");
-            }
-        }
-#endif
     }
+#endif
+
+#if NET
+    internal class NetCoreDependenciesResolver : IDependenciesResolver
+    {
+        PowerBIDesktopInstallation[] IDependenciesResolver.PBIInstalls => throw new NotImplementedException();
+
+        string IDependenciesResolver.GetEffectivePowerBiInstallDir()
+        {
+            throw new PlatformNotSupportedException("Not supported in the pbi-tools Core version.");
+        }
+
+        string IDependenciesResolver.ShadowCopyMsmdsrv(string path)
+        {
+            throw new PlatformNotSupportedException("Not supported in the pbi-tools Core version.");
+        }
+
+        bool IDependenciesResolver.TryFindMsmdsrv(out string path)
+        {
+            throw new PlatformNotSupportedException("Not supported in the pbi-tools Core version.");
+        }
+    }
+#endif
 }

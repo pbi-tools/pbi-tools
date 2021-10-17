@@ -440,7 +440,7 @@ NUGET
       System.Security.Cryptography.Encoding (>= 4.3)
       System.Security.Cryptography.Primitives (>= 4.3)
       System.Text.Encoding (>= 4.3) - restriction: || (&& (== net472) (< net46)) (== net5.0)
-    System.Security.Cryptography.Cng (4.7) - restriction: || (&& (== net472) (< net46)) (&& (== net472) (>= netcoreapp2.0)) (&& (== net472) (>= netcoreapp2.1)) (&& (== net472) (>= netcoreapp3.0)) (&& (== net472) (>= netstandard2.1)) (== net5.0)
+    System.Security.Cryptography.Cng (4.7)
     System.Security.Cryptography.Csp (4.3) - restriction: || (&& (== net472) (< net46)) (== net5.0)
       Microsoft.NETCore.Platforms (>= 1.1) - restriction: || (&& (== net472) (< net46)) (== net5.0)
       System.IO (>= 4.3) - restriction: || (&& (== net472) (< net46)) (== net5.0)
@@ -555,17 +555,6 @@ NUGET
       System.Text.Encoding (>= 4.3) - restriction: || (&& (== net472) (< net46)) (== net5.0)
       System.Threading (>= 4.3) - restriction: || (&& (== net472) (< net46)) (== net5.0)
       System.Xml.ReaderWriter (>= 4.3) - restriction: || (&& (== net472) (< net46)) (== net5.0)
-    Validation (2.4.22)
-    xunit.abstractions (2.0.3)
-    xunit.extensibility.core (2.4.1)
-      NETStandard.Library (>= 1.6.1) - restriction: || (&& (== net472) (< net452)) (== net5.0)
-      xunit.abstractions (>= 2.0.3)
-    xunit.extensibility.execution (2.4.1)
-      NETStandard.Library (>= 1.6.1) - restriction: || (&& (== net472) (< net452)) (== net5.0)
-      xunit.extensibility.core (2.4.1)
-    Xunit.SkippableFact (1.4.8)
-      Validation (>= 2.4.18)
-      xunit.extensibility.execution (>= 2.4)
 
 GROUP Fake-Build
 STORAGE: NONE

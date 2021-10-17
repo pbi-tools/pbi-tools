@@ -17,6 +17,7 @@
   <PropertyGroup>
     <!-- See: https://github.com/dotnet/sdk/issues/2809 -->
     <AssemblySearchPaths>$(ReferencePath);$(AssemblySearchPaths)</AssemblySearchPaths>
+    <SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="msmdsrv.ini.xml" />

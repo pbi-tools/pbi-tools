@@ -4,10 +4,7 @@ Newtonsoft.Json
 PowerArgs
 System.ValueTuple
 Polly
-StreamJsonRpc
 Castle.Core
-Costura.Fody
-Moq
 HtmlAgilityPack
 PeNet
 CsvHelper

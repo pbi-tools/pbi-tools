@@ -11,7 +11,9 @@ using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using PbiTools.PowerBI;
+#if NETFRAMEWORK
 using PbiTools.Rpc;
+#endif
 using PbiTools.Utils;
 using PowerArgs;
 using Serilog;
@@ -399,6 +401,7 @@ namespace PbiTools
         }
 
 
+#if NETFRAMEWORK
         [ArgActionMethod, ArgShortcut("start-server"), OmitFromUsageDocs]
         public void StartJsonRpcServer()
         {
@@ -430,6 +433,7 @@ namespace PbiTools
 
              */
         }
+#endif
 
 
         [ArgActionMethod, ArgShortcut("export-usage"), OmitFromUsageDocs]

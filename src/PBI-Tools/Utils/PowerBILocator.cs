@@ -1,6 +1,7 @@
 // Copyright (c) Mathias Thierbach
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+#if NETFRAMEWORK
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -184,3 +185,4 @@ namespace PbiTools.Utils
 
     }
 }
+#endif
