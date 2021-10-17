@@ -55,25 +55,25 @@ namespace PbiTools.PowerBI
 
         public string Path { get; }
 
+
         public JObject ReadConnections()
         {
-            return _converters.Connections.FromPackagePart(_package.Connections);
+            return _converters.Connections.FromPackagePart(_package.Connections.AsFunc());
         }
 
         public JObject ReadDataModel()
         {
             if (_package.DataModelSchema != null)
             {
-                return _converters.DataModelSchema.FromPackagePart(_package.DataModelSchema);
+                return _converters.DataModelSchema.FromPackagePart(_package.DataModelSchema.AsFunc());
             }
             else if (_package.DataModel != null)
             {
-                return _converters.DataModel.FromPackagePart(_package.DataModel);
+                return _converters.DataModel.FromPackagePart(_package.DataModel.AsFunc());
             }
 
             return default(JObject);
         }
-
 
         public JObject ReadDataModelFromRunningInstance(int port)
         {
@@ -84,80 +84,80 @@ namespace PbiTools.PowerBI
         {
             if (_package.DataMashup != null)
             {
-                return new MashupConverter().FromPackagePart(_package.DataMashup);
+                return new MashupConverter().FromPackagePart(_package.DataMashup.AsFunc(), null);
             }
             return default(MashupParts);
         }
 
         public JObject ReadReport()
         {
-            return _converters.ReportDocument.FromPackagePart(_package.ReportDocument);
+            return _converters.ReportDocument.FromPackagePart(_package.ReportDocument.AsFunc());
         }
 
         public JObject ReadDiagramViewState()
         {
-            return _converters.DiagramViewState.FromPackagePart(_package.DiagramViewState);
+            return _converters.DiagramViewState.FromPackagePart(_package.DiagramViewState.AsFunc());
         }
 
         public JObject ReadDiagramLayout()
         {
-            return _converters.DiagramLayout.FromPackagePart(_package.DiagramLayout);
+            return _converters.DiagramLayout.FromPackagePart(_package.DiagramLayout.AsFunc());
         }
 
         public XDocument ReadLinguisticSchema()
         {
-            return _converters.LinguisticSchema.FromPackagePart(_package.LinguisticSchema);
+            return _converters.LinguisticSchema.FromPackagePart(_package.LinguisticSchema.AsFunc());
         }
 
         public JObject ReadLinguisticSchemaV3()
         {
-            return _converters.LinguisticSchemaV3.FromPackagePart(_package.LinguisticSchema);
+            return _converters.LinguisticSchemaV3.FromPackagePart(_package.LinguisticSchema.AsFunc());
         }
 
         public JObject ReadReportMetadata()
         {
-            return _legacyConverters.Value.ReportMetadata.FromPackagePart(_package.ReportMetadata);
+            return _legacyConverters.Value.ReportMetadata.FromPackagePart(_package.ReportMetadata.AsFunc());
         }
 
         public JObject ReadReportMetadataV3()
         {
-            return _converters.ReportMetadataV3.FromPackagePart(_package.ReportMetadata);
+            return _converters.ReportMetadataV3.FromPackagePart(_package.ReportMetadata.AsFunc());
         }
 
         public JObject ReadReportSettings()
         {
-            return _legacyConverters.Value.ReportSettings.FromPackagePart(_package.ReportSettings);
+            return _legacyConverters.Value.ReportSettings.FromPackagePart(_package.ReportSettings.AsFunc());
         }
 
         public JObject ReadReportSettingsV3()
         {
-            return _converters.ReportSettingsV3.FromPackagePart(_package.ReportSettings);
+            return _converters.ReportSettingsV3.FromPackagePart(_package.ReportSettings.AsFunc());
         }
 
         public string ReadVersion()
         {
-            return _converters.Version.FromPackagePart(_package.Version);
+            return _converters.Version.FromPackagePart(_package.Version.AsFunc());
         }
 
 #region Resources
 
         public IDictionary<string, byte[]> ReadCustomVisuals()
         {
-            return ReadResources(_package.CustomVisuals);
+            return ReadResources(_package.CustomVisuals, _converters.CustomVisuals);
         }
 
         public IDictionary<string, byte[]> ReadStaticResources()
         {
-            return ReadResources(_package.StaticResources);
+            return ReadResources(_package.StaticResources, _converters.StaticResources);
         }
 
-        private IDictionary<string, byte[]> ReadResources(IDictionary<Uri, IStreamablePowerBIPackagePartContent> part)
+        private IDictionary<string, byte[]> ReadResources(IDictionary<Uri, IStreamablePowerBIPackagePartContent> part, IPowerBIPartConverter<byte[]> converter)
         {
             return part?.Aggregate(
                 new Dictionary<string, byte[]>(),
                 (result, entry) =>
                 {
-                    result.Add(entry.Key.ToString(), _converters.Resources.FromPackagePart(entry.Value));
+                    result.Add(entry.Key.ToString(), converter.FromPackagePart(entry.Value.GetStream));
                     return result;
                 });
         }
@@ -172,6 +172,14 @@ namespace PbiTools.PowerBI
             _pbixStream?.Dispose();  // null if initialized from existing package
         }
 
+    }
+
+    public static class PowerBIPackageExtensions
+    {
+        public static Func<Stream> AsFunc(this IStreamablePowerBIPackagePartContent partContent) =>
+            partContent == null
+                ? null
+                : partContent.GetStream;
     }
 
     /*

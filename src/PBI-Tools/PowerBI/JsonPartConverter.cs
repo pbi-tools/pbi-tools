@@ -1,10 +1,9 @@
 ﻿// Copyright (c) Mathias Thierbach
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-#if NETFRAMEWORK
+using System;
 using System.IO;
 using System.Text;
-using Microsoft.PowerBI.Packaging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -15,30 +14,34 @@ namespace PbiTools.PowerBI
         private static readonly JsonSerializer DefaultSerializer = new JsonSerializer { };
         private readonly Encoding _encoding;
 
-        public JsonPartConverter() : this(Encoding.Unicode)
+        public JsonPartConverter(Uri partUri) : this(partUri, Encoding.Unicode)
         {
         }
 
-        public JsonPartConverter(Encoding encoding)
+        public JsonPartConverter(Uri partUri, Encoding encoding)
         {
+            this.PartUri = partUri;
             _encoding = encoding;
         }
 
+        public Uri PartUri { get; }
 
-        public JObject FromPackagePart(IStreamablePowerBIPackagePartContent part)
+        public bool IsOptional { get; set; } = true;
+        public string ContentType { get; set; } = PowerBIPartConverters.ContentTypes.Json;
+
+        public JObject FromPackagePart(Func<Stream> part, string contentType)
         {
-            if (part == null) return default(JObject);
-            using (var reader = new JsonTextReader(new StreamReader(part.GetStream(), _encoding)))
+            if (!part.TryGetStream(out var stream)) return default(JObject);
+            using (var reader = new JsonTextReader(new StreamReader(stream, _encoding)))
             {
                 return DefaultSerializer.Deserialize<JObject>(reader); // TODO Error handling
             }
         }
 
-        public IStreamablePowerBIPackagePartContent ToPackagePart(JObject content)
+        public Func<Stream> ToPackagePart(JObject content)
         {
-            if (content == null) return new StreamablePowerBIPackagePartContent(default(string));
-            return new StreamablePowerBIPackagePartContent(_encoding.GetBytes(content.ToString(Formatting.None)));
+            if (content == null) return null;
+            return () => new MemoryStream(_encoding.GetBytes(content.ToString(Formatting.None)));
         }
     }
 }
-#endif

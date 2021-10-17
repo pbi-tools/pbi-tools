@@ -73,7 +73,7 @@ namespace PbiTools.Model
         {
             if (!IsV3Version(this.Version))
             {
-                throw new NotSupportedException("The PBIX file does not contain a V3 model. This API only supports V3 PBIX files.");
+                throw new NotSupportedException("The PBIX file/project does not contain a V3 model. This API only supports the V3 PBIX format.");
             }
         }
 
@@ -279,16 +279,17 @@ namespace PbiTools.Model
         /// <param name="dependenciesResolver"></param>
         public void ToFile(string path, PbiFileFormat format, IDependenciesResolver dependenciesResolver = null)
         {
-#if NETFRAMEWORK
             Log.Information("Generating {Format} file at '{Path}'...", format, path);
 
+#if NETFRAMEWORK
             var modelName = PowerBIPartConverters.ConvertToValidModelName(Path.GetFileNameWithoutExtension(path));
             var converters = new PowerBIPartConverters(modelName, dependenciesResolver ?? DependenciesResolver.Default);
             var pbiPackage = new PbiPackage(this, converters, format); // TODO Handle missing Report part
 
             pbiPackage.Save(path);
 #elif NET
-            throw new NotImplementedException();
+            var writer = new PbixWriter(this, new PowerBIPartConverters(), format);
+            writer.WriteTo(path);
 #endif
         }
 

@@ -13,7 +13,6 @@ using Microsoft.Mashup.Client.Packaging;
 using Microsoft.Mashup.Client.Packaging.SerializationObjectModel;
 using Microsoft.Mashup.Client.Packaging.Serializers;
 using Microsoft.Mashup.Host.Document.Storage;
-using Microsoft.PowerBI.Packaging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
@@ -31,18 +30,29 @@ namespace PbiTools.PowerBI
 
         private static readonly XmlSerializer PackageMetadataXmlSerializer = new XmlSerializer(typeof(SerializedPackageMetadata));
 
+        public Uri PartUri => new Uri("/DataMashup", UriKind.Relative);
+
+        public bool IsOptional { get; set; } = true;
+        public string ContentType { get; set; } = PowerBIPartConverters.ContentTypes.DEFAULT;
+
         public MashupConverter()
         {
             _xmlNamespaces.Add("", ""); // omits 'xsd' and 'xsi' namespaces in serialized xml
         }
 
 
-        public MashupParts FromPackagePart(IStreamablePowerBIPackagePartContent part)
+        public MashupParts FromPackagePart(Func<Stream> part, string contentType)
         {
-            if (part == null) return default(MashupParts);
-            if (!PackageComponents.TryDeserialize(PowerBIPackagingUtils.GetContentAsBytes(part, isOptional: false), out PackageComponents packageComponents))
+            if (!part.TryGetStream(out var stream)) return default(MashupParts);
+
+            PackageComponents packageComponents;
+            using (var memoryStream = new MemoryStream())
             {
-                throw new Exception("Could not read MashupPackage"); // TODO Better error handling
+                stream.CopyTo(memoryStream);
+                if (!PackageComponents.TryDeserialize(memoryStream.ToArray(), out packageComponents))
+                {
+                    throw new Exception("Could not read MashupPackage"); // TODO Better error handling
+                }
             }
 
             var mashupParts = new MashupParts
@@ -73,30 +83,34 @@ namespace PbiTools.PowerBI
             return mashupParts;
         }
 
-        public IStreamablePowerBIPackagePartContent ToPackagePart(MashupParts content)
+        public Func<Stream> ToPackagePart(MashupParts content)
         {
-            if (content == null) return PbiPackage.EmptyContent;
+            if (content == null) return null;
 
-            // PartsBytes: Package Stream as byte[]
-            var partsBytes = content.Package?.ToArray() ?? new byte[0];
-            
-            // Convert json to PackagePermissions, then use PermissionsSerializer to convert to byte[]
-            var permissionBytes = PermissionsSerializer.Serialize(content?.Permissions.ToObject<PackagePermissions>() ?? new PackagePermissions());
-            
-            // Convert xml to SerializedPackageMetadata, then use PackageMetadataSerializer to convert to byte[]
-            var serializedPackageMetadata = (SerializedPackageMetadata)PackageMetadataXmlSerializer.Deserialize(content.Metadata.CreateReader());
-            var metadataBytes = PackageMetadataSerializer.Serialize(
-                serializedPackageMetadata,
-                content.Content?.ToArray() ?? new byte[0]
-            );
+            return () =>
+            {
+                // PartsBytes: Package Stream as byte[]
+                var partsBytes = content.Package?.ToArray() ?? new byte[0];
 
-            Log.Verbose("Generating PackageComponents: {PartsBytes} PartsBytes, {PermissionBytes} PermissionBytes, {MetadataBytes} MetadataBytes"
-                , partsBytes.Length
-                , permissionBytes.Length
-                , metadataBytes.Length);
-            var pc = new PackageComponents(partsBytes, permissionBytes, metadataBytes);
-            
-            return new StreamablePowerBIPackagePartContent(pc.Serialize());
+                // Convert json to PackagePermissions, then use PermissionsSerializer to convert to byte[]
+                var permissionBytes = PermissionsSerializer.Serialize(content?.Permissions.ToObject<PackagePermissions>() ?? new PackagePermissions());
+
+                // Convert xml to SerializedPackageMetadata, then use PackageMetadataSerializer to convert to byte[]
+                var serializedPackageMetadata = (SerializedPackageMetadata)PackageMetadataXmlSerializer.Deserialize(content.Metadata.CreateReader());
+                var metadataBytes = PackageMetadataSerializer.Serialize(
+                    serializedPackageMetadata,
+                    content.Content?.ToArray() ?? new byte[0]
+                );
+
+                Log.Verbose("Generating PackageComponents: {PartsBytes} PartsBytes, {PermissionBytes} PermissionBytes, {MetadataBytes} MetadataBytes"
+                    , partsBytes.Length
+                    , permissionBytes.Length
+                    , metadataBytes.Length);
+
+                var pc = new PackageComponents(partsBytes, permissionBytes, metadataBytes);
+
+                return new MemoryStream(pc.Serialize());
+            };
         }
 
 

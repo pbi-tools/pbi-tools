@@ -155,7 +155,7 @@ namespace PbiTools
                     msmdsrv.HideWindow = true;
 
                     msmdsrv.Start();
-                    msmdsrv.LoadPbixModel(package.DataModel, "Model", "Model");
+                    msmdsrv.LoadPbixModel(package.DataModel.GetStream(), "Model", "Model");
 
                     using (var reader = new TabularModel.TabularDataReader(msmdsrv.OleDbConnectionString))
                     {
@@ -278,7 +278,7 @@ namespace PbiTools
                 proj.ToFile(outputFile.FullName, format, _dependenciesResolver);
             }
 
-            Console.WriteLine($"{format} file written to: {outputFile.FullName}");
+            Log.Information("{Format} file written to: {Path}", format, outputFile.FullName);
         }
 
 #if NETFRAMEWORK

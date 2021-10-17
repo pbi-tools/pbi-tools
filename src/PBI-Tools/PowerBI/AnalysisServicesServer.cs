@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Mathias Thierbach
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-#if NETFRAMEWORK
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -15,14 +14,13 @@ using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
-using Microsoft.PowerBI.Packaging;
 using PbiTools.Utils;
 using Polly;
 using Serilog;
 using Serilog.Events;
+using static PbiTools.Utils.Resources;
 using AMO = Microsoft.AnalysisServices;
 using TOM = Microsoft.AnalysisServices.Tabular;
-using static PbiTools.Utils.Resources;
 
 namespace PbiTools.PowerBI
 {
@@ -80,6 +78,9 @@ namespace PbiTools.PowerBI
         public void Start()
         {
             if (IsRunning) throw new InvalidOperationException("Server is already running.");
+
+            if (!System.Runtime.InteropServices.RuntimeInformation.OSDescription.Contains("Windows"))
+                throw new PlatformNotSupportedException("The embedded SSAS Server can only be started on Windows.");
 
             // Start new instance
             // '-n' arg is REQUIRED for dynamic port assignment! -- will only use default port 2383 otherwise (and fail if that port is in use)
@@ -145,18 +146,18 @@ namespace PbiTools.PowerBI
                 Console.Error.WriteLine("Port Detection Timeout"); // TODO Throw instead?
         }
 
-        public void LoadPbixModel(IStreamablePowerBIPackagePartContent part, string id, string name)
+        public void LoadPbixModel(Stream stream, string id, string name)
         {
             if (!IsRunning) throw new Exception("Server not running");
 
             using (var server = new TOM.Server())
             {
-                if (part == null)
+                if (stream == null)
                     throw new Exception("PBIX file does not contain a model.");
 
                 server.Connect(ConnectionString); // must be PowerPivot/SharePoint (mode 1) instance
 
-                server.ImageLoad(name, id, part.GetStream());
+                server.ImageLoad(name, id, stream);
                 server.Refresh();
 
                 Log.Information("Model image from PBIX loaded successfully.");
@@ -324,4 +325,3 @@ namespace PbiTools.PowerBI
         public string Path { get; }
     }
 }
-#endif

@@ -1,22 +1,35 @@
 ﻿// Copyright (c) Mathias Thierbach
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-#if NETFRAMEWORK
-using Microsoft.PowerBI.Packaging;
+using System;
+using System.IO;
 
 namespace PbiTools.PowerBI
 {
     public class BytesPartConverter : IPowerBIPartConverter<byte[]>
     {
-        public byte[] FromPackagePart(IStreamablePowerBIPackagePartContent part)
+        public Uri PartUri { get; }
+
+        public bool IsOptional { get; set; } = true;
+        public string ContentType { get; set; } = PowerBIPartConverters.ContentTypes.DEFAULT;
+
+        public BytesPartConverter(Uri partUri)
         {
-            return PowerBIPackagingUtils.GetContentAsBytes(part, isOptional: true);
+            this.PartUri = partUri;
         }
 
-        public IStreamablePowerBIPackagePartContent ToPackagePart(byte[] content)
+        public byte[] FromPackagePart(Func<Stream> part, string contentType)
         {
-            return new StreamablePowerBIPackagePartContent(content);
+            if (!part.TryGetStream(out var stream)) return default(byte[]);
+            using (var memStream = new MemoryStream()) {
+                stream.CopyTo(memStream);
+                return memStream.ToArray();
+            }
+        }
+
+        public Func<Stream> ToPackagePart(byte[] content)
+        {
+            return () => new MemoryStream(content);
         }
     }
 }
-#endif

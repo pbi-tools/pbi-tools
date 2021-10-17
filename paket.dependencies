@@ -28,7 +28,7 @@ group Main
   nuget Microsoft.AnalysisServices.AdomdClient.retail.amd64 framework: net472
   nuget Microsoft.AnalysisServices.NetCore.retail.amd64 framework: net5.0
   nuget Microsoft.AnalysisServices.AdomdClient.NetCore.retail.amd64 framework: net5.0
-  //nuget System.Data.SqlClient framework: net5.0
+  nuget System.IO.Packaging
 
 group Tests
   source https://api.nuget.org/v3/index.json

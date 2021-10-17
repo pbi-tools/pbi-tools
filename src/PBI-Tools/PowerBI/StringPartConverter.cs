@@ -1,10 +1,9 @@
 ﻿// Copyright (c) Mathias Thierbach
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-#if NETFRAMEWORK
+using System;
 using System.IO;
 using System.Text;
-using Microsoft.PowerBI.Packaging;
 
 namespace PbiTools.PowerBI
 {
@@ -12,30 +11,34 @@ namespace PbiTools.PowerBI
     {
         private readonly Encoding _encoding;
 
-        public StringPartConverter() : this(Encoding.Unicode)
+        public StringPartConverter(Uri partUri) : this(partUri, Encoding.Unicode)
         {
         }
 
-        public StringPartConverter(Encoding encoding)
+        public StringPartConverter(Uri partUri, Encoding encoding)
         {
+            this.PartUri = partUri;
             _encoding = encoding;
         }
 
+        public Uri PartUri { get; }
 
-        public string FromPackagePart(IStreamablePowerBIPackagePartContent part)
+        public bool IsOptional { get; set; } = true;
+        public string ContentType { get; set; } = PowerBIPartConverters.ContentTypes.DEFAULT;
+
+        public string FromPackagePart(Func<Stream> part, string contentType)
         {
-            if (part == null) return default(string);
-            using (var reader = new StreamReader(part.GetStream(), _encoding))
+            if (!part.TryGetStream(out var stream)) return default(string);
+            using (var reader = new StreamReader(stream, _encoding))
             {
                 return reader.ReadToEnd();
             }
         }
 
-        public IStreamablePowerBIPackagePartContent ToPackagePart(string content)
+        public Func<Stream> ToPackagePart(string content)
         {
-            if (content == null) return new StreamablePowerBIPackagePartContent(default(string));
-            return new StreamablePowerBIPackagePartContent(_encoding.GetBytes(content));
+            if (content == null) return null;
+            return () => new MemoryStream(_encoding.GetBytes(content));
         }
     }
 }
-#endif
