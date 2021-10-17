@@ -184,7 +184,7 @@ namespace PbiTools.Model
 
                 var pbixModel = new PbixModel(projectFolder.BasePath, PbixModelSource.PbixProjFolder) { PbixProj = pbixProject };
 
-                pbixModel.Version = serializers.Version.DeserializeSafe(isOptional: false);
+                pbixModel.Version = serializers.Version.DeserializeSafe(isOptional: false); // TODO Inject default value when missing?
                 pbixModel.EnsureV3Model();
                 
                 pbixModel.Connections = serializers.Connections.DeserializeSafe();

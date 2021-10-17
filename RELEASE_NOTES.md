@@ -1,4 +1,6 @@
 
+## 1.0.0-beta.7+20211016 - 2021-10-16
+
 ## 1.0.0-beta.6 - 2021-10-11
 * #39 **Rebranded as "Action BI Toolkit | pbi-tools"**
 * Upgraded dependencies: CsvHelper, Fody, Costura.Fody

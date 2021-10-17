@@ -255,7 +255,7 @@ namespace PbiTools.PowerBI
                     sourceStream.CopyTo(partStream);
                 }
 
-                Log.Information("Package part written: {Uri}.", uri);
+                Log.Information("Package part written: {Uri}", uri);
                 partsWritten.Add(uri);
             }
         }
