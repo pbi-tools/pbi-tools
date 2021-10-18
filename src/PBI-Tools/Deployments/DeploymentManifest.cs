@@ -29,7 +29,8 @@ namespace PbiTools.Deployments
 
     public enum PbiDeploymentMode
     {
-        Report = 1
+        Report = 1,
+        Model
     }
 
     public class PbiDeploymentSource
@@ -40,7 +41,8 @@ namespace PbiTools.Deployments
 
     public enum PbiDeploymentSourceType
     {
-        Folder = 1
+        Folder = 1,
+        File
     }
 
     public class PbiDeploymentAuthentication
@@ -66,5 +68,6 @@ namespace PbiTools.Deployments
     {
         public bool Disabled { get; set; }
         public Guid WorkspaceId { get; set; } // TODO Support Workspace Name
+        public string WorkspaceName { get; set; }
     }
 }
