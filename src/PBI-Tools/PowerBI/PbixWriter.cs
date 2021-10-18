@@ -8,15 +8,15 @@ using System.IO;
 using System.IO.Packaging;
 #endif
 using System.Linq;
-using Castle.DynamicProxy;
 #if NETFRAMEWORK
+using Castle.DynamicProxy;
 using Microsoft.PowerBI.Packaging;
 #endif
-using PbiTools.Model;
 using Serilog;
 
 namespace PbiTools.PowerBI
 {
+    using Model;
 
 #if NETFRAMEWORK
 

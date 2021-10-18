@@ -2,9 +2,6 @@ Serilog
 Serilog.Sinks.Console
 Newtonsoft.Json
 PowerArgs
-System.ValueTuple
-Polly
-Castle.Core
 HtmlAgilityPack
 PeNet
 CsvHelper
