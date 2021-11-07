@@ -332,6 +332,7 @@ namespace PbiTools
                 var jsonResult = new JObject
                 {
                     { "version", AssemblyVersionInformation.AssemblyInformationalVersion },
+                    { "edition", _appSettings.Edition },
                     { "build", AssemblyVersionInformation.AssemblyFileVersion },
                     { "pbiBuildVersion", AssemblyVersionInformation.AssemblyMetadata_PBIBuildVersion },
                     { "amoVersion", typeof(Microsoft.AnalysisServices.Tabular.Server).Assembly
