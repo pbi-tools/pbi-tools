@@ -73,7 +73,7 @@ BuildServer.install [
 let buildDir = ".build"
 let outDir = buildDir @@ "out"
 let distDir = buildDir @@ "dist"
-let distFullDir = distDir @@ "full"
+let distFullDir = distDir @@ "desktop"
 let distCoreDir = distDir @@ "core"
 let testDir = buildDir @@ "test"
 let tempDir = ".temp"
@@ -106,7 +106,7 @@ let stable =
     | Some stable -> stable
     | _ -> release
 
-// If 'PBITOOLS_PbiInstallDir' points to a valid PBI Desktop installation, set the MSBuild 'ReferencePath' property to that location
+/// If 'PBITOOLS_PbiInstallDir' points to a valid PBI Desktop installation, set the MSBuild 'ReferencePath' property to that location
 let pbiInstallDir =
     lazy ( match Environment.environVarOrNone "PBITOOLS_PbiInstallDir" with // PBIDesktop.exe might be in a sub-folder .. getting that folder here
            | Some path -> Directory.EnumerateFiles(path, "PBIDesktop.exe", SearchOption.AllDirectories)
@@ -181,25 +181,65 @@ Target.create "Build" (fun _ ->
                        | Some dir -> Trace.logfn "Using assembly ReferencePath: %s" dir
                                      [ "ReferencePath", dir ]
                        | _ -> []
-    let setParams (defaults:MSBuildParams) =
-        { defaults with
-            MaxCpuCount = None 
-        }
+    // let setParams (defaults:MSBuildParams) =
+    //     { defaults with
+    //         MaxCpuCount = None 
+    //     }
 
     !! solutionFile
-    |> MSBuild.runReleaseExt id null msbuildProps "Restore;Rebuild;Publish"
+    |> MSBuild.runReleaseExt id null msbuildProps "Restore;Rebuild"
     |> ignore
-
-    // !! "src/PBI-Tools/*.csproj"
-    // |> MSBuild.runReleaseExt id distFullDir msbuildProps "Restore;Rebuild"
-    // |> ignore
-
-    !! ("src/PBI-Tools/bin/Release/net472/win7-x64/publish/*.*")
-    |> Shell.copy distFullDir
-
-    !! ("src/PBI-Tools.NETCore/bin/Release/net5.0/win10-x64/publish/*.*")
-    |> Shell.copy distCoreDir
 )
+
+
+Target.create "Publish" (fun _ -> 
+    let msbuildProps = match pbiInstallDir.Value with
+                       | Some dir -> Trace.logfn "Using assembly ReferencePath: %s" dir
+                                     [ "ReferencePath", dir ]
+                       | _ -> []
+
+    let setParams (rid, path) =
+        fun (args : DotNet.PublishOptions) -> 
+            { args with
+                Runtime = Some rid
+                SelfContained = Some false
+                //NoRestore = true
+                OutputPath = Some path
+                Configuration = DotNet.BuildConfiguration.Release
+                MSBuildParams = { args.MSBuildParams with
+                                       Properties = msbuildProps }
+            }
+    
+    // Desktop build
+    DotNet.publish
+        (setParams ("win10-x64", distFullDir)) 
+        "src/PBI-Tools/PBI-Tools.csproj"
+    
+    // Core build
+    [ "win10-x64",      "win-x64"
+      "linux-x64",      "linux-x64"
+      "linux-musl-x64", "alpine-x64" ]
+    |> Seq.iter (fun (rid, path) ->
+        DotNet.publish 
+            (setParams (rid, distCoreDir @@ path)) 
+            "src/PBI-Tools.NETCore/PBI-Tools.NETCore.csproj"
+    )
+)
+
+
+Target.create "Pack" (fun _ ->
+    !! (distFullDir @@ "*.*")
+    |> Zip.zip distFullDir (sprintf @"%s\pbi-tools.%s.zip" buildDir release.NugetVersion)
+
+    distCoreDir
+    |> Directory.EnumerateDirectories
+    |> Seq.map (Path.GetFileName) 
+    |> Seq.iter (fun dist ->
+        !! (distCoreDir @@ dist @@ "*.*")
+        |> Zip.zip (distCoreDir @@ dist) (sprintf @"%s\pbi-tools.core.%s_%s.zip" buildDir release.NugetVersion dist)
+    )
+)
+
 
 Target.create "Test" (fun _ ->
     !! "tests/*/bin/Release/**/pbi-tools*tests.dll"
@@ -208,6 +248,7 @@ Target.create "Test" (fun _ ->
                                      XmlOutputPath = Some (testDir @@ "xunit.xml")
                                      ToolPath = "packages/fake-tools/xunit.runner.console/tools/net472/xunit.console.exe" } )
 )
+
 
 Target.create "SmokeTest" (fun _ ->
     // Copy all *.pbix from /data folder to TEMP
@@ -234,6 +275,7 @@ Target.create "SmokeTest" (fun _ ->
     )
 )
 
+
 Target.create "UsageDocs" (fun _ ->
     [ "export-usage"; "-outPath"; "./docs/Usage.md" ]
     |> CreateProcess.fromRawCommand (distFullDir @@ "pbi-tools.exe")
@@ -242,12 +284,6 @@ Target.create "UsageDocs" (fun _ ->
     |> ignore
 )
 
-Target.create "Pack" (fun _ ->
-    !! (distFullDir @@ "*.*")
-    |> Zip.zip distFullDir (sprintf @"%s\pbi-tools.%s.zip" buildDir release.NugetVersion)
-
-    // TODO Add Publish builds for pbi-tools.core
-)
 
 Target.create "Help" (fun _ ->
     Trace.traceError "Please specify a target to run."
@@ -263,10 +299,16 @@ open Fake.Core.TargetOperators
   ==> "Build"
   ==> "Test"
   ==> "UsageDocs"
-  ==> "Pack"
 
 "Build"
   ==> "SmokeTest"
+
+"Build"
+  ==> "Publish"
+
+"Publish"
+  ==> "Test"
+  ==> "Pack"
 
 // --------------------------------------------------------------------------------------
 // Show help by default. Invoke 'fake build -t <Target>' to override
