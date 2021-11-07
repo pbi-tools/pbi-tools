@@ -9,32 +9,33 @@ async Task Main()
 {
 	var downloadUrlBase = "https://download.microsoft.com/download/8/8/0/880BCA75-79DD-466A-927D-1ABF1F5454B0/";
 	var downloadFilename =
-		 // "PBIDesktopSetup-2019-11_x64.exe";
-		 // "PBIDesktopSetup-2019-12_x64.exe";
-		 // "PBIDesktopSetup-2020-02_x64.exe";
-		 // "PBIDesktopSetup-2020-03_x64.exe";
-		 // "PBIDesktopSetup-2020-04_x64.exe";
-		 // "PBIDesktopSetup-2020-05_x64.exe";
-		 // "PBIDesktopSetup-2020-06_x64.exe";
-		 // "PBIDesktopSetup-2020-07_x64.exe";
-		 // "PBIDesktopSetup-2020-08_x64.exe";
-		 // "PBIDesktopSetup-2020-09_x64.exe";
-		 // "PBIDesktopSetup-2020-10_x64.exe";
-		 // "PBIDesktopSetup-2020-11_x64.exe";
-		 // "PBIDesktopSetup-2020-12_x64.exe";
-		 // "PBIDesktopSetup-2021-02_x64.exe";
-		 // "PBIDesktopSetup-2021-03_x64.exe";
-		 // "PBIDesktopSetup-2021-04_x64.exe";
-		 // "PBIDesktopSetup-2021-05_x64.exe";
-		 // "PBIDesktopSetup-2021-06_x64.exe";
-		 // "PBIDesktopSetup-2021-07_x64.exe";
-		 // "PBIDesktopSetup-2021-08_x64.exe";
+		// "PBIDesktopSetup-2019-11_x64.exe";
+		// "PBIDesktopSetup-2019-12_x64.exe";
+		// "PBIDesktopSetup-2020-02_x64.exe";
+		// "PBIDesktopSetup-2020-03_x64.exe";
+		// "PBIDesktopSetup-2020-04_x64.exe";
+		// "PBIDesktopSetup-2020-05_x64.exe";
+		// "PBIDesktopSetup-2020-06_x64.exe";
+		// "PBIDesktopSetup-2020-07_x64.exe";
+		// "PBIDesktopSetup-2020-08_x64.exe";
+		// "PBIDesktopSetup-2020-09_x64.exe";
+		// "PBIDesktopSetup-2020-10_x64.exe";
+		// "PBIDesktopSetup-2020-11_x64.exe";
+		// "PBIDesktopSetup-2020-12_x64.exe";
+		// "PBIDesktopSetup-2021-02_x64.exe";
+		// "PBIDesktopSetup-2021-03_x64.exe";
+		// "PBIDesktopSetup-2021-04_x64.exe";
+		// "PBIDesktopSetup-2021-05_x64.exe";
+		// "PBIDesktopSetup-2021-06_x64.exe";
+		// "PBIDesktopSetup-2021-07_x64.exe";
+		// "PBIDesktopSetup-2021-08_x64.exe";
+		// "PBIDesktopSetup-2021-09_x64.exe";
 		"PBIDesktopSetup_x64.exe";
 	var skipDownload = false;
 	var skipExtract = false;
 
 	/***************************************************************/
-	var rootFolder = @"X:\pbi-tools\pbi-downloader\PBIDesktop_x64";
+	var rootFolder = Path.GetFullPath(Path.Combine(Util.CurrentQueryPath, "../../../pbi-downloader/PBIDesktop_x64")).Dump();
 	/***************************************************************/
 	var tempFolder = Path.Combine(rootFolder, "_temp");
 	

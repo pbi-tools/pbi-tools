@@ -1,4 +1,8 @@
-2.97.921 # Sep '21
+2.98.1025
+2.98.1004 # Oct '21
+2.98.882
+2.98.683
+2.97.921;https://download.microsoft.com/download/8/8/0/880BCA75-79DD-466A-927D-1ABF1F5454B0/PBIDesktopSetup-2021-09_x64.exe # Sep '21
 2.97.861
 2.97.801
 2.96.1061;https://download.microsoft.com/download/8/8/0/880BCA75-79DD-466A-927D-1ABF1F5454B0/PBIDesktopSetup-2021-08_x64.exe # Aug '21
