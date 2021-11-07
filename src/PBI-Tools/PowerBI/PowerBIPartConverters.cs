@@ -21,6 +21,7 @@ namespace PbiTools.PowerBI
         
         public IPowerBIPartConverter<MashupParts> DataMashup { get; } = new MashupConverter();
 
+        public static readonly Uri MashupPartUri = new Uri("/DataMashup", UriKind.Relative);
     }
 #endif
 

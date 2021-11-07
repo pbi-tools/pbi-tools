@@ -30,7 +30,7 @@ namespace PbiTools.PowerBI
 
         private static readonly XmlSerializer PackageMetadataXmlSerializer = new XmlSerializer(typeof(SerializedPackageMetadata));
 
-        public Uri PartUri => new Uri("/DataMashup", UriKind.Relative);
+        public Uri PartUri => PowerBILegacyPartConverters.MashupPartUri;
 
         public bool IsOptional { get; set; } = true;
         public string ContentType { get; set; } = PowerBIPartConverters.ContentTypes.DEFAULT;
