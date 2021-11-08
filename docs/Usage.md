@@ -2,7 +2,7 @@
 
     pbi-tools <action> -options
 
-_Action BI Toolkit | pbi-tools, 1.0.0-beta.6_
+_Action BI Toolkit | pbi-tools, 1.0.0-beta.7_
 
 ### Actions
 
@@ -74,7 +74,7 @@ Converts the Model artifacts to a TMSL/BIM file.
 
     compile-pbix <folder> [<outPath>] [<format>] [<overwrite>] 
 
-*EXPERIMENTAL* Generates a PBIX/PBIT file from sources in the specified PbixProj folder. Currently, the PBIX output is supported only for report-only projects, and PBIT for projects containing a data model.
+Generates a PBIX/PBIT file from sources in the specified PbixProj folder. Currently, the PBIX output is supported only for report-only projects ("thin" reports), and PBIT for projects containing a data model.
 
 | Option | Default Value | Is Switch | Description |
 | --- | --- | --- | --- |
@@ -82,6 +82,18 @@ Converts the Model artifacts to a TMSL/BIM file.
 | outPath |  |  | The path for the output file. If not provided, creates the file in the current working directory, using the foldername. A directory or file name can be provided. The full output path is created if it does not exist. |
 | format | `PBIX` |  | The target file format. <br> `PBIX`  - Creates a file using the PBIX format. If the file contains a data model it will have no data and will require processing. This is the default format. <br> `PBIT`  - Creates a file using the PBIT format. When opened in Power BI Desktop, parameters and/or credentials need to be provided and a refresh is triggered. |
 | overwrite |  | X | Overwrite the destination file if it already exists, fail otherwise. |
+
+#### deploy
+
+    deploy <folder> [<label>] [<environment>] 
+
+Deploys artifacts to Power BI Service.
+
+| Option | Default Value | Is Switch | Description |
+| --- | --- | --- | --- |
+| folder* |  |  | The PbixProj folder containing the deployment manifest. |
+| label |  |  | Name of a section in the deployment manifest. |
+| environment | `Development` |  | The target deployment environment. |
 
 #### launch-pbi
 

@@ -298,7 +298,6 @@ open Fake.Core.TargetOperators
   ==> "ZipSampleData"
   ==> "Build"
   ==> "Test"
-  ==> "UsageDocs"
 
 "Build"
   ==> "SmokeTest"
@@ -308,6 +307,7 @@ open Fake.Core.TargetOperators
 
 "Publish"
   ==> "Test"
+  ==> "UsageDocs"
   ==> "Pack"
 
 // --------------------------------------------------------------------------------------
