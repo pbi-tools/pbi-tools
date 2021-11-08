@@ -11,6 +11,13 @@ namespace PbiTools
     {
         public const string EnvPrefix = "PBITOOLS_";
 
+        public string Edition { get; }
+#if NETFRAMEWORK
+            = "Desktop";
+#elif NET
+            = "Core";
+#endif
+
         public static class Environment
         {
             public static readonly string LogLevel = $"{EnvPrefix}{nameof(LogLevel)}";

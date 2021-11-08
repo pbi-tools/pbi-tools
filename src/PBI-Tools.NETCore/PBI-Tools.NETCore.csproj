@@ -13,13 +13,15 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <ApplicationIcon>..\PBI-Tools\pbi-tools.ico</ApplicationIcon>
     <!-- <RuntimeIdentifiers>win-x64;linux-x64</RuntimeIdentifiers> -->
-    <RuntimeIdentifier>win7-x64</RuntimeIdentifier>
-    <PublishSingleFile>false</PublishSingleFile>
+    <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
+    <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>false</SelfContained>
+    <IncludeNativeLibrariesForSelfExtract>false</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
   <PropertyGroup>
     <!-- See: https://github.com/dotnet/sdk/issues/2809 -->
     <AssemblySearchPaths>$(ReferencePath);$(AssemblySearchPaths)</AssemblySearchPaths>
+    <SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\PBI-Tools\**\*.cs" Exclude="..\PBI-Tools\obj\**\*.*;..\PBI-Tools\Properties\**\*.*" />

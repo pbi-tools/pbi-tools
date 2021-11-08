@@ -2,6 +2,6 @@
 
 PUSHD %~dp0
 
-.\.build\dist\core\pbi-tools.core.exe %*
+.\.build\dist\core\win-x64\pbi-tools.core.exe %*
 
 POPD

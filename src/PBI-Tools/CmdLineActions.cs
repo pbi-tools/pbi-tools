@@ -11,7 +11,9 @@ using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using PbiTools.PowerBI;
+#if NETFRAMEWORK
 using PbiTools.Rpc;
+#endif
 using PbiTools.Utils;
 using PowerArgs;
 using Serilog;
@@ -155,7 +157,7 @@ namespace PbiTools
                     msmdsrv.HideWindow = true;
 
                     msmdsrv.Start();
-                    msmdsrv.LoadPbixModel(package.DataModel, "Model", "Model");
+                    msmdsrv.LoadPbixModel(package.DataModel.GetStream(), "Model", "Model");
 
                     using (var reader = new TabularModel.TabularDataReader(msmdsrv.OleDbConnectionString))
                     {
@@ -192,7 +194,7 @@ namespace PbiTools
                         var dataSources = TabularModel.TabularModelConversions.GenerateDataSources(db);
                         db["model"]["dataSources"] = dataSources;
 #elif NET
-                        throw new PlatformNotSupportedException("Generating DataSources is not supported by the .Net Core version.");
+                        throw new PlatformNotSupportedException("Generating DataSources is not supported by the pbi-tools Core version.");
 #endif
                     }
 
@@ -218,7 +220,7 @@ namespace PbiTools
         }
 
 
-        [ArgActionMethod, ArgShortcut("compile-pbix"), ArgDescription("*EXPERIMENTAL* Generates a PBIX/PBIT file from sources in the specified PbixProj folder. Currently, only PBIX projects with a live connection are supported.")]
+        [ArgActionMethod, ArgShortcut("compile-pbix"), ArgDescription("Generates a PBIX/PBIT file from sources in the specified PbixProj folder. Currently, the PBIX output is supported only for report-only projects (\"thin\" reports), and PBIT for projects containing a data model.")]
         public void CompilePbix(
             [ArgRequired, ArgExistingDirectory, ArgDescription("The PbixProj folder to generate the PBIX from.")] string folder,
             [ArgDescription("The path for the output file. If not provided, creates the file in the current working directory, using the foldername. A directory or file name can be provided. The full output path is created if it does not exist.")]
@@ -278,8 +280,26 @@ namespace PbiTools
                 proj.ToFile(outputFile.FullName, format, _dependenciesResolver);
             }
 
-            Console.WriteLine($"{format} file written to: {outputFile.FullName}");
+            Log.Information("{Format} file written to: {Path}", format, outputFile.FullName);
         }
+
+
+        [ArgActionMethod, ArgShortcut("deploy"), ArgDescription("Deploys artifacts to Power BI Service.")]
+        public void Deploy(
+            [ArgRequired, ArgExistingDirectory, ArgDescription("The PbixProj folder containing the deployment manifest.")] string folder,
+            [ArgDescription("Name of a section in the deployment manifest.")] string label,
+            [ArgDescription("The target deployment environment."), ArgDefaultValue("Development")] string environment
+        )
+        {
+            using (var rootFolder = new FileSystem.ProjectRootFolder(folder))
+            {
+                var proj = ProjectSystem.PbixProject.FromFolder(rootFolder);
+                var deploymentManager = new Deployments.DeploymentManager();
+
+                deploymentManager.DeployAsync(proj, environment, label).Wait();
+            }
+        }
+
 
 #if NETFRAMEWORK
         [ArgActionMethod, ArgShortcut("launch-pbi"), ArgDescription("Starts a new instance of Power BI Desktop with the PBIX/PBIT file specified. Does not support Windows Store installations.")]
@@ -312,6 +332,7 @@ namespace PbiTools
                 var jsonResult = new JObject
                 {
                     { "version", AssemblyVersionInformation.AssemblyInformationalVersion },
+                    { "edition", _appSettings.Edition },
                     { "build", AssemblyVersionInformation.AssemblyFileVersion },
                     { "pbiBuildVersion", AssemblyVersionInformation.AssemblyMetadata_PBIBuildVersion },
                     { "amoVersion", typeof(Microsoft.AnalysisServices.Tabular.Server).Assembly
@@ -381,6 +402,7 @@ namespace PbiTools
         }
 
 
+#if NETFRAMEWORK
         [ArgActionMethod, ArgShortcut("start-server"), OmitFromUsageDocs]
         public void StartJsonRpcServer()
         {
@@ -412,6 +434,7 @@ namespace PbiTools
 
              */
         }
+#endif
 
 
         [ArgActionMethod, ArgShortcut("export-usage"), OmitFromUsageDocs]

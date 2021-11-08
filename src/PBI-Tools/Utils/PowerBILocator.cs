@@ -1,6 +1,7 @@
 // Copyright (c) Mathias Thierbach
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+#if NETFRAMEWORK
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,6 +11,7 @@ using System.Linq;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using Microsoft.Win32;
+using PeNet;
 using Serilog;
 
 namespace PbiTools.Utils
@@ -42,16 +44,19 @@ namespace PbiTools.Utils
                 if (pbiExePath == null) return false;
 
                 var fileInfo = FileVersionInfo.GetVersionInfo(pbiExePath);
-                install = new PowerBIDesktopInstallation
+                using (var peFile = new PeNet.FileParser.StreamFile(File.OpenRead(fileInfo.FileName)))
                 {
-                    InstallDir = Path.GetDirectoryName(fileInfo.FileName),
-                    Is64Bit = PeNet.PeFile.Is64BitPeFile(fileInfo.FileName),
-                    ProductVersion = fileInfo.ProductVersion,
-                    Version = ParseProductVersion(fileInfo.ProductVersion),
-                    Location = PowerBIDesktopInstallationLocation.Custom
-                };
-                Log.Verbose("Located Power BI Desktop custom install at {Path}", pbiExePath);
-                return true;
+                    install = new PowerBIDesktopInstallation
+                    {
+                        InstallDir = Path.GetDirectoryName(fileInfo.FileName),
+                        Is64Bit = peFile.Is64Bit(),
+                        ProductVersion = fileInfo.ProductVersion,
+                        Version = ParseProductVersion(fileInfo.ProductVersion),
+                        Location = PowerBIDesktopInstallationLocation.Custom
+                    };
+                    Log.Verbose("Located Power BI Desktop custom install at {Path}", pbiExePath);
+                    return true;
+                }
             }
             catch (Exception ex)
             {
@@ -184,3 +189,4 @@ namespace PbiTools.Utils
 
     }
 }
+#endif

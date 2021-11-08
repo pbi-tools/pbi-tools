@@ -16,7 +16,7 @@ using Serilog;
 namespace PbiTools.Model
 {
     /// <summary>
-    /// Represents the contents of a PBIX file, held in various storage formats.
+    /// A storage-agnostic representation of the contents of a PBIX/PBIT file.
     /// </summary>
     public interface IPbixModel
     {
@@ -32,6 +32,9 @@ namespace PbiTools.Model
         JObject ReportSettings { get; }
         string Version { get; }
 
+        // TODO CustomProperties
+        // TODO ReportMobileState
+
         IDictionary<string, byte[]> CustomVisuals { get; } // TODO Change to Dict<Uri, Func<Stream>> ??
         IDictionary<string, byte[]> StaticResources { get; }
 
@@ -39,12 +42,6 @@ namespace PbiTools.Model
         PbixModelSource Type { get; }
     }
 
-    /* Workflow: Extract PBIX
-     * 1 Create PbixModel from .pbix
-     * 2 Serialize PbixModel to folder
-     * 2.1 Read existing PbixProject from folder
-     * 2.2 Replace query ids accordingly
-     */
 
     public enum PbixModelSource
     {
@@ -52,6 +49,7 @@ namespace PbiTools.Model
         PbixProjFolder,
         LiveSession
     }
+
 
     public class PbixModel : IPbixModel, IDisposable
     {
@@ -73,7 +71,7 @@ namespace PbiTools.Model
         {
             if (!IsV3Version(this.Version))
             {
-                throw new NotSupportedException("The PBIX file does not contain a V3 model. This API only supports V3 PBIX files.");
+                throw new NotSupportedException("The PBIX file/project does not contain a V3 model. This API only supports the V3 PBIX format.");
             }
         }
 
@@ -174,8 +172,8 @@ namespace PbiTools.Model
 
         public static PbixModel FromFolder(string path)
         {
-            // PBIXPROJ(folder) <==> Serializer <=|PbixModel|=> PbixReader|PbiPackage[Converter] <==> PBIX(file)
-            //                       ##########                 ################################
+            // PBIXPROJ(folder) <==> Serializer <=|PbixModel|=> PbixReader|PbixWriter <==> PowerBIPartConverter <==> PBIX|PBIT(file)
+            //                       ##########                 #####################      ####################
 
             Log.Debug("Building PbixModel from folder: {Path}", path);
 
@@ -186,7 +184,7 @@ namespace PbiTools.Model
 
                 var pbixModel = new PbixModel(projectFolder.BasePath, PbixModelSource.PbixProjFolder) { PbixProj = pbixProject };
 
-                pbixModel.Version = serializers.Version.DeserializeSafe(isOptional: false);
+                pbixModel.Version = serializers.Version.DeserializeSafe(isOptional: false); // TODO Inject default value when missing?
                 pbixModel.EnsureV3Model();
                 
                 pbixModel.Connections = serializers.Connections.DeserializeSafe();
@@ -279,8 +277,11 @@ namespace PbiTools.Model
         /// <param name="dependenciesResolver"></param>
         public void ToFile(string path, PbiFileFormat format, IDependenciesResolver dependenciesResolver = null)
         {
-#if NETFRAMEWORK
             Log.Information("Generating {Format} file at '{Path}'...", format, path);
+
+#if NETFRAMEWORK
+            if (format == PbiFileFormat.PBIX && this.DataModel != null)
+                Log.Warning("Compiling a project containing a data model into a PBIX file is currently unsupported and will most likely result in an invalid output. Please consider compiling into a PBIT file instead.");
 
             var modelName = PowerBIPartConverters.ConvertToValidModelName(Path.GetFileNameWithoutExtension(path));
             var converters = new PowerBIPartConverters(modelName, dependenciesResolver ?? DependenciesResolver.Default);
@@ -288,7 +289,11 @@ namespace PbiTools.Model
 
             pbiPackage.Save(path);
 #elif NET
-            throw new NotImplementedException();
+            if (format == PbiFileFormat.PBIX && this.DataModel != null)
+                throw new NotSupportedException("Compiling a project containing a data model into a PBIX file is not supported by the Core edition of pbi-tools.");
+
+            var writer = new PbixWriter(this, new PowerBIPartConverters(), format);
+            writer.WriteTo(path);
 #endif
         }
 

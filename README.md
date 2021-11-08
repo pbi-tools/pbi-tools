@@ -4,13 +4,15 @@
 
 An example project is available here: <https://github.com/action-bi-toolkit/adventureworksdw2020-pbix>
 
-Watch <https://www.action-bi.com/action-bi-toolkit> for further info. More docs are coming!
+Website: <https://toolkit.action-bi.com/pbi-tools>
 
 ## User Notes
 
 ### Installation
 
 Download the tool as a ZIP file (no installer required) from [Releases](https://github.com/action-bi-toolkit/pbi-tools/releases/latest) (under _Assets_). Extract and run from a command prompt.
+
+The latest download links are available at <https://toolkit.action-bi.com/>.
 
 Make sure to [unblock the ZIP file before extracting](https://singularlabs.com/tips/how-to-unblock-a-zip-file-on-windows-10/).
 
@@ -33,13 +35,16 @@ Running `pbi-tools {action} -?` prints usage details for that specific action.
 
 ![Extract Usage Screenshot](./docs/assets/extract-usage-screenshot.png)
 
-### Prerequisites
+### Prerequisites - Desktop Version
 
 * Windows 64-bit
 * Power BI Desktop 64-bit. Installer version (default location) and/or Windows Store version supported. Optionally, `pbi-tools` works with Power BI Desktop in a custom location, provided the path is specified in the `PBITOOLS_PbiInstallDir` environment variable.
 * .Net Framework Runtime 4.7.2 (Comes with Power BI Desktop)
 
-_A cross-platform .Net 5 version is currently under development._
+### Prerequisites - Core Version
+
+* Any 64-Bit OS [supported by .Net 5](https://github.com/dotnet/core/blob/main/release-notes/5.0/5.0-supported-os.md)
+* [.Net 5 Runtime](https://dotnet.microsoft.com/download/dotnet/5.0/runtime) pre-installed
 
 ### Command-line Syntax
 
@@ -87,6 +92,7 @@ _A cross-platform .Net 5 version is currently under development._
 ### Run only the specified build target
 
     .\build.cmd UsageDocs -s
+    dotnet fake build -s -t SmokeTest
 
 ### Install Dependencies
 
@@ -112,10 +118,6 @@ _That is generally not needed as the `build.cmd` script takes care of fetching d
     dotnet fake {...}
     dotnet fake -t Build
     dotnet fake --version
-
-### Run single build target
-
-    dotnet fake build -s -t SmokeTest
 
 ### Extract embedded sample PBIX with local build version and using default settings
 

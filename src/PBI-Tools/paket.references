@@ -4,7 +4,6 @@ Microsoft.AnalysisServices.retail.amd64
 Microsoft.AnalysisServices.AdomdClient.retail.amd64
 Newtonsoft.Json
 PowerArgs
-System.ValueTuple
 Polly
 StreamJsonRpc
 Castle.Core
@@ -13,3 +12,5 @@ Moq
 HtmlAgilityPack
 PeNet
 CsvHelper
+Microsoft.Identity.Client
+Microsoft.PowerBI.API

@@ -4,7 +4,6 @@
 #if NETFRAMEWORK
 using System;
 using System.IO;
-using Microsoft.PowerBI.Packaging;
 using Newtonsoft.Json.Linq;
 using AMO = Microsoft.AnalysisServices;
 using TOM = Microsoft.AnalysisServices.Tabular;
@@ -20,18 +19,27 @@ namespace PbiTools.PowerBI
         private readonly string _modelName;
         private readonly IDependenciesResolver _resolver;
 
-        public DataModelConverter(string modelName, IDependenciesResolver resolver)
+        public Uri PartUri { get; }
+
+        public bool IsOptional { get; set; } = true;
+        public string ContentType { get; set; } = PowerBIPartConverters.ContentTypes.DEFAULT;
+
+        public DataModelConverter(Uri partUri, string modelName, IDependenciesResolver resolver)
         {
+            this.PartUri = partUri;
             _modelName = modelName;
             _resolver = resolver;
         }
 
-        public JObject FromPackagePart(IStreamablePowerBIPackagePartContent part) =>
-            LaunchTabularServerAndExecuteCallback(msmdsrv => 
+        public JObject FromPackagePart(Func<Stream> part, string contentType)
+        {
+            if (!part.TryGetStream(out var stream)) return default(JObject);
+            return LaunchTabularServerAndExecuteCallback(msmdsrv => 
             {
-                msmdsrv.LoadPbixModel(part, _modelName, _modelName);
+                msmdsrv.LoadPbixModel(stream, _modelName, _modelName);
                 return ExtractModelFromAS(msmdsrv.ConnectionString, databases => databases[_modelName]);
             });
+        }
 
         internal static JObject ExtractModelFromAS(string connectionString, Func<TOM.DatabaseCollection, TOM.Database> selectDb)
         { 
@@ -72,11 +80,11 @@ namespace PbiTools.PowerBI
             }            
         }
 
-        public IStreamablePowerBIPackagePartContent ToPackagePart(JObject content)
+        public Func<Stream> ToPackagePart(JObject content)
         {
-            if (content == null) return new StreamablePowerBIPackagePartContent(default(string));
+            if (content == null) return null;
 
-            var bytes = LaunchTabularServerAndExecuteCallback(msmdsrv => 
+            return () => LaunchTabularServerAndExecuteCallback(msmdsrv => 
             {
                 using (var server = new TOM.Server())
                 {
@@ -87,18 +95,17 @@ namespace PbiTools.PowerBI
                         , server.DefaultCompatibilityLevel);
 
                     using (var db = TOM.JsonSerializer.DeserializeDatabase(content.ToString()))
-                    using (var stream = new MemoryStream())
                     {
+                        var stream = new MemoryStream();
+
                         server.Databases.Add(db);
                         db.Update(AMO.UpdateOptions.ExpandFull);
 
                         server.ImageSave(db.ID, stream);
-                        return stream.ToArray();
+                        return stream;
                     }
                 }
             });
-
-            return new StreamablePowerBIPackagePartContent(bytes);
         }
 
     }

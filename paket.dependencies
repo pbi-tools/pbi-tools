@@ -21,14 +21,17 @@ group Main
   nuget System.IO.Compression
   nuget HtmlAgilityPack
   nuget PInvoke.Msi
-  nuget PeNet < 2.0         // 2.x is netstandard2.1 only
-  nuget PeNet.Asn1 == 1.3.3 // 1.3.4 is netstandard2.1 only
+  nuget PeNet
   nuget CommandLineParser
   nuget Microsoft.AnalysisServices.retail.amd64 framework: net472
   nuget Microsoft.AnalysisServices.AdomdClient.retail.amd64 framework: net472
   nuget Microsoft.AnalysisServices.NetCore.retail.amd64 framework: net5.0
   nuget Microsoft.AnalysisServices.AdomdClient.NetCore.retail.amd64 framework: net5.0
-  //nuget System.Data.SqlClient framework: net5.0
+  nuget System.IO.Packaging
+  nuget Microsoft.Identity.Client
+  nuget Microsoft.PowerBI.API
+  nuget Microsoft.NETCore.Platforms
+  nuget Microsoft.NETCore.Targets
 
 group Tests
   source https://api.nuget.org/v3/index.json
