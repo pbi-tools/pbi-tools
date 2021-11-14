@@ -52,16 +52,16 @@ namespace PbiTools
         public bool Help { get; set; }
 
 
-
+#region extract
 #if NETFRAMEWORK
         [ArgActionMethod, ArgShortcut("extract")]
         [ArgDescription("Extracts the contents of a PBIX/PBIT file into a folder structure suitable for source control. By default, this will create a sub-folder in the directory of the *.pbix file with the same name without the extension.")]
         [ArgExample(
-            @"pbi-tools.exe extract '.\data\Samples\Adventure Works DW 2020.pbix' -extractFolder '.\data\Samples\Adventure Works DW 2020 - Raw' -modelSerialization Raw", 
+            @"pbi-tools extract '.\data\Samples\Adventure Works DW 2020.pbix' -extractFolder '.\data\Samples\Adventure Works DW 2020 - Raw' -modelSerialization Raw", 
             "Extracts the PBIX file into the specified extraction folder (relative to the current working dir), using the 'Auto' compatibility mode. The model part is serialialized using Raw mode.",
             Title = "Extract: Custom folder and settings")]
         [ArgExample(
-            @"pbi-tools.exe extract '.\data\Samples\Adventure Works DW 2020.pbix'", 
+            @"pbi-tools extract '.\data\Samples\Adventure Works DW 2020.pbix'", 
             "Extracts the specified PBIX file into the default extraction folder (relative to the PBIX file location), using the 'Auto' compatibility mode. Any settings specified in the '.pbixproj.json' file already present in the destination folder will be honored.",
             Title = "Extract: Default")]
         public void Extract(
@@ -117,25 +117,40 @@ namespace PbiTools
             Console.WriteLine($"Completed in {_stopWatch.Elapsed}.");
         }
 #endif
+#endregion
 
 
+#region export-data
         [ArgActionMethod, ArgShortcut("export-data"), ArgAltShortcut("extract-data")]
+#if NETFRAMEWORK
         [ArgDescription("Exports data from all tables in a tabular model, either from within a PBIX file, or from a live session.")]
         [ArgExample(
-            "pbi-tools.exe extract-data -port 12345", 
+            "pbi-tools export-data -port 12345", 
             "Extracts all records from each table from a local Power BI Desktop or SSAS Tabular instance running on port 12345 (get actual port via 'info' command). Each table is extracted into a UTF-8 CSV file with the same name into the current working directory.",
-            Title = "Extract data from local workspace instance")]
+            Title = "Export data from local workspace instance")]
         [ArgExample(
-            @"pbi-tools.exe extract-data -pbixPath '.\data\Samples\Adventure Works DW 2020.pbix'", 
+            @"pbi-tools export-data -pbixPath '.\data\Samples\Adventure Works DW 2020.pbix'", 
             "Extracts all records from each table from the model embedded in the specified PBIX file. Each table is extracted into a UTF-8 CSV file with the same name into the current working directory.",
-            Title = "Extract data from offline PBIX file")]
+            Title = "Export data from offline PBIX file")]
+#else
+        [ArgDescription("Exports data from all tables in a live Power BI Desktop session.")]
+        [ArgExample(
+            "pbi-tools.core export-data -port 12345", 
+            "Extracts all records from each table from a local Power BI Desktop or SSAS Tabular instance running on port 12345 (get actual port via 'info' command). Each table is extracted into a UTF-8 CSV file with the same name into the current working directory.",
+            Title = "Export data from local workspace instance")]
+#endif
         public void ExportData(
             [ArgCantBeCombinedWith("pbixPath"), ArgDescription("The port number of a local Tabular Server instance.")] int port,
+#if NETFRAMEWORK
             [ArgRequired(IfNot = "port"), ArgExistingFile, ArgDescription("The PBIX file to extract data from.")] string pbixPath,
+#endif
             [ArgDescription("The output directory. Uses PBIX file directory if not provided, or the current working directory when connecting to Tabular Server instance.")] string outPath,
             [ArgDescription("The format to use for DateTime values. Must be a valid .Net format string."), ArgDefaultValue("s")] string dateTimeFormat
         )
         {
+#if NET
+            var pbixPath = default(string);
+#endif
             if (outPath == null && pbixPath != null)
                 outPath = Path.GetDirectoryName(pbixPath);
             else if (outPath == null)
@@ -143,9 +158,9 @@ namespace PbiTools
 
             Log.Verbose("Port: {Port}, Path: {PbixPath}, OutPath: {OutPath}", port, pbixPath, outPath);
 
+#if NETFRAMEWORK
             if (pbixPath != null)
             {
-#if NETFRAMEWORK
                 using (var file = File.OpenRead(pbixPath))
                 using (var package = Microsoft.PowerBI.Packaging.PowerBIPackager.Open(file, skipValidation: true))
                 using (var msmdsrv = new AnalysisServicesServer(new ASInstanceConfig
@@ -165,9 +180,9 @@ namespace PbiTools
                         reader.ExtractTableData(outPath, dateTimeFormat);
                     }
                 }
-#endif
             }
             else
+#endif
             {
                 using (var reader = new TabularModel.TabularDataReader($"Provider=MSOLAP;Data Source=.:{port};"))
                 {
@@ -175,13 +190,17 @@ namespace PbiTools
                 }
             }
         }
+#endregion
 
 
+#region generate-bim
         [ArgActionMethod, ArgShortcut("generate-bim"), ArgAltShortcut("export-bim")]
         [ArgDescription("Generates a TMSL/BIM file from Model sources in a folder. The output path is derived from the source folder.")]
         public void GenerateBim(
             [ArgRequired, ArgExistingDirectory, ArgDescription("The PbixProj folder to export the BIM file from.")] string folder,
+#if NETFRAMEWORK
             [ArgDescription("Generate model data sources. Only required for deployment to Azure Analysis Services, but not for Power BI Premium via the XMLA endpoint.")] bool generateDataSources,
+#endif
             [ArgDescription("List transformations to be applied to TMSL document.")] ExportTransforms transforms
         )
         {
@@ -190,15 +209,13 @@ namespace PbiTools
                 var serializer = new Serialization.TabularModelSerializer(rootFolder, ProjectSystem.PbixProject.FromFolder(rootFolder).Settings.Model);
                 if (serializer.TryDeserialize(out var db))  // throws for V1 models
                 {
+#if NETFRAMEWORK
                     if (generateDataSources)
                     {
-#if NETFRAMEWORK
                         var dataSources = TabularModel.TabularModelConversions.GenerateDataSources(db);
                         db["model"]["dataSources"] = dataSources;
-#elif NET
-                        throw new PlatformNotSupportedException("Generating DataSources is not supported by the pbi-tools Core version.");
-#endif
                     }
+#endif
 
                     if (transforms.HasFlag(ExportTransforms.RemovePBIDataSourceVersion))
                     {
@@ -220,9 +237,12 @@ namespace PbiTools
                 }
             }
         }
+#endregion
 
 
-        [ArgActionMethod, ArgShortcut("compile-pbix"), ArgDescription("Generates a PBIX/PBIT file from sources in the specified PbixProj folder. Currently, the PBIX output is supported only for report-only projects (\"thin\" reports), and PBIT for projects containing a data model.")]
+#region compile-pbix
+        [ArgActionMethod, ArgShortcut("compile-pbix")]
+        [ArgDescription("Generates a PBIX/PBIT file from sources in the specified PbixProj folder. Currently, the PBIX output is supported only for report-only projects (\"thin\" reports), and PBIT for projects containing a data model.")]
         public void CompilePbix(
             [ArgRequired, ArgExistingDirectory, ArgDescription("The PbixProj folder to generate the PBIX from.")] string folder,
             [ArgDescription("The path for the output file. If not provided, creates the file in the current working directory, using the foldername. A directory or file name can be provided. The full output path is created if it does not exist.")]
@@ -284,9 +304,12 @@ namespace PbiTools
 
             Log.Information("{Format} file written to: {Path}", format, outputFile.FullName);
         }
+#endregion
 
 
-        [ArgActionMethod, ArgShortcut("deploy"), ArgDescription("Deploys artifacts to Power BI Service.")]
+#region deploy
+        [ArgActionMethod, ArgShortcut("deploy")]
+        [ArgDescription("Deploys artifacts to Power BI Service or Azure Analysis Services.")]
         public void Deploy(
             [ArgRequired, ArgExistingDirectory, ArgDescription("The PbixProj folder containing the deployment manifest.")] string folder,
             [ArgDescription("Name of a section in the deployment manifest.")] string label,
@@ -301,10 +324,13 @@ namespace PbiTools
                 deploymentManager.DeployAsync(proj, environment, label).Wait();
             }
         }
+#endregion
 
 
+#region launch-pbi
 #if NETFRAMEWORK
-        [ArgActionMethod, ArgShortcut("launch-pbi"), ArgDescription("Starts a new instance of Power BI Desktop with the PBIX/PBIT file specified. Does not support Windows Store installations.")]
+        [ArgActionMethod, ArgShortcut("launch-pbi")]
+        [ArgDescription("Starts a new instance of Power BI Desktop with the PBIX/PBIT file specified. Does not support Windows Store installations.")]
         public void LaunchPbiDesktop(
             [ArgRequired, ArgExistingFile, ArgDescription("The path to an existing PBIX or PBIT file.")] string pbixPath
         )
@@ -320,10 +346,14 @@ namespace PbiTools
             Log.Information("Launched Power BI Desktop, Process ID: {ProcessID}, Arguments: {Arguments}", proc.Id, proc.StartInfo.Arguments);
         }
 #endif
+#endregion
 
-        [ArgActionMethod, ArgShortcut("info"), ArgDescription("Collects diagnostic information about the local system and writes a JSON object to StdOut.")]
+
+#region info
+        [ArgActionMethod, ArgShortcut("info")]
+        [ArgDescription("Collects diagnostic information about the local system and writes a JSON object to StdOut.")]
         [ArgExample(
-            "pbi-tools.exe info check", 
+            "pbi-tools info check", 
             "Prints information about the active version of pbi-tools, all Power BI Desktop versions on the local system, any running Power BI Desktop instances, and checks the latest version of Power BI Desktop available from Microsoft Downloads.")]
         public void Info(
             [ArgDescription("When specified, checks the latest Power BI Desktop version available from download.microsoft.com.")] bool checkDownloadVersion
@@ -334,7 +364,7 @@ namespace PbiTools
                 var jsonResult = new JObject
                 {
                     { "version", AssemblyVersionInformation.AssemblyInformationalVersion },
-                    { "edition", _appSettings.Edition },
+                    { "edition", AppSettings.Edition },
                     { "build", AssemblyVersionInformation.AssemblyFileVersion },
                     { "pbiBuildVersion", AssemblyVersionInformation.AssemblyMetadata_PBIBuildVersion },
                     { "amoVersion", typeof(Microsoft.AnalysisServices.Tabular.Server).Assembly
@@ -369,10 +399,14 @@ namespace PbiTools
                 }
             }
         }
+#endregion
 
 
-        [ArgActionMethod, ArgShortcut("cache"), ArgDescription("Manages the internal assembly cache.")]
-        [ArgExample("pbi-tools.exe cache list", "Lists all cache folders present in the current user profile.")]
+#region cache
+#if NETFRAMEWORK
+        [ArgActionMethod, ArgShortcut("cache")]
+        [ArgDescription("Manages the internal assembly cache.")]
+        [ArgExample("pbi-tools cache list", "Lists all cache folders present in the current user profile.")]
         public void Cache(
             [ArgRequired, ArgDescription("The cache action to perform.")] CacheAction action
         )
@@ -402,9 +436,12 @@ namespace PbiTools
                     break;
             }
         }
+#endif
+#endregion
 
 
-#if NETFRAMEWORK
+#region start-server
+#if DEBUG
         [ArgActionMethod, ArgShortcut("start-server"), OmitFromUsageDocs]
         public void StartJsonRpcServer()
         {
@@ -437,8 +474,10 @@ namespace PbiTools
              */
         }
 #endif
+#endregion
 
 
+#region export-usage
         [ArgActionMethod, ArgShortcut("export-usage"), OmitFromUsageDocs]
         public void ExportUsage(
             [ArgDescription("The optional path to a file to write into. Prints to console if not provided.")] string outPath
@@ -446,13 +485,13 @@ namespace PbiTools
         {
             var sb = new StringBuilder();
             
-            var definitions = CmdLineArgumentsDefinitionExtensions.For<CmdLineActions>().RemoveAutoAliases();
+            var definitions = CmdLineArgumentsDefinitionExtensions.For<CmdLineActions>().RemoveAutoAliases(true);
 
             sb.AppendLine("## Usage");
             sb.AppendLine();
             sb.AppendLine($"    {definitions.UsageSummary}");
             sb.AppendLine();
-            sb.AppendLine($"_{definitions.Description}_");
+            sb.AppendLine($"_{definitions.Description.Replace("|", "\\|")}_");
             sb.AppendLine();
             sb.AppendLine("### Actions");
             sb.AppendLine();
@@ -524,6 +563,8 @@ namespace PbiTools
          * - Compile|Write
          */
     }
+#endregion
+
 
     public enum ExtractActionCompatibilityMode
     {

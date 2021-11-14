@@ -288,11 +288,15 @@ Target.create "SmokeTest" (fun _ ->
 
 
 Target.create "UsageDocs" (fun _ ->
-    [ "export-usage"; "-outPath"; "./docs/Usage.md" ]
-    |> CreateProcess.fromRawCommand (distFullDir @@ "pbi-tools.exe")
-    |> CreateProcess.ensureExitCode
-    |> Proc.run
-    |> ignore
+    [ (distFullDir @@ "pbi-tools.exe"), "./docs/usage.md"
+      (distCoreDir @@ "win-x64" @@ "pbi-tools.core.exe"), "./docs/usage-core.md" ]
+    |> Seq.iter (fun (command, output) ->
+        [ "export-usage"; "-outPath"; output ]
+        |> CreateProcess.fromRawCommand command
+        |> CreateProcess.ensureExitCode
+        |> Proc.run
+        |> ignore
+    )
 )
 
 
