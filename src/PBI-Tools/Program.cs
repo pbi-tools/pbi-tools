@@ -10,6 +10,7 @@ using PowerArgs;
 using Serilog;
 
 [assembly: InternalsVisibleTo("pbi-tools.tests")]
+[assembly: InternalsVisibleTo("pbi-tools.netcore.tests")]
 
 namespace PbiTools
 {

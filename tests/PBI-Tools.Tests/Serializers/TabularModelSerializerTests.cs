@@ -2,7 +2,7 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using System.Collections.Generic;
-using System.Data.OleDb;
+using System.Data.Common;
 using System.Xml;
 using System.Xml.XPath;
 using Newtonsoft.Json.Linq;
@@ -306,8 +306,8 @@ namespace PbiTools.Tests
 
         #endregion
 
-
-        public class SerializeDataSources
+#if NETFRAMEWORK
+        public class SerializeLegacyDataSources
         {
             private readonly JObject _databaseJson = new JObject
             {
@@ -336,7 +336,7 @@ namespace PbiTools.Tests
 
             private readonly MockProjectFolder _folder;
 
-            public SerializeDataSources()
+            public SerializeLegacyDataSources()
             {
                 _folder = new MockProjectFolder();
                 TabularModelSerializer.SerializeDataSources(_databaseJson, _folder, _queriesLookup);
@@ -365,9 +365,9 @@ namespace PbiTools.Tests
                 var table1 = _folder.GetAsJson(@"dataSources\Table1\dataSource.json");
                 var table2 = _folder.GetAsJson(@"dataSources\Table2\dataSource.json");
 
-                var connStr1 = new OleDbConnectionStringBuilder(table1["connectionString"].Value<string>());
+                var connStr1 = new DbConnectionStringBuilder { ConnectionString = table1["connectionString"].Value<string>() };
                 Assert.False(connStr1.ContainsKey("Global Pipe"));
-                var connStr2 = new OleDbConnectionStringBuilder(table2["connectionString"].Value<string>());
+                var connStr2 = new DbConnectionStringBuilder { ConnectionString = table2["connectionString"].Value<string>() };
                 Assert.False(connStr2.ContainsKey("Global Pipe"));
             }
 
@@ -377,14 +377,14 @@ namespace PbiTools.Tests
                 var table1 = _folder.GetAsJson(@"dataSources\Table1\dataSource.json");
                 var table2 = _folder.GetAsJson(@"dataSources\Table2\dataSource.json");
 
-                var connStr1 = new OleDbConnectionStringBuilder(table1["connectionString"].Value<string>());
+                var connStr1 = new DbConnectionStringBuilder { ConnectionString = table1["connectionString"].Value<string>() };
                 Assert.False(connStr1.ContainsKey("Mashup"));
-                var connStr2 = new OleDbConnectionStringBuilder(table2["connectionString"].Value<string>());
+                var connStr2 = new DbConnectionStringBuilder { ConnectionString = table2["connectionString"].Value<string>() };
                 Assert.False(connStr2.ContainsKey("Mashup"));
             }
 
         }
-
+#endif
     }
 
 }

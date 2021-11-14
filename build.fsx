@@ -247,6 +247,17 @@ Target.create "Test" (fun _ ->
     |> XUnit2.run (fun p -> { p with HtmlOutputPath = Some (testDir @@ "xunit.html")
                                      XmlOutputPath = Some (testDir @@ "xunit.xml")
                                      ToolPath = "packages/fake-tools/xunit.runner.console/tools/net472/xunit.console.exe" } )
+    // TODO Does XUnit2.run fail silently??
+
+    // https://fake.build/apidocs/v5/fake-dotnet-dotnet-testoptions.html
+    "tests/PBI-Tools.NetCore.Tests/PBI-Tools.NetCore.Tests.csproj"
+    |> DotNet.test (fun defaults ->
+       { defaults with
+           ResultsDirectory = Some "./.build/test"
+           Configuration = DotNet.BuildConfiguration.Release
+           ListTests = true
+           Logger = Some "trx;LogFileName=TestOutput.NetCore.xml"
+       })
 )
 
 

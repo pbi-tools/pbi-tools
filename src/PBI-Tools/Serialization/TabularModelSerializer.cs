@@ -260,12 +260,13 @@ namespace PbiTools.Serialization
                 var name = dataSource["name"]?.Value<string>();  //TODO replace name using IDCache
                 if (name == null) continue;
                 var dir = name;
-#if NETFRAMEWORK
+
                 // connectionString: Global Pipe, Mashup
                 var connectionStringToken = dataSource["connectionString"] as JValue;
                 var connectionString = connectionStringToken?.Value<string>();
                 if (connectionStringToken != null && IsPowerBIConnectionString(connectionString, out var location, out var mashup))
                 {
+#if NETFRAMEWORK
                     // lookup static name
                     name = idCache.LookupOriginalDataSourceId(name); // idCache is traversing via location
                     dataSource["name"] = name;
@@ -282,8 +283,8 @@ namespace PbiTools.Serialization
                         location,
                         "mashup");
                     MashupSerializer.ExtractMashup(modelFolder, mashupPrefix, mashup);
-                }
 #endif
+                }
                 modelFolder.Write(dataSource, $@"dataSources\{dir.SanitizeFilename()}\dataSource.json");
             }
 
@@ -350,7 +351,7 @@ namespace PbiTools.Serialization
 
 #endregion
 
-#region Model Deserialization
+        #region Model Deserialization
 
         public bool TryDeserialize(out JObject database)
         {
@@ -587,9 +588,9 @@ namespace PbiTools.Serialization
             }
         }
 
-#endregion
+        #endregion
 
-#region DAX Expressions
+        #region DAX Expressions
 
         /// <summary>
         /// Converts an M expression from a TMSL payload into a single string, accounting for both single and multi-line expressions.
@@ -609,9 +610,9 @@ namespace PbiTools.Serialization
             return new JArray(lines);
         }
 
-#endregion
+        #endregion
 
-#region Measures
+        #region Measures
 
         private static Action<TextWriter> WriteMeasureXml(JToken json)
         {
@@ -751,7 +752,7 @@ namespace PbiTools.Serialization
             return measure;
         }
 
-#endregion
+        #endregion
 
         // TODO place AAS conversions into TabularModelConversion.ToAASModel(JObject db, JObject extensions)
 

@@ -15,9 +15,11 @@
     <AssemblySearchPaths>$(ReferencePath);$(AssemblySearchPaths)</AssemblySearchPaths>
   </PropertyGroup>
   <ItemGroup>
-    <None Remove="TestResources\**\*.*" />
-    <EmbeddedResource Include="TestResources\**\*.*" />
+    <EmbeddedResource Include="..\PBI-Tools.Tests\TestResources\**\*.*" />
     <EmbeddedResource Include="..\..\.temp\Adventure Works DW 2020.zip" LogicalName="Adventure Works DW 2020.zip" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\PBI-Tools.Tests\**\*.cs" Exclude="..\PBI-Tools.Tests\obj\**\*.*;..\PBI-Tools.Tests\Properties\**\*.*" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\PBI-Tools.NETCore\PBI-Tools.NETCore.csproj" />
