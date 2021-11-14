@@ -145,7 +145,7 @@ namespace PbiTools.ProjectSystem
                     }
                     catch (JsonReaderException e)
                     {
-                        Log.Error(e, "Failed to read PBIXPROJ file from {Path}. Using default settings.", file.Path);
+                        Log.Warning(e, "Failed to read PBIXPROJ file from {Path}. Using default settings.", file.Path);
                     }
                 }
             }
