@@ -211,18 +211,18 @@ Target.create "Publish" (fun _ ->
             }
     
     // Desktop build
-    DotNet.publish
+    "src/PBI-Tools/PBI-Tools.csproj"
+    |> DotNet.publish
         (setParams ("win10-x64", distFullDir)) 
-        "src/PBI-Tools/PBI-Tools.csproj"
     
     // Core build
     [ "win10-x64",      "win-x64"
       "linux-x64",      "linux-x64"
       "linux-musl-x64", "alpine-x64" ]
     |> Seq.iter (fun (rid, path) ->
-        DotNet.publish 
+        "src/PBI-Tools.NETCore/PBI-Tools.NETCore.csproj"
+        |> DotNet.publish 
             (setParams (rid, distCoreDir @@ path)) 
-            "src/PBI-Tools.NETCore/PBI-Tools.NETCore.csproj"
     )
 )
 
