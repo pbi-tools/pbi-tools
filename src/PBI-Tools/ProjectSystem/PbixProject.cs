@@ -18,7 +18,7 @@ namespace PbiTools.ProjectSystem
         private static readonly ILogger Log = Serilog.Log.ForContext<PbixProject>();
 
         public const string Filename = ".pbixproj.json";
-        public static readonly Version CurrentVersion = Version.Parse("0.9");
+        public static readonly Version CurrentVersion = Version.Parse("0.10");
 
         /*
          * PBIXPROJ Change Log
@@ -50,6 +50,7 @@ namespace PbiTools.ProjectSystem
          * 0.8   - /Mashup extracted from V3 models (when present in PBIX/PBIT)
          * 0.9   - Mashup serialization modes: Default, Raw, Expanded.
          *       - BREAKING CHANGE: 'Expanded' is now considered legacy and no longer the default serialization mode. (The `compile-pbix` action only supports projects extracted using the _Default_ or _Raw_ Mashup serialization mode.)
+         * 0.10  - Supports 'custom' token (not used by pbi-tools, but available to external clients)
          */
 
         /* Entries to add later: */
@@ -100,6 +101,13 @@ namespace PbiTools.ProjectSystem
 
         [JsonProperty("settings", NullValueHandling = NullValueHandling.Ignore)]
         public PbixProjectSettings Settings { get; set; } = new PbixProjectSettings();
+
+        #endregion
+
+        #region Custom
+
+        [JsonProperty("custom", NullValueHandling = NullValueHandling.Ignore)]
+        public JToken Custom { get; set; }
 
         #endregion
 
