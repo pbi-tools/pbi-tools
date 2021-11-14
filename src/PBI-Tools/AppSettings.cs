@@ -11,7 +11,7 @@ namespace PbiTools
     {
         public const string EnvPrefix = "PBITOOLS_";
 
-        public string Edition { get; }
+        public const string Edition
 #if NETFRAMEWORK
             = "Desktop";
 #elif NET
