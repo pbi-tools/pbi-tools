@@ -1,0 +1,15 @@
+{
+  "name": "SqlServerDatabase",
+  "kind": "m",
+  "expression": "\"AdventureWorksDW2020-DAX-Docs\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]",
+  "annotations": [
+    {
+      "name": "PBI_NavigationStepName",
+      "value": "Navigation"
+    },
+    {
+      "name": "PBI_ResultType",
+      "value": "Text"
+    }
+  ]
+}

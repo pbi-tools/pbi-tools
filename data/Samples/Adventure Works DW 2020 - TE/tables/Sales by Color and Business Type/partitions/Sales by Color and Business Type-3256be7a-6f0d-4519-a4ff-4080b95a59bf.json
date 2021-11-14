@@ -1,0 +1,16 @@
+{
+  "name": "Sales by Color and Business Type-3256be7a-6f0d-4519-a4ff-4080b95a59bf",
+  "mode": "import",
+  "source": {
+    "type": "calculated",
+    "expression": [
+      "SUMMARIZECOLUMNS (",
+      "    Product[Color],",
+      "    Reseller[Business Type],",
+      "    FILTER ( ALL ( Product[List Price] ), Product[List Price] > 150.00 ),",
+      "    TREATAS ( { \"Accessories\", \"Bikes\" }, 'Product'[Category] ),",
+      "    \"Total Sales\", SUM ( Sales[Sales Amount] )",
+      ")"
+    ]
+  }
+}

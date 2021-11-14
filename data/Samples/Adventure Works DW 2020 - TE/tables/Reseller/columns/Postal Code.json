@@ -1,0 +1,17 @@
+{
+  "name": "Postal Code",
+  "dataType": "string",
+  "sourceColumn": "Postal Code",
+  "dataCategory": "PostalCode",
+  "summarizeBy": "none",
+  "annotations": [
+    {
+      "name": "SummarizationSetBy",
+      "value": "Automatic"
+    },
+    {
+      "name": "Format",
+      "value": "<Format Format=\"Text\" />"
+    }
+  ]
+}

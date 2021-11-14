@@ -1,0 +1,18 @@
+{
+  "name": "Sales Order Line",
+  "dataType": "string",
+  "sourceColumn": "Sales Order Line",
+  "sortByColumn": "SalesOrderLineKey",
+  "isDefaultLabel": true,
+  "summarizeBy": "none",
+  "annotations": [
+    {
+      "name": "SummarizationSetBy",
+      "value": "Automatic"
+    },
+    {
+      "name": "Format",
+      "value": "<Format Format=\"Text\" />"
+    }
+  ]
+}

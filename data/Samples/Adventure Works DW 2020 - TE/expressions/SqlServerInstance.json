@@ -1,0 +1,15 @@
+{
+  "name": "SqlServerInstance",
+  "kind": "m",
+  "expression": "\"POWERBI-SQL\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]",
+  "annotations": [
+    {
+      "name": "PBI_NavigationStepName",
+      "value": "Navigation"
+    },
+    {
+      "name": "PBI_ResultType",
+      "value": "Text"
+    }
+  ]
+}

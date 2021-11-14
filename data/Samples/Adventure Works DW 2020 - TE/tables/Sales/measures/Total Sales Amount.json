@@ -1,0 +1,11 @@
+{
+  "name": "Total Sales Amount",
+  "expression": "SUM(Sales[Sales Amount])",
+  "formatString": "\"£\"#,0.###############;-\"£\"#,0.###############;\"£\"#,0.###############",
+  "annotations": [
+    {
+      "name": "Format",
+      "value": "<Format Format=\"CurrencyGeneral\" ThousandSeparator=\"True\"><Currency LCID=\"2057\" DisplayName=\"£ English (United Kingdom)\" Symbol=\"£\" PositivePattern=\"0\" NegativePattern=\"1\" /></Format>"
+    }
+  ]
+}

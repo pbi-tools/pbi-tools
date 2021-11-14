@@ -1,0 +1,17 @@
+{
+  "name": "Order Quantity",
+  "dataType": "int64",
+  "sourceColumn": "Order Quantity",
+  "formatString": "#,0",
+  "summarizeBy": "none",
+  "annotations": [
+    {
+      "name": "SummarizationSetBy",
+      "value": "User"
+    },
+    {
+      "name": "Format",
+      "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" ThousandSeparator=\"True\" />"
+    }
+  ]
+}

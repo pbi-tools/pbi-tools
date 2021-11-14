@@ -1,0 +1,22 @@
+{
+  "name": "ResellerKey",
+  "dataType": "int64",
+  "isHidden": true,
+  "sourceColumn": "ResellerKey",
+  "formatString": "0",
+  "summarizeBy": "none",
+  "annotations": [
+    {
+      "name": "SummarizationSetBy",
+      "value": "Automatic"
+    },
+    {
+      "name": "Format",
+      "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+    },
+    {
+      "name": "PBI_ChangedProperties",
+      "value": "[\"IsHidden\"]"
+    }
+  ]
+}
