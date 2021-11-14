@@ -119,7 +119,8 @@ namespace PbiTools
 #endif
 
 
-        [ArgActionMethod, ArgShortcut("extract-data"), ArgDescription("Extract data from all tables in a tabular model, either from within a PBIX file, or from a live session.")]
+        [ArgActionMethod, ArgShortcut("export-data"), ArgAltShortcut("extract-data")]
+        [ArgDescription("Exports data from all tables in a tabular model, either from within a PBIX file, or from a live session.")]
         [ArgExample(
             "pbi-tools.exe extract-data -port 12345", 
             "Extracts all records from each table from a local Power BI Desktop or SSAS Tabular instance running on port 12345 (get actual port via 'info' command). Each table is extracted into a UTF-8 CSV file with the same name into the current working directory.",
@@ -128,7 +129,7 @@ namespace PbiTools
             @"pbi-tools.exe extract-data -pbixPath '.\data\Samples\Adventure Works DW 2020.pbix'", 
             "Extracts all records from each table from the model embedded in the specified PBIX file. Each table is extracted into a UTF-8 CSV file with the same name into the current working directory.",
             Title = "Extract data from offline PBIX file")]
-        public void ExtractData(
+        public void ExportData(
             [ArgCantBeCombinedWith("pbixPath"), ArgDescription("The port number of a local Tabular Server instance.")] int port,
             [ArgRequired(IfNot = "port"), ArgExistingFile, ArgDescription("The PBIX file to extract data from.")] string pbixPath,
             [ArgDescription("The output directory. Uses PBIX file directory if not provided, or the current working directory when connecting to Tabular Server instance.")] string outPath,
@@ -176,8 +177,9 @@ namespace PbiTools
         }
 
 
-        [ArgActionMethod, ArgShortcut("export-bim"), ArgDescription("Converts the Model artifacts to a TMSL/BIM file.")]
-        public void ExportBim(
+        [ArgActionMethod, ArgShortcut("generate-bim"), ArgAltShortcut("export-bim")]
+        [ArgDescription("Generates a TMSL/BIM file from Model sources in a folder. The output path is derived from the source folder.")]
+        public void GenerateBim(
             [ArgRequired, ArgExistingDirectory, ArgDescription("The PbixProj folder to export the BIM file from.")] string folder,
             [ArgDescription("Generate model data sources. Only required for deployment to Azure Analysis Services, but not for Power BI Premium via the XMLA endpoint.")] bool generateDataSources,
             [ArgDescription("List transformations to be applied to TMSL document.")] ExportTransforms transforms
