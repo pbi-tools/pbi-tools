@@ -171,6 +171,9 @@ Target.create "Clean" (fun _ ->
 Target.create "ZipSampleData" (fun _ ->
     !! "data/Samples/Adventure Works DW 2020/**/*.*"
     |> Zip.zip "data/Samples/Adventure Works DW 2020" (tempDir @@ "Adventure Works DW 2020.zip")
+
+    !! "data/Samples/Adventure Works DW 2020 - TE/**/*.*"
+    |> Zip.zip "data/Samples/Adventure Works DW 2020 - TE" (tempDir @@ "Adventure Works DW 2020 - TE.zip")
 )
 
 

@@ -19,6 +19,7 @@
     <None Remove="TestResources\**\*.*" />
     <EmbeddedResource Include="TestResources\**\*.*" />
     <EmbeddedResource Include="..\..\.temp\Adventure Works DW 2020.zip" LogicalName="Adventure Works DW 2020.zip" />
+    <EmbeddedResource Include="..\..\.temp\Adventure Works DW 2020 - TE.zip" LogicalName="Adventure Works DW 2020 - TE.zip" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\PBI-Tools\PBI-Tools.csproj" />

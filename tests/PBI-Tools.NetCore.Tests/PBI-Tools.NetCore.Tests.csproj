@@ -17,6 +17,7 @@
   <ItemGroup>
     <EmbeddedResource Include="..\PBI-Tools.Tests\TestResources\**\*.*" />
     <EmbeddedResource Include="..\..\.temp\Adventure Works DW 2020.zip" LogicalName="Adventure Works DW 2020.zip" />
+    <EmbeddedResource Include="..\..\.temp\Adventure Works DW 2020 - TE.zip" LogicalName="Adventure Works DW 2020 - TE.zip" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\PBI-Tools.Tests\**\*.cs" Exclude="..\PBI-Tools.Tests\obj\**\*.*;..\PBI-Tools.Tests\Properties\**\*.*" />
