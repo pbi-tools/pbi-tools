@@ -4,8 +4,8 @@
 
 An example project is available here: <https://github.com/action-bi-toolkit/adventureworksdw2020-pbix>
 
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/action-bi-toolkit/pbi-tools)
-![Twitter Follow](https://img.shields.io/twitter/follow/mthierba)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/action-bi-toolkit/pbi-tools)](https://github.com/action-bi-toolkit/pbi-tools/releases/latest)
+[![Twitter Follow](https://img.shields.io/twitter/follow/mthierba)](https://twitter.com/mthierba)
 
 - Twitter Hashtag: [#ActionBIToolkit](https://twitter.com/search?q=%23ActionBIToolkit&src=typed_query)
 
