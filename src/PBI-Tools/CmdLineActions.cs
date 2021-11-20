@@ -7,13 +7,9 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using PbiTools.PowerBI;
-#if NETFRAMEWORK
-using PbiTools.Rpc;
-#endif
 using PbiTools.Utils;
 using PowerArgs;
 using Serilog;
@@ -435,43 +431,6 @@ namespace PbiTools
                     });
                     break;
             }
-        }
-#endif
-#endregion
-
-
-#region start-server
-#if DEBUG
-        [ArgActionMethod, ArgShortcut("start-server"), OmitFromUsageDocs]
-        public void StartJsonRpcServer()
-        {
-            using (_appSettings.SuppressConsoleLogs())
-            using (var cts = new CancellationTokenSource())
-            {
-                if (Environment.UserInteractive)
-                {
-                    Console.CancelKeyPress += (sender,e) => {
-                        e.Cancel = true; // intercept Ctrl+C
-                        cts.Cancel();
-                    };
-                }
-
-                using (var rpcServer = RpcServer.Start(Console.OpenStandardOutput, Console.OpenStandardInput, cts))
-                {
-                    cts.Token.WaitHandle.WaitOne(); // waits until cancel key pressed, RpcServer disconnected, or exit message sent
-                }
-            }
-
-            /* OmniSharp sample server:
-
-            var server = new LanguageServer(Console.OpenStandardInput(), Console.OpenStandardOutput(), new LoggerFactory());
-
-            server.AddHandler(new TextDocumentHandler(server));
-
-            await server.Initialize();
-            await server.WaitForExit;
-
-             */
         }
 #endif
 #endregion

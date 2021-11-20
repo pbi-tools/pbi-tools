@@ -14,7 +14,6 @@ group Main
   nuget Moq
   nuget System.ValueTuple
   nuget Polly
-  nuget StreamJsonRpc
   nuget Castle.Core
   nuget Costura.Fody copy_local: true
   nuget Fody

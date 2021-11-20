@@ -5,7 +5,6 @@ Microsoft.AnalysisServices.AdomdClient.retail.amd64
 Newtonsoft.Json
 PowerArgs
 Polly
-StreamJsonRpc
 Castle.Core
 Costura.Fody
 Moq
