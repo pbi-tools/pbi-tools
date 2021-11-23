@@ -17,6 +17,7 @@ namespace PbiTools
 
     class Program
     {
+#if NETFRAMEWORK
         [DllImport("kernel32.dll")]
         private static extern ErrorModes SetErrorMode(ErrorModes uMode);
 
@@ -30,13 +31,15 @@ namespace PbiTools
             SEM_NOGPFAULTERRORBOX = 0x0002,
             SEM_NOOPENFILEERRORBOX = 0x8000
         }
+#endif
 
         static Program()
         {
+#if NETFRAMEWORK
             // Prevent the "This program has stopped working" messages.
             var prevMode = SetErrorMode(ErrorModes.SEM_NOGPFAULTERRORBOX);
             SetErrorMode(prevMode | ErrorModes.SEM_NOGPFAULTERRORBOX); // Set error mode w/o overwriting prev settings
-
+#endif
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.ControlledBy(AppSettings.LevelSwitch)
                 .WriteTo.Console(
