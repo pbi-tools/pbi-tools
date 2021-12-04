@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using TOM = Microsoft.AnalysisServices.Tabular;
@@ -16,17 +17,19 @@ namespace PbiTools.Tests
     using Utils;
 
     /// <summary>
-    /// Extracts the embedded 'Adventure Works DW 2020' Pbix Project,
+    /// Extracts the embedded 'Adventure Works DW 2020 - TE' Tabular Editor model folder,
     /// and deserializes the model into a TOM.Model to run tests against.
     /// </summary>
-    public class TabularModelDeserializerFixture : HasTempFolder
+    public class TEModelFolderDeserializerFixture : HasTempFolder
     {
 
-        public TabularModelDeserializerFixture()
+        public TEModelFolderDeserializerFixture()
         {
-            using (var zip = new ZipArchive(Resources.GetEmbeddedResourceStream("Adventure Works DW 2020.zip")))
+            using (var zip = new ZipArchive(Resources.GetEmbeddedResourceStream("Adventure Works DW 2020 - TE.zip")))
             {
-                zip.ExtractToDirectory(TestFolder.Path);
+                var modelFolder = new DirectoryInfo(Path.Combine(TestFolder.Path, "Model"));
+                modelFolder.Create();
+                zip.ExtractToDirectory(modelFolder.FullName);
             }
 
             using (var rootFolder = new ProjectRootFolder(TestFolder.Path))
@@ -46,13 +49,13 @@ namespace PbiTools.Tests
             }
         }
 
-        public TOM.Model Model { get; private set; }
+        public TOM.Model Model { get; }
 
     }
 
-    public class TabularModelDeserializerTests : AdventureWorksDeserializerTestsBase, IClassFixture<TabularModelDeserializerFixture>
+    public class TEModelFolderDeserializerTests : AdventureWorksDeserializerTestsBase, IClassFixture<TEModelFolderDeserializerFixture>
     {
-        public TabularModelDeserializerTests(TabularModelDeserializerFixture fixture) : base(fixture.Model)
+        public TEModelFolderDeserializerTests(TEModelFolderDeserializerFixture fixture) : base(fixture.Model)
         {
         }
 

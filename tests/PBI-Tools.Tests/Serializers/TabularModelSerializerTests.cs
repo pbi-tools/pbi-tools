@@ -3,7 +3,6 @@
 
 using System.Collections.Generic;
 using System.Data.Common;
-using System.Xml;
 using System.Xml.XPath;
 using Newtonsoft.Json.Linq;
 using PbiTools.Serialization;
@@ -305,6 +304,84 @@ namespace PbiTools.Tests
 
 
         #endregion
+
+        #region Partitions
+
+        public class Partitions
+        { 
+            [TestNotImplemented]
+            public void Serializes_M_Partitions()
+            {
+                //Given
+
+                //When
+
+                //Then
+            }
+
+            [TestNotImplemented]
+            public void Serializes_CalculationGroup_Partitions()
+            {
+                //Given
+
+                //When
+
+                //Then
+            }
+
+            [TestNotImplemented]
+            public void Serializes_Calculated_Partitions()
+            {
+                //Given
+
+                //When
+
+                //Then
+            }
+
+            [TestNotImplemented]
+            public void Serializes_PolicyRange_Partitions()
+            {
+                //Given
+
+                //When
+
+                //Then
+            }
+
+            [TestNotImplemented]
+            public void Serializes_Entity_Partitions()
+            {
+                //Given
+
+                //When
+
+                //Then
+            }
+
+            [TestNotImplemented]
+            public void Serializes_Query_Partitions()
+            {
+                //Given
+
+                //When
+
+                //Then
+            }
+
+        }
+
+        #endregion
+
+        #region Perspectives
+        #endregion
+
+        #region Roles
+        #endregion
+
+        #region Expressions
+        #endregion
+
 
 #if NETFRAMEWORK
         public class SerializeLegacyDataSources

@@ -123,5 +123,20 @@ namespace PbiTools.Serialization
             }
             return defaultValue;
         }
+
+        /// <summary>
+        /// Returns the array with the specified name from the json object. Inserts a new empty array if it doesn't exist.
+        /// </summary>
+        public static JArray EnsureArray(this JObject parent, string name)
+        { 
+            var array = parent[name] as JArray;
+            if (array == null)
+            {
+                parent.Add(name, new JArray());
+                array = parent[name] as JArray;
+            }
+            return array;
+        }
+
     }
 }

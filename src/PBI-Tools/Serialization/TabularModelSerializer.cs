@@ -36,6 +36,10 @@ namespace PbiTools.Serialization
             public const string Columns = "columns";
             public const string Hierarchies = "hierarchies";
             public const string Measures = "measures";
+            public const string Partitions = "partitions";
+            public const string Annotations = "annotations";
+            public const string Expressions = "expressions";
+            public const string Relationships = "relationships";
         }
 
 
@@ -396,15 +400,32 @@ namespace PbiTools.Serialization
             var model = db.Value<JObject>("model");
 
             // append tables (convert measures, partitions)
-            var tables = DeserializeTables(_modelFolder);
+            var tables = DeserializeTables(_modelFolder);  // "tables", "tables/columns", "tables/hierarchies", "tables/measures"
             if (tables != null)
                 model.Add("tables", tables);
 
             // expressions (queries) -- exclude table (non shared) expressions
-            DeserializeExpressions(_modelFolder, model);
+            DeserializeExpressions(_modelFolder, model);   // "queries"
 
             // cultures
-            DeserializeCultures(_modelFolder, model);
+            DeserializeCultures(_modelFolder, model);      // "cultures"
+
+            // Support TE folders:
+            /*
+    "Data Sources",
+    "Perspectives",
+    "Relationships",
+    "Roles",
+    "Shared Expressions",
+    "Tables",
+    "Tables/Annotations",
+    "Tables/Calculation Items",
+    "Tables/Columns",
+    "Tables/Hierarchies",
+    "Tables/Measures",
+    "Tables/Partitions",
+    "Translations"
+             */
 
             database = db;
             return true;
@@ -415,72 +436,98 @@ namespace PbiTools.Serialization
         {
             var tables = new List<JObject>();
             var tablesFolder = modelFolder.GetSubfolder(Names.Tables);
-            var queriesFolder = modelFolder.GetSubfolder(Names.Queries);
+            var queriesFolder = modelFolder.GetSubfolder(Names.Queries); // Contains M queries in PbixProj format
 
             foreach (var tableFolder in tablesFolder.GetSubfolders("*"))
             {
-                var tableFile = tableFolder.GetFile("table.json");
+                var tableFile = tableFolder.GetFirstFile("table.json", $"{tableFolder.Name}.json");
                 if (!tableFile.Exists()) continue;
 
                 var tableJson = tableFile.ReadJson();
                 var tableName = tableJson.Value<string>("name");
 
-                if (!tableJson.ContainsKey("partitions")) tableJson["partitions"] = new JArray();
-                var partitionsJson = tableJson["partitions"] as JArray;
-
-                if (partitionsJson.Count == 1) // TODO Handle multiple partitions
+                // PARTITIONS
+                var partitionsFolder = tableFolder.GetSubfolder(Names.Partitions);
+                if (partitionsFolder.Exists())
                 {
-                    var partition = partitionsJson[0];
+                    tableJson["partitions"] = new JArray(partitionsFolder
+                        .GetFiles("*.json")
+                        .Select(f => f.ReadJson())
+                    );
+                }
+                else
+                {
+                    var partitionsJson = tableJson.EnsureArray("partitions");
 
-                    // Legacy models: Convert to M partition
-                    if (partition.SelectToken("source.query") != null)
+                    if (partitionsJson.Count == 1) // TODO Handle multiple partitions
                     {
-                        partition["source"] = new JObject // overwrites existing QueryPartitionSource
-                        {
-                            { "type", "m" },
-                            { "expression", new JArray(new [] {
-                                $"let",
-                                $"    Source = #\"{tableJson.Value<string>("name")}\"",
-                                $"in",
-                                $"    Source"
-                            })} // TODO Must find correct query name!!! (get from annotation 'LinkedQueryName')
-                        };
-                    }
+                        var partition = partitionsJson[0];
 
-                    if (partition.SelectToken("source.type")?.Value<string>() == "calculated")
-                    { 
-                        var daxFile = tableFolder.GetFile("table.dax");
-                        if (daxFile.Exists())
-                        { 
-                            partition["source"]["expression"] = ConvertExpression(daxFile.ReadText());
+                        // LEGACY models only: Convert to M partition
+                        if (partition.SelectToken("source.query") != null)
+                        {
+                            partition["source"] = new JObject // overwrites existing QueryPartitionSource
+                            {
+                                { "type", "m" },
+                                { "expression", new JArray(new [] {
+                                    $"let",
+                                    $"    Source = #\"{tableJson.Value<string>("name")}\"",
+                                    $"in",
+                                    $"    Source"
+                                })} // TODO Must find correct query name!!! (get from annotation 'LinkedQueryName')
+                            };
+                        }
+
+                        // Calculated table: Insert partition expression from *.dax file (if exists)
+                        if (partition.SelectToken("source.type")?.Value<string>() == "calculated")
+                        {
+                            var daxFile = tableFolder.GetFile("table.dax");
+                            if (daxFile.Exists())
+                            {
+                                partition["source"]["expression"] = ConvertExpression(daxFile.ReadText());
+                            }
                         }
                     }
-                }
 
-                // Get (single) query from /queries folder matching the current table's name
-                var tableQuery = queriesFolder.GetFiles($"{tableName.SanitizeFilename()}.m", SearchOption.AllDirectories).FirstOrDefault();
-                if (tableQuery != null && partitionsJson.Count == 0)
-                {
-                    var partitionName = partitionsJson.Count == 0
-                        ? tableName
-                        : $"{tableName}-{Guid.NewGuid()}";
-
-                    partitionsJson.Add(new JObject
+                    // Get (single) query from '/queries' folder matching the current table's name
+                    var tableQuery = queriesFolder.GetFiles($"{tableName.SanitizeFilename()}.m", SearchOption.AllDirectories).FirstOrDefault();
+                    if (tableQuery != null && partitionsJson.Count == 0)
                     {
-                        { "name", partitionName },
-                        { "mode", "import" },
-                        // { "queryGroup", "TODO" },
-                        { "source", new JObject 
+                        var partitionName = partitionsJson.Count == 0
+                            ? tableName
+                            : $"{tableName}-{Guid.NewGuid()}"; // TODO Provide option to configure generated partition name
+
+                        partitionsJson.Add(new JObject
                         {
-                            { "type", "m" },
-                            { "expression", ConvertExpression(tableQuery.ReadText()) }
-                        }}
-                    });
+                            { "name", partitionName },
+                            { "mode", "import" },
+                            // { "queryGroup", "TODO" },
+                            { "source", new JObject
+                            {
+                                { "type", "m" },
+                                { "expression", ConvertExpression(tableQuery.ReadText()) }
+                            }}
+                        });
+                    }
                 }
+
 
                 DeserializeMeasures(tableFolder, tableJson);
                 DeserializeColumns(tableFolder, tableJson);
                 DeserializeHierarchies(tableFolder, tableJson);
+
+                // ANNOTATIONS (TE Format)
+                var annotationsFolder = tableFolder.GetSubfolder(Names.Annotations);
+                if (annotationsFolder.Exists())
+                {
+                    tableJson["annotations"] = new JArray(annotationsFolder
+                        .GetFiles("*.json")
+                        .Select(f => f.ReadJson())
+                    );
+                }
+
+
+                // Calculation Items
 
                 tables.Add(tableJson);
             }
@@ -557,12 +604,7 @@ namespace PbiTools.Serialization
             if (sharedExpressions.Length == 0) return;
 
             // Ensure model.expressions node:
-            var expressionsJson = modelJson["expressions"] as JArray;
-            if (expressionsJson == null)
-            {
-                modelJson.Add("expressions", new JArray());
-                expressionsJson = modelJson["expressions"] as JArray;
-            }
+            var expressionsJson = modelJson.EnsureArray("expressions");
 
             // Upsert each shared expression
             foreach (var expressionFile in sharedExpressions)

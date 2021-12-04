@@ -53,6 +53,21 @@ namespace PbiTools.FileSystem
             });
         }
 
+        /// <summary>
+        /// Tests a series of file paths against the project folder and returns the first file found.
+        /// Returns null if none of the paths have existing files.
+        /// </summary>
+        public static IProjectFile GetFirstFile(this IProjectFolder folder, params string[] filePaths)
+        {
+            foreach (var path in filePaths ?? new string[0])
+            {
+                var file = folder.GetFile(path);
+                if (file.Exists())
+                    return file;
+            }
+
+            return default;
+        }
     }
 
 }
