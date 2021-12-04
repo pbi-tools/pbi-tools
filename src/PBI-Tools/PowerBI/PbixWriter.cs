@@ -185,6 +185,8 @@ namespace PbiTools.PowerBI
             if (_format == PbiFileFormat.PBIX && _pbixModel.DataModel != null)
                 throw new NotSupportedException("The pbi-tools Core version does not support compiling a PBIX with an embedded data model. Target a PBIT output instead.");
 
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
+
             using (var package = Package.Open(path, FileMode.OpenOrCreate, FileAccess.ReadWrite)) // TODO Check overwrite?
             {
                 var existingParts = package.GetParts().Select(p => p.Uri).ToList();
