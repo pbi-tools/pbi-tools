@@ -24,6 +24,9 @@ namespace PbiTools.PowerBI
         public bool IsOptional { get; set; } = true;
         public string ContentType { get; set; } = PowerBIPartConverters.ContentTypes.DEFAULT;
 
+        public DataModelConverter(string relativePartUri, string modelName, IDependenciesResolver resolver) : this(new Uri(relativePartUri, UriKind.Relative), modelName, resolver)
+        { }
+
         public DataModelConverter(Uri partUri, string modelName, IDependenciesResolver resolver)
         {
             this.PartUri = partUri;

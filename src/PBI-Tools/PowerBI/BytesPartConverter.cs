@@ -13,6 +13,9 @@ namespace PbiTools.PowerBI
         public bool IsOptional { get; set; } = true;
         public string ContentType { get; set; } = PowerBIPartConverters.ContentTypes.DEFAULT;
 
+        public BytesPartConverter(string relativePartUri) : this(new Uri(relativePartUri, UriKind.Relative))
+        { }
+
         public BytesPartConverter(Uri partUri)
         {
             this.PartUri = partUri;
