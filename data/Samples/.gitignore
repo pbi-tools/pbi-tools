@@ -1,3 +1,5 @@
 *.csv
 Adventure Works DW 2020 - Raw/
 !*.pbix
+query.json
+dataTransforms.json
