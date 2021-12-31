@@ -16,7 +16,7 @@ namespace PbiTools.Deployments
         public PbiDeploymentSource Source { get; set; }
         public PbiDeploymentAuthentication Authentication { get; set; }
         public PbiDeploymentOptions Options { get; set; }
-        public JToken Parameters { get; set; }
+        public IDictionary<string, string> Parameters { get; set; }
         public JToken Logging { get; set; }
         public IDictionary<string, PbiDeploymentEnvironment> Environments { get; set; }
 
@@ -35,7 +35,7 @@ namespace PbiTools.Deployments
 
     public class PbiDeploymentSource
     {
-        public PbiDeploymentSourceType Source { get; set; }
+        public PbiDeploymentSourceType Type { get; set; }
         public string Path { get; set; }
     }
 
@@ -62,12 +62,13 @@ namespace PbiTools.Deployments
     {
         public Microsoft.PowerBI.Api.Models.ImportConflictHandlerMode NameConflict { get; set; }
         public string TempDir { get; set; }
+        public Uri PbiBaseUri { get; set; }
     }
 
     public class PbiDeploymentEnvironment
     {
         public bool Disabled { get; set; }
-        public Guid WorkspaceId { get; set; } // TODO Support Workspace Name
-        // public string WorkspaceName { get; set; }
+        public string Workspace { get; set; }
+        // Workspace Members?
     }
 }
