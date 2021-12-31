@@ -53,9 +53,6 @@ namespace PbiTools.ProjectSystem
          * 0.10  - Supports 'custom' token (not used by pbi-tools, but available to external clients)
          */
 
-        /* Entries to add later: */
-        // Deployments
-        // CustomProperties
 
         private static readonly JsonSerializerSettings DefaultJsonSerializerSettings = new JsonSerializerSettings
         {
@@ -172,6 +169,9 @@ namespace PbiTools.ProjectSystem
                 Path.GetDirectoryName(pbixPath),
                 Path.GetFileNameWithoutExtension(pbixPath)
             ); // TODO make this configurable
+
+        public static bool IsPbixProjFolder(string path) =>
+            File.Exists(Path.Combine(path, Filename));
 
     }
 }
