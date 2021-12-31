@@ -1,4 +1,8 @@
 
+## 1.0.0-beta.7+60.1 - 2021-12-31
+
+- FIX #60 Introduced new env setting `PBITOOLS_AppDataDir`, allowing to customize the default AppData location (in the `%LOCALAPPDATA%` folder). When the Windows Store version of PBI Desktop is used, that location is used to shadow-copy the msmdsrv engine.
+
 ## 1.0.0-beta.7 - 2021-11-07
 * #16 **pbi-tools Core Version** released (with distributions for Win x64, Linux Desktop x64, Linux Alpine x64). This version is available cross-platform and supports CI/CD deployment and automation scenarios where a local Power BI Desktop installation is not available.
 * #16 Full/classic version of pbi-tools rebranded as "Desktop CLI" (exposed as "edition" `info` property)

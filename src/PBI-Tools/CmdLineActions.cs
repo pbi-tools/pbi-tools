@@ -338,10 +338,7 @@ namespace PbiTools
                     { "amoVersion", typeof(Microsoft.AnalysisServices.Tabular.Server).Assembly
                         .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion },
                     { "toolPath", Process.GetCurrentProcess().MainModule.FileName },
-                    { "settings", new JObject {
-                        { AppSettings.Environment.LogLevel, AppSettings.GetEnvironmentSetting(AppSettings.Environment.LogLevel) },
-                        { AppSettings.Environment.PbiInstallDir, AppSettings.GetEnvironmentSetting(AppSettings.Environment.PbiInstallDir) },
-                    }},
+                    { "settings", AppSettings.AsJson() },
                     { "runtime", new JObject {
                         { "platform", System.Runtime.InteropServices.RuntimeInformation.OSDescription },
                         { "architecture", System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString() },
