@@ -1,6 +1,7 @@
 Serilog
 Serilog.Sinks.Console
 Newtonsoft.Json
+Polly
 PowerArgs
 HtmlAgilityPack
 CsvHelper

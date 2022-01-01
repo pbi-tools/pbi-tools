@@ -3,6 +3,7 @@
 
 using System;
 using System.IO;
+using Polly;
 using Serilog;
 
 namespace PbiTools.Utils
@@ -37,9 +38,18 @@ namespace PbiTools.Utils
         void IDisposable.Dispose()
         {
             if (!Delete) return;
-            Directory.Delete(Path, recursive: true);
-            Log.Verbose("Deleted TEMP folder at {Path}", Path);
-            // Provide failsafe Dispose() -- catch and log any errors, rather than re-throw
+
+            Policy
+                .Handle<IOException>()
+                .Fallback(() => { }, ex => 
+                {
+                    Log.Warning(ex, "Failed to delete temp folder at {Path}.", this.Path);
+                })
+                .Execute(() =>
+                {
+                    Directory.Delete(Path, recursive: true);
+                    Log.Verbose("Deleted TEMP folder at {Path}", Path);
+                });
         }
     }
 }
