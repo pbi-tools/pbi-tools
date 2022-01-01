@@ -2,6 +2,8 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using System;
+using System.Linq;
+using Newtonsoft.Json.Linq;
 using Serilog.Core;
 using Serilog.Events;
 
@@ -22,9 +24,15 @@ namespace PbiTools
         {
             public static readonly string LogLevel = $"{EnvPrefix}{nameof(LogLevel)}";
             public static readonly string PbiInstallDir = $"{EnvPrefix}{nameof(PbiInstallDir)}";
+            public static readonly string AppDataDir = $"{EnvPrefix}{nameof(AppDataDir)}";
         }
 
-        public static string GetEnvironmentSetting(string name) => System.Environment.GetEnvironmentVariable(name);
+        public static string GetEnvironmentSetting(string name) => System.Environment.GetEnvironmentVariable(name)
+            switch
+            {
+                var value when value is not null => System.Environment.ExpandEnvironmentVariables(value),
+                _ => null
+            };
 
         public AppSettings()
         {
@@ -46,6 +54,16 @@ namespace PbiTools
         public LoggingLevelSwitch LevelSwitch { get; }
 
         internal bool ShouldSuppressConsoleLogs { get; set; } = false;
+
+        public static JObject AsJson() =>
+            new JObject(
+                typeof(Environment).GetFields(System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public)
+                .Select(f =>
+                {
+                    var envName = (string)f.GetValue(null);
+                    return new JProperty(envName, GetEnvironmentSetting(envName));
+                })
+            );
 
         /// <summary>
         /// Completely disables the console logger inside an <c>IDisposable</c> scope.
