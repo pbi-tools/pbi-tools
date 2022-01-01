@@ -26,11 +26,15 @@ namespace PbiTools.Tests
                 { "custom", new JRaw(Utils.Resources.GetEmbeddedResourceString("custom_project_settings.json")) }
             };
 
+            // Write PbixProj file with custom settings
             using (var writer = new JsonTextWriter(File.CreateText(Path.Combine(TestFolder.Path, PbixProject.Filename))))
             {
                 projFile.WriteTo(writer);
             }
 
+            // Read file using PbixProject API
+            // Modify custom settings
+            // Save file back
             using (var rootFolder = new ProjectRootFolder(TestFolder.Path))
             {
                 var project = PbixProject.FromFolder(rootFolder);

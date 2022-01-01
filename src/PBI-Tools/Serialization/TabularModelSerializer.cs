@@ -573,11 +573,20 @@ namespace PbiTools.Serialization
                 }
             );
 
+        /// <summary>
+        /// Deserializes items from a table subfolder into an array property of the TOM table object.
+        /// </summary>
+        /// <param name="tableFolder">The PbixProj table folder.</param>
+        /// <param name="tableJson">The TOM Table object to populate.</param>
+        /// <param name="name">The name of the TOM Table property to create. Also the expected subfolder name.</param>
+        /// <param name="transformFile">A function transforming a file into a JToken. A file will be skipped if <c>null</c> is returned.</param>
+        /// <param name="searchPattern">The file search pattern. Default: '*.json'.</param>
         private static void DeserializeTablePropertyFromFolder(IProjectFolder tableFolder, JObject tableJson, string name, Func<IProjectFolder, IProjectFile, JToken> transformFile, string searchPattern = "*.json")
         { 
             var subFolder = tableFolder.GetSubfolder(name);
             if (subFolder.Exists())
             {
+                // TODO Support json merge
                 tableJson.Add(name, new JArray(
                     subFolder
                         .GetFiles(searchPattern)
