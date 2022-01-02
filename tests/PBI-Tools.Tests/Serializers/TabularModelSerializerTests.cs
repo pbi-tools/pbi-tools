@@ -1,8 +1,10 @@
 ﻿// Copyright (c) Mathias Thierbach
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Linq;
 using System.Xml.XPath;
 using Newtonsoft.Json.Linq;
 using PbiTools.Serialization;
@@ -419,6 +421,111 @@ namespace PbiTools.Tests
         #region Expressions
         #endregion
 
+        #region Annotations
+
+        public class AnnotationRules
+        {
+            private static JArray CreateAnnotations(params string[] names) =>
+                new(names.Select(name => new JObject {
+                    { "name", name },
+                    { "value", $"{Guid.NewGuid()}" } 
+                }));
+
+            [Fact]
+            public void DoesNothingWhenRulesAreNull() 
+            {
+                JsonTransforms.ApplyAnnotationRules(new JObject(), default);
+            }
+
+            [Fact]
+            public void RemovesAnnotationsPropertyWhenAllAnnotationsAreExcluded()
+            {
+                var result = JsonTransforms.ApplyAnnotationRules(
+                    new JObject {
+                        { "annotations", CreateAnnotations("Foo1", "foo_2") }
+                    }, 
+                    new ProjectSystem.ModelAnnotationSettings {
+                        Exclude = new[] { "foo*" }
+                    }
+                );
+
+                // 'annotations' property removed since both annotions were excluded
+                Assert.Empty(result.Properties());
+            }
+
+            [Fact]
+            public void AnnotationRulesAreCaseInsensitive()
+            {
+                var result = JsonTransforms.ApplyAnnotationRules(
+                    new JObject {
+                        { "annotations", CreateAnnotations(
+                            "PBI_Annotation1", 
+                            "PBI__VERSION"
+                        ) }
+                    },
+                    new ProjectSystem.ModelAnnotationSettings
+                    {
+                        Exclude = new[] { "pbi_*" },
+                        Include = new[] { "pbi__version" }
+                    }
+                );
+
+                // Both annotations matched ignoring casing
+                // One annotation remains because of Include rule
+                Assert.Collection(result.SelectTokens("$.annotations[*].name"),
+                    t => Assert.Equal("PBI__VERSION", t));
+            }
+
+            [Fact]
+            public void AllowsWildcardsInIncludeRules()
+            {
+                var result = JsonTransforms.ApplyAnnotationRules(
+                    new JObject {
+                        { "annotations", CreateAnnotations(
+                            "PBI_Annotation_1",
+                            "PBI_Annotation_10",
+                            "PBI__VERSION"
+                        ) }
+                    },
+                    new ProjectSystem.ModelAnnotationSettings
+                    {
+                        Exclude = new[] { "pbi_*" },
+                        Include = new[] { "pbi_annotation_?" }
+                    }
+                );
+
+                // Both annotations matched ignoring casing
+                // One annotation remains because of Include rule
+                Assert.Collection(result.SelectTokens("$.annotations[*].name"),
+                    t => Assert.Equal("PBI_Annotation_1", t));
+            }
+
+            [Fact]
+            public void DoesNothingWithoutExcludeRules()
+            {
+                var result = JsonTransforms.ApplyAnnotationRules(
+                    new JObject {
+                        { "annotations", CreateAnnotations(
+                            "PBI_Annotation1",
+                            "PBI__VERSION"
+                        ) }
+                    },
+                    new ProjectSystem.ModelAnnotationSettings
+                    {
+                        Include = new[] { "pbi__version" }
+                    }
+                );
+
+                // Only 'Include' rules provided: Json object is not modified
+                Assert.Collection(result.SelectTokens("$.annotations[*].name"),
+                    t => Assert.Equal("PBI_Annotation1", t),
+                    t => Assert.Equal("PBI__VERSION", t)
+                );
+            }
+
+        }
+
+        #endregion
 
 #if NETFRAMEWORK
         public class SerializeLegacyDataSources

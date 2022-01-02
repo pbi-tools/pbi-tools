@@ -17,6 +17,10 @@ namespace PbiTools.ProjectSystem
 
     public class ModelSettings
     {
+        [JsonProperty("serializationMode")]
+        [JsonConverter(typeof(StringEnumConverter))]
+        public ModelSerializationMode SerializationMode { get; set; } = ModelSerializationMode.Default;
+
         [JsonIgnore]
         public bool IsDefault => _ignoreProperties == null
             && SerializationMode == ModelSerializationMode.Default;
@@ -36,10 +40,25 @@ namespace PbiTools.ProjectSystem
             set => _ignoreProperties = value;
         }
 
-        [JsonProperty("serializationMode")]
-        [JsonConverter(typeof(StringEnumConverter))]
-        public ModelSerializationMode SerializationMode { get; set; } = ModelSerializationMode.Default;
+        [JsonProperty("annotations", NullValueHandling = NullValueHandling.Ignore)]
+        public ModelAnnotationSettings Annotations { get; set; }
     }
 
 
+    public class ModelAnnotationSettings
+    {
+        /// <summary>
+        /// All TOM object annotations to be ignored when serializing.
+        /// Wildcards ("*", "?") are supported.
+        /// </summary>
+        [JsonProperty("exclude", NullValueHandling = NullValueHandling.Ignore)]
+        public string[] Exclude { get; set; }
+
+        /// <summary>
+        /// Exeptions to the 'exclude' rule. Annotations listed here are not excluded.
+        /// Wildcards ("*", "?") are supported.
+        /// </summary>
+        [JsonProperty("include", NullValueHandling = NullValueHandling.Ignore)]
+        public string[] Include { get; set; }
+    }
 }

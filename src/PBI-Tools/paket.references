@@ -11,5 +11,6 @@ Moq
 HtmlAgilityPack
 PeNet
 CsvHelper
+WildcardMatch
 Microsoft.Identity.Client
 Microsoft.PowerBI.Api

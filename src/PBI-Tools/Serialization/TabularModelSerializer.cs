@@ -23,7 +23,7 @@ namespace PbiTools.Serialization
     public class TabularModelSerializer : IPowerBIPartSerializer<JObject>
     {
 
-        private static readonly ILogger Log = Serilog.Log.ForContext<TabularModelSerializer>();
+        internal static readonly ILogger Log = Serilog.Log.ForContext<TabularModelSerializer>();
 
         public static string FolderName => "Model";
 
@@ -68,7 +68,9 @@ namespace PbiTools.Serialization
 
             if (_settings.SerializationMode == ModelSerializationMode.Default)
             { 
-                db = db.RemoveProperties(_settings?.IgnoreProperties);
+                db = db
+                    .RemoveProperties(_settings?.IgnoreProperties)
+                    .ApplyAnnotationRules(_settings?.Annotations);
 
                 var dataSources = db.SelectToken("model.dataSources") as JArray ?? new JArray();
 #if NETFRAMEWORK

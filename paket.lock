@@ -328,6 +328,8 @@ NUGET
       System.Text.Encoding (>= 4.3) - restriction: || (&& (== net472) (< net46)) (== net6.0)
       System.Threading (>= 4.3) - restriction: || (&& (== net472) (< net46)) (== net6.0)
       System.Xml.ReaderWriter (>= 4.3) - restriction: || (&& (== net472) (< net46)) (== net6.0)
+    WildcardMatch (1.0.7)
+      NETStandard.Library (>= 1.6.1) - restriction: || (&& (== net472) (< net40)) (== net6.0)
 
 GROUP Fake-Build
 STORAGE: NONE

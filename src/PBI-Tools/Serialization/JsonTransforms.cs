@@ -4,6 +4,7 @@
 using System;
 using System.Linq;
 using Newtonsoft.Json.Linq;
+using WildcardMatch;
 
 namespace PbiTools.Serialization
 {
@@ -78,5 +79,42 @@ namespace PbiTools.Serialization
 
             return RemovePropertiesRec(json) as JObject;
         }
+
+
+        public static JObject ApplyAnnotationRules(this JObject json, ProjectSystem.ModelAnnotationSettings settings)
+        {
+            if (settings == null) return json;
+            if (settings.Exclude == null || settings.Exclude.Length == 0) return json;
+
+            var hasIncludes = settings.Include != null && settings.Include.Length > 0;
+            var allAnnotations = json.SelectTokens("$..annotations[?(@.name)]").ToArray();
+
+            foreach (JObject item in allAnnotations)
+            {
+                var name = item["name"].Value<string>();
+
+                // Do any of the 'Excludes match?
+                if (settings.Exclude.Any(excl => excl.WildcardMatch(name, ignoreCase: true)))
+                {
+                    // Skip if any of the 'Includes' match:
+                    if (hasIncludes && settings.Include.Any(incl => incl.WildcardMatch(name, ignoreCase: true)))
+                    { 
+                        TabularModelSerializer.Log.Debug("Keeping annotation due to 'Include' rule: {Path}", item.Path);
+                        continue; 
+                    }
+
+                    var parent = item.Parent as JArray; // Need to grab reference before removing item
+
+                    TabularModelSerializer.Log.Debug("Removing annotation due to 'Exclude' rule: {Path}", item.Path);
+                    item.Remove();
+
+                    if (parent != null && parent.Count == 0 && parent.Parent is JProperty property)
+                        property.Remove();
+                }
+            }
+
+            return json;
+        }
+
     }
 }
