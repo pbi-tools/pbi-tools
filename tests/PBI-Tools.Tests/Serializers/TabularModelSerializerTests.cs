@@ -13,13 +13,14 @@ namespace PbiTools.Tests
 {
     public class TabularModelSerializerTests : HasTempFolder
     {
+        private readonly MockProjectFolder folder = new MockProjectFolder();
+
 
         #region Tables
 
         [Fact]
         public void SerializeTables__RemovesTablesArrayFromOriginalJson()
         {
-            var folder = new MockProjectFolder();
             var db = JObject.Parse(@"
 {
     ""model"": {
@@ -35,7 +36,6 @@ namespace PbiTools.Tests
         [Fact]
         public void SerializeTables__CreatesFolderForEachTableUsingName()
         {
-            var folder = new MockProjectFolder();
             var db = JObject.Parse(@"
 {
     ""model"": {
@@ -63,7 +63,6 @@ namespace PbiTools.Tests
         [InlineData(@"foo?bar", "foo%3Fbar")]
         public void SerializeTables__SanitizesTableName(string tableName, string expectedFolderName)
         {
-            var folder = new MockProjectFolder();
             var db = new JObject 
             {
                 { "model", new JObject {
@@ -84,7 +83,6 @@ namespace PbiTools.Tests
         [Fact]
         public void SerializeTables__CreatesDaxFileForCalculatedTables()
         {
-            var folder = new MockProjectFolder();
             var table = Resources.GetEmbeddedResourceFromString("table--calculated.json", JObject.Parse);
             var table2 = TabularModelSerializer.SerializeTablePartitions(table, folder, @"tables\calculated", new MockQueriesLookup());
 
@@ -161,9 +159,7 @@ namespace PbiTools.Tests
         public void SerializeMeasures__DoesNothingIfThereAreNoMeasures()
         {
             var table = new JObject {};
-            var folder = new MockProjectFolder();
-            var result =
-                TabularModelSerializer.SerializeMeasures(table, folder, @"tables\table1\");
+            var result = TabularModelSerializer.SerializeMeasures(table, folder, @"tables\table1\");
 
             Assert.Equal(table.ToString(), result.ToString());
             Assert.Equal(0, folder.NumberOfFilesWritten);
@@ -180,7 +176,7 @@ namespace PbiTools.Tests
         { ""name"" : ""measure2"" }
     ]
 }");
-            var folder = new MockProjectFolder();
+
             TabularModelSerializer.SerializeMeasures(table, folder, @"tables\table1\");
 
             Assert.True(folder.ContainsPath(@"tables\table1\measures\measure1.xml"));
@@ -198,9 +194,8 @@ namespace PbiTools.Tests
         { ""name"" : ""measure2"" }
     ]
 }");
-            var folder = new MockProjectFolder();
-            var result =
-                TabularModelSerializer.SerializeMeasures(table, folder, @"tables\table1\");
+
+            var result = TabularModelSerializer.SerializeMeasures(table, folder, @"tables\table1\");
 
             Assert.Null(result.Property("measure"));
         }
@@ -224,7 +219,7 @@ namespace PbiTools.Tests
         }
     ]
 }");
-            var folder = new MockProjectFolder();
+
             TabularModelSerializer.SerializeMeasures(table, folder, @"tables\table1");
 
             var xml = folder.GetAsXml(@"tables\table1\measures\measure1.xml");
@@ -249,7 +244,6 @@ namespace PbiTools.Tests
         }
     ]
 }");
-            var folder = new MockProjectFolder();
             TabularModelSerializer.SerializeMeasures(table, folder, @"tables\table1");
 
             var expression = folder.GetAsString(@"tables\table1\measures\measure1.dax");
@@ -271,7 +265,7 @@ namespace PbiTools.Tests
         }
     ]
 }");
-            var folder = new MockProjectFolder();
+
             TabularModelSerializer.SerializeMeasures(table, folder, @"tables\table1");
 
             var expression = folder.GetAsString(@"tables\table1\measures\measure1.dax");
@@ -294,7 +288,7 @@ namespace PbiTools.Tests
         { ""name"" : ""hierarchy2"" }
     ]
 }");
-            var folder = new MockProjectFolder();
+
             TabularModelSerializer.SerializeHierarchies(table, folder, @"tables\table1\");
 
             Assert.True(folder.ContainsPath(@"tables\table1\hierarchies\hierarchy1.json"));
