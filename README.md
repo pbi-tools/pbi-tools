@@ -28,9 +28,13 @@ An example project is available here: <https://github.com/action-bi-toolkit/adve
 - .Net Core SDK 3.x or later
 - Power BI Desktop x64 (Must be installed in default location for local development: `C:\Program Files\Microsoft Power BI Desktop\`)
 
+### List Build Targets
+
+    dotnet fake build --list
+
 ### Versioning
 
-The strictly adheres to [SemVer v2](https://semver.org/) for release versioning. The build system uses the first entry in [RELEASE_NOTES.md](./RELEASE_NOTES.md) to inject version numbers into build artifacts.
+The project strictly adheres to [SemVer v2](https://semver.org/) for release versioning. The build system uses the first entry in [RELEASE_NOTES.md](./RELEASE_NOTES.md) to inject version numbers into build artifacts.
 
 ### Diagnostics
 
@@ -52,6 +56,10 @@ The strictly adheres to [SemVer v2](https://semver.org/) for release versioning.
 
     .\build.cmd Test
 
+### Run All Targets (Build, Test, UsageDocs, Publish, Pack)
+
+    .\build.cmd Pack
+
 ### Run only the specified build target
 
     .\build.cmd UsageDocs -s
@@ -70,6 +78,7 @@ _That is generally not needed as the `build.cmd` script takes care of fetching d
 
 ### Updating Build Dependencies
 
+    dotnet paket update
     dotnet paket update -g Fake-Build
 
 ### Find outdated dependencies
