@@ -677,7 +677,7 @@ namespace PbiTools.Serialization
 
         #region Measures
 
-        private static Action<TextWriter> WriteMeasureXml(JToken json)
+        internal static Action<TextWriter> WriteMeasureXml(JToken json)
         {
             return writer =>
             {
@@ -746,7 +746,7 @@ namespace PbiTools.Serialization
             };
         }
 
-        public static JObject ConvertMeasureXml(XDocument xml)
+        internal static JObject ConvertMeasureXml(XDocument xml)
         {
             if (xml == null) return default(JObject);
 
@@ -777,16 +777,12 @@ namespace PbiTools.Serialization
                         { "value", sb.ToString() }
                     };
 
-                    JArray GetOrInsertAnnotations()
-                    {
-                        if (measure["annotations"] is JArray array)
-                            return array;
-                        var newArray = new JArray();
-                        measure.Add("annotations", newArray);
-                        return newArray;
-                    };
-
-                    GetOrInsertAnnotations().Add(annotation);
+                    measure.EnsureArray("annotations").Add(annotation);
+                }
+                else if (element.Name == "ExtendedProperty")
+                {
+                    var extendedProperty = JObject.Parse(element.Value);
+                    measure.EnsureArray("extendedProperties").Add(extendedProperty);
                 }
                 else if (element.Name == "Expression")
                 {

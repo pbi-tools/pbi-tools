@@ -8,6 +8,7 @@ using Newtonsoft.Json.Linq;
 using PbiTools.Serialization;
 using PbiTools.Utils;
 using Xunit;
+using TOM = Microsoft.AnalysisServices.Tabular;
 
 namespace PbiTools.Tests
 {
@@ -271,9 +272,51 @@ namespace PbiTools.Tests
             var expression = folder.GetAsString(@"tables\table1\measures\measure1.dax");
             Assert.Equal("CALCULATE ([SalesAmount], ALLSELECTED ( Customer[Occupation] ) )", expression);
         }
-        
 
-            #endregion
+        [Fact]
+        public void DeserializeMeasures__ExtendedProperties()
+        {
+            var table = new TOM.Table { Name = "Table1" };
+            table.Measures.Add(
+                TOM.JsonSerializer.DeserializeObject<TOM.Measure>(
+                    Resources.GetEmbeddedResourceString("measure--extendedProperties.json")));
+
+            var tableJsonSrc = JObject.Parse(TOM.JsonSerializer.SerializeObject(table));
+
+            var tableJsonOut = new JObject {
+                { "name", "Table1" },
+            };
+
+            using (var testFolder = new FileSystem.ProjectRootFolder(TestFolder.Path))
+            {
+                var modelFolder = testFolder.GetFolder(TabularModelSerializer.FolderName);
+
+                TabularModelSerializer.SerializeMeasures(tableJsonSrc, modelFolder, @"table");
+
+                TabularModelSerializer.DeserializeMeasures(modelFolder.GetSubfolder("table"), tableJsonOut);
+            }
+
+            // Assert expectations via TOM API
+            var tableOut = TOM.JsonSerializer.DeserializeObject<TOM.Table>(
+                tableJsonOut.ToString()
+            );
+
+            var measure = tableOut.Measures[0];
+            Assert.Collection(measure.ExtendedProperties,
+                x1 => Assert.Equal(TOM.ExtendedPropertyType.Json, x1.Type)
+            );
+
+            var prop = measure.ExtendedProperties[0] as TOM.JsonExtendedProperty;
+            Assert.NotNull(prop);
+            Assert.Equal("MeasureTemplate", prop.Name);
+
+            var propValue = JObject.Parse(prop.Value);
+            Assert.Equal("FilteredMeasure", propValue["daxTemplateName"]);
+            Assert.Equal(0, propValue["version"]);
+        }
+
+
+        #endregion
 
         #region Hierarchies
 
