@@ -15,15 +15,19 @@ namespace PbiTools.ProjectSystem
         Raw = 2
     }
 
-    public class ModelSettings
+    public class ModelSettings : IHasDefaultValue
     {
         [JsonProperty("serializationMode")]
         [JsonConverter(typeof(StringEnumConverter))]
         public ModelSerializationMode SerializationMode { get; set; } = ModelSerializationMode.Default;
 
         [JsonIgnore]
-        public bool IsDefault => _ignoreProperties == null
-            && SerializationMode == ModelSerializationMode.Default;
+        public bool IsDefault => 
+            _ignoreProperties == null
+            && SerializationMode == ModelSerializationMode.Default
+            && Annotations.IsDefault();
+
+        #region IgnoreProperties
 
         private static readonly string[] DefaultIgnoreProperties = new [] {
             "modifiedTime", "refreshedTime", "lastProcessed", "structureModifiedTime", 
@@ -40,12 +44,13 @@ namespace PbiTools.ProjectSystem
             set => _ignoreProperties = value;
         }
 
+        #endregion
+
         [JsonProperty("annotations", NullValueHandling = NullValueHandling.Ignore)]
-        public ModelAnnotationSettings Annotations { get; set; }
+        public ModelAnnotationSettings Annotations { get; set; } = new ModelAnnotationSettings();
     }
 
-
-    public class ModelAnnotationSettings
+    public class ModelAnnotationSettings : IHasDefaultValue
     {
         /// <summary>
         /// All TOM object annotations to be ignored when serializing.
@@ -60,5 +65,9 @@ namespace PbiTools.ProjectSystem
         /// </summary>
         [JsonProperty("include", NullValueHandling = NullValueHandling.Ignore)]
         public string[] Include { get; set; }
+
+        [JsonIgnore]
+        public bool IsDefault => Exclude.IsDefault() && Include.IsDefault();
     }
+
 }
