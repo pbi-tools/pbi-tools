@@ -8,7 +8,7 @@ using System.Reflection;
 using PowerArgs;
 using Serilog;
 
-namespace PbiTools
+namespace PbiTools.Cli
 {
     public static class CmdLineArgumentsDefinitionExtensions
     {
