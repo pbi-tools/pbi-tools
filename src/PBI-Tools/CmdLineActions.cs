@@ -61,12 +61,19 @@ namespace PbiTools
             "Extracts the specified PBIX file into the default extraction folder (relative to the PBIX file location), using the 'Auto' compatibility mode. Any settings specified in the '.pbixproj.json' file already present in the destination folder will be honored.",
             Title = "Extract: Default")]
         public void Extract(
-            [ArgRequired, ArgExistingFile, ArgDescription("The path to an existing PBIX file.")] string pbixPath,
-            [ArgDescription("The port number from a running Power BI Desktop instance. When specified, the model will not be read from the PBIX file, and will instead be retrieved from the PBI instance. Only supported for V3 PBIX files."), ArgRange(1024, 65535)] int pbiPort,
-            [ArgDescription("The folder to extract the PBIX file to. Only needed to override the default location. Can be relative to current working directory.")] string extractFolder,
-            [ArgDescription("The extraction mode."), ArgDefaultValue(ExtractActionCompatibilityMode.Auto)] ExtractActionCompatibilityMode mode,
-            [ArgDescription("The model serialization mode.")] ProjectSystem.ModelSerializationMode modelSerialization,
-            [ArgDescription("The mashup serialization mode.")] ProjectSystem.MashupSerializationMode mashupSerialization
+            [ArgRequired, ArgExistingFile, ArgDescription("The path to an existing PBIX file.")]
+                string pbixPath,
+            [ArgDescription("The port number from a running Power BI Desktop instance. When specified, the model will not be read from the PBIX file, and will instead be retrieved from the PBI instance. Only supported for V3 PBIX files.")]
+            [ArgRange(1024, 65535)]
+                int pbiPort,
+            [ArgDescription("The folder to extract the PBIX file to. Only needed to override the default location. Can be relative to current working directory.")]
+                string extractFolder,
+            [ArgDescription("The extraction mode."), ArgDefaultValue(ExtractActionCompatibilityMode.Auto)]
+                ExtractActionCompatibilityMode mode,
+            [ArgDescription("The model serialization mode.")]
+                ProjectSystem.ModelSerializationMode modelSerialization,
+            [ArgDescription("The mashup serialization mode.")]
+                ProjectSystem.MashupSerializationMode mashupSerialization
         )
         {
             // TODO Support '-parts' parameter, listing specifc parts to extract only
@@ -136,12 +143,16 @@ namespace PbiTools
             Title = "Export data from local workspace instance")]
 #endif
         public void ExportData(
-            [ArgCantBeCombinedWith("pbixPath"), ArgDescription("The port number of a local Tabular Server instance.")] int port,
+            [ArgCantBeCombinedWith("pbixPath"), ArgDescription("The port number of a local Tabular Server instance.")]
+                int port,
 #if NETFRAMEWORK
-            [ArgRequired(IfNot = "port"), ArgExistingFile, ArgDescription("The PBIX file to extract data from.")] string pbixPath,
+            [ArgRequired(IfNot = "port"), ArgExistingFile, ArgDescription("The PBIX file to extract data from.")]
+                string pbixPath,
 #endif
-            [ArgDescription("The output directory. Uses PBIX file directory if not provided, or the current working directory when connecting to Tabular Server instance.")] string outPath,
-            [ArgDescription("The format to use for DateTime values. Must be a valid .Net format string."), ArgDefaultValue("s")] string dateTimeFormat
+            [ArgDescription("The output directory. Uses PBIX file directory if not provided, or the current working directory when connecting to Tabular Server instance.")]
+                string outPath,
+            [ArgDescription("The format to use for DateTime values. Must be a valid .Net format string."), ArgDefaultValue("s")]
+                string dateTimeFormat
         )
         {
 #if NET
@@ -193,11 +204,14 @@ namespace PbiTools
         [ArgActionMethod, ArgShortcut("generate-bim"), ArgAltShortcut("export-bim")]
         [ArgDescription("Generates a TMSL/BIM file from Model sources in a folder. The output path is derived from the source folder.")]
         public void GenerateBim(
-            [ArgRequired, ArgExistingDirectory, ArgDescription("The PbixProj folder to export the BIM file from.")] string folder,
+            [ArgRequired, ArgExistingDirectory, ArgDescription("The PbixProj folder to export the BIM file from.")]
+                string folder,
 #if NETFRAMEWORK
-            [ArgDescription("Generate model data sources. Only required for deployment to Azure Analysis Services, but not for Power BI Premium via the XMLA endpoint.")] bool generateDataSources,
+            [ArgDescription("Generate model data sources. Only required for deployment to Azure Analysis Services, but not for Power BI Premium via the XMLA endpoint.")]
+                bool generateDataSources,
 #endif
-            [ArgDescription("List transformations to be applied to TMSL document.")] ExportTransforms transforms
+            [ArgDescription("List transformations to be applied to TMSL document.")]
+                ExportTransforms transforms
         )
         {
             using (var rootFolder = new FileSystem.ProjectRootFolder(folder))
@@ -237,14 +251,17 @@ namespace PbiTools
 
 
 #region compile-pbix
-        [ArgActionMethod, ArgShortcut("compile-pbix")]
+        [ArgActionMethod, ArgShortcut("compile"), ArgShortcut("compile-pbix")]
         [ArgDescription("Generates a PBIX/PBIT file from sources in the specified PbixProj folder. Currently, the PBIX output is supported only for report-only projects (\"thin\" reports), and PBIT for projects containing a data model.")]
         public void CompilePbix(
-            [ArgRequired, ArgExistingDirectory, ArgDescription("The PbixProj folder to generate the PBIX from.")] string folder,
+            [ArgRequired, ArgExistingDirectory, ArgDescription("The PbixProj folder to generate the PBIX from.")]
+                string folder,
             [ArgDescription("The path for the output file. If not provided, creates the file in the current working directory, using the foldername. A directory or file name can be provided. The full output path is created if it does not exist.")]
                 string outPath,
-            [ArgDescription("The target file format."), ArgDefaultValue(PbiFileFormat.PBIX)] PbiFileFormat format,
-            [ArgDescription("Overwrite the destination file if it already exists, fail otherwise.")] bool overwrite
+            [ArgDescription("The target file format."), ArgDefaultValue(PbiFileFormat.PBIX)]
+                PbiFileFormat format,
+            [ArgDescription("Overwrite the destination file if it already exists, fail otherwise.")]
+                bool overwrite
         )
         {
             // format: pbix, pbit
@@ -307,9 +324,12 @@ namespace PbiTools
         [ArgActionMethod, ArgShortcut("deploy")]
         [ArgDescription("Deploys artifacts to Power BI Service or Azure Analysis Services.")]
         public void Deploy(
-            [ArgRequired, ArgExistingDirectory, ArgDescription("The PbixProj folder containing the deployment manifest.")] string folder,
-            [ArgDescription("Name of a section in the deployment manifest.")] string label,
-            [ArgDescription("The target deployment environment."), ArgDefaultValue("Development")] string environment
+            [ArgRequired, ArgExistingDirectory, ArgDescription("The PbixProj folder containing the deployment manifest.")]
+                string folder,
+            [ArgDescription("Name of a section in the deployment manifest.")]
+                string label,
+            [ArgDescription("The target deployment environment."), ArgDefaultValue("Development")]
+                string environment
         )
         {
             using (var rootFolder = new FileSystem.ProjectRootFolder(folder))
@@ -328,7 +348,8 @@ namespace PbiTools
         [ArgActionMethod, ArgShortcut("launch-pbi")]
         [ArgDescription("Starts a new instance of Power BI Desktop with the PBIX/PBIT file specified. Does not support Windows Store installations.")]
         public void LaunchPbiDesktop(
-            [ArgRequired, ArgExistingFile, ArgDescription("The path to an existing PBIX or PBIT file.")] string pbixPath
+            [ArgRequired, ArgExistingFile, ArgDescription("The path to an existing PBIX or PBIT file.")]
+                string pbixPath
         )
         {
             var defaultInstall = _dependenciesResolver.PBIInstalls.FirstOrDefault(x => x.Location != PowerBIDesktopInstallationLocation.WindowsStore);
@@ -352,7 +373,8 @@ namespace PbiTools
             "pbi-tools info check", 
             "Prints information about the active version of pbi-tools, all Power BI Desktop versions on the local system, any running Power BI Desktop instances, and checks the latest version of Power BI Desktop available from Microsoft Downloads.")]
         public void Info(
-            [ArgDescription("When specified, checks the latest Power BI Desktop version available from download.microsoft.com.")] bool checkDownloadVersion
+            [ArgDescription("When specified, checks the latest Power BI Desktop version available from download.microsoft.com.")]
+                bool checkDownloadVersion
         )
         {
             using (_appSettings.SetScopedLogLevel(LogEventLevel.Warning))  // Suppresses Informational logs
@@ -401,7 +423,8 @@ namespace PbiTools
         [ArgDescription("Manages the internal assembly cache.")]
         [ArgExample("pbi-tools cache list", "Lists all cache folders present in the current user profile.")]
         public void Cache(
-            [ArgRequired, ArgDescription("The cache action to perform.")] CacheAction action
+            [ArgRequired, ArgDescription("The cache action to perform.")]
+                CacheAction action
         )
         {
             var folders = Directory.GetDirectories(ApplicationFolders.AppDataFolder);
@@ -436,7 +459,8 @@ namespace PbiTools
 #region export-usage
         [ArgActionMethod, ArgShortcut("export-usage"), OmitFromUsageDocs]
         public void ExportUsage(
-            [ArgDescription("The optional path to a file to write into. Prints to console if not provided.")] string outPath
+            [ArgDescription("The optional path to a file to write into. Prints to console if not provided.")]
+                string outPath
         )
         {
             var sb = new StringBuilder();
