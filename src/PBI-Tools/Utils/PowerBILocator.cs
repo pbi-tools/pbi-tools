@@ -16,6 +16,8 @@ using Serilog;
 
 namespace PbiTools.Utils
 {
+    using Configuration;
+    
     public class PowerBILocator
     {
         private const string PBIDesktop_exe = "PBIDesktop.exe";

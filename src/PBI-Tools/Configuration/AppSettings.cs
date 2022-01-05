@@ -7,7 +7,7 @@ using Newtonsoft.Json.Linq;
 using Serilog.Core;
 using Serilog.Events;
 
-namespace PbiTools
+namespace PbiTools.Configuration
 {
     public class AppSettings
     {

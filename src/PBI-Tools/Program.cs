@@ -14,6 +14,7 @@ using Serilog;
 
 namespace PbiTools
 {
+    using Configuration;
 
     class Program
     {

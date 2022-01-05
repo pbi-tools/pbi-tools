@@ -6,6 +6,8 @@ using System.IO;
 
 namespace PbiTools.Utils
 {
+    using Configuration;
+    
     public static class ApplicationFolders
     {
         private const string LOCALAPPDATA = "%LOCALAPPDATA%";
