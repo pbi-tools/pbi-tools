@@ -74,46 +74,16 @@
     "expressions": [
       {
         "name": "SqlServerInstance",
-        "kind": "m",
-        "annotations": [
-          {
-            "name": "PBI_NavigationStepName",
-            "value": "Navigation"
-          },
-          {
-            "name": "PBI_ResultType",
-            "value": "Text"
-          }
-        ]
+        "kind": "m"
       },
       {
         "name": "SqlServerDatabase",
-        "kind": "m",
-        "annotations": [
-          {
-            "name": "PBI_NavigationStepName",
-            "value": "Navigation"
-          },
-          {
-            "name": "PBI_ResultType",
-            "value": "Text"
-          }
-        ]
+        "kind": "m"
       },
       {
         "name": "Culture",
         "description": "Used to format month names in the Date query.",
-        "kind": "m",
-        "annotations": [
-          {
-            "name": "PBI_NavigationStepName",
-            "value": "Navigation"
-          },
-          {
-            "name": "PBI_ResultType",
-            "value": "Text"
-          }
-        ]
+        "kind": "m"
       }
     ],
     "annotations": [

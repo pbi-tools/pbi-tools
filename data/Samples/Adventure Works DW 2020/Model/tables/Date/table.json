@@ -1,15 +1,5 @@
 {
   "name": "Date",
   "description": "Filters the Sales table using sales order date",
-  "dataCategory": "Time",
-  "annotations": [
-    {
-      "name": "PBI_NavigationStepName",
-      "value": "Navigation"
-    },
-    {
-      "name": "PBI_ResultType",
-      "value": "Table"
-    }
-  ]
+  "dataCategory": "Time"
 }

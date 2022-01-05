@@ -13,10 +13,6 @@
     {
       "name": "Format",
       "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
-    },
-    {
-      "name": "PBI_ChangedProperties",
-      "value": "[\"IsHidden\"]"
     }
   ]
 }

@@ -1,13 +1,3 @@
 {
-  "name": "Sales Territory",
-  "annotations": [
-    {
-      "name": "PBI_NavigationStepName",
-      "value": "Navigation"
-    },
-    {
-      "name": "PBI_ResultType",
-      "value": "Table"
-    }
-  ]
+  "name": "Sales Territory"
 }
