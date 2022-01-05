@@ -20,10 +20,10 @@
     <SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>
   </PropertyGroup>
   <ItemGroup>
-    <None Remove="msmdsrv.ini.xml" />
+    <None Remove="PowerBI\msmdsrv.ini.xml" />
+    <EmbeddedResource Include="PowerBI\msmdsrv.ini.xml" />
   </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
-    <EmbeddedResource Include="msmdsrv.ini.xml" />
+  <ItemGroup>
     <Reference Include="Microsoft.Mashup.Client.Packaging">
       <HintPath>C:\Program Files\Microsoft Power BI Desktop\bin\Microsoft.Mashup.Client.Packaging.dll</HintPath>
       <Private>false</Private>
