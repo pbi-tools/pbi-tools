@@ -25,7 +25,7 @@ NUGET
       System.Memory (>= 4.5) - restriction: || (== net472) (&& (== net6.0) (>= net45) (< netstandard2.0)) (&& (== net6.0) (>= net47)) (&& (== net6.0) (< netstandard2.1))
       System.Threading.Tasks.Extensions (>= 4.5.2) - restriction: || (== net472) (&& (== net6.0) (>= net47)) (&& (== net6.0) (< netstandard2.1))
     Fody (6.6)
-    HtmlAgilityPack (1.11.39)
+    HtmlAgilityPack (1.11.40)
     Microsoft.AnalysisServices.AdomdClient.NetCore.retail.amd64 (19.32) - restriction: == net6.0
       Microsoft.Identity.Client (>= 4.6)
     Microsoft.AnalysisServices.AdomdClient.retail.amd64 (19.32) - restriction: == net472
@@ -36,7 +36,7 @@ NUGET
       System.Threading.Tasks.Extensions (>= 4.5.4) - restriction: || (== net472) (&& (== net6.0) (>= net461)) (&& (== net6.0) (< netstandard2.1))
     Microsoft.Bcl.HashCode (1.1.1) - restriction: || (== net472) (&& (== net6.0) (>= net47)) (&& (== net6.0) (< netstandard2.1))
     Microsoft.CSharp (4.7) - restriction: || (== net472) (&& (== net6.0) (>= net45) (< netstandard2.0)) (&& (== net6.0) (>= net47)) (&& (== net6.0) (< net5.0)) (&& (== net6.0) (< netstandard2.1))
-    Microsoft.Identity.Client (4.39)
+    Microsoft.Identity.Client (4.40)
     Microsoft.NETCore.Platforms (6.0.1)
     Microsoft.NETCore.Targets (5.0)
     Microsoft.PowerBI.Api (4.1)
