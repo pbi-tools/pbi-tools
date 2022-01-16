@@ -37,7 +37,7 @@ namespace PbiTools.Serialization
         {
             if (_file.TryReadFile(out var stream))
             {
-                using (var reader = XmlReader.Create(new StreamReader(stream)))
+                using (var reader = XmlReader.Create(new StreamReader(stream), new XmlReaderSettings { CloseInput = true }))
                 {
                     try
                     {
