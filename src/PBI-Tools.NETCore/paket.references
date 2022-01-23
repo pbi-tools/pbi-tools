@@ -11,3 +11,6 @@ Microsoft.AnalysisServices.AdomdClient.NetCore.retail.amd64
 System.IO.Packaging
 Microsoft.Identity.Client
 Microsoft.PowerBI.Api
+
+group Main-Local
+  LibGit2Sharp

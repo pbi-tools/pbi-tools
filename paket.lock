@@ -587,6 +587,15 @@ NUGET
   remote: https://api.nuget.org/v3/index.json
     xunit.runner.console (2.4.1)
 
+GROUP Main-Local
+STORAGE: PACKAGES
+RESTRICTION: || (== net472) (== net6.0)
+NUGET
+  remote: https://api.nuget.org/v3/index.json
+    LibGit2Sharp (0.26.2)
+      LibGit2Sharp.NativeBinaries (2.0.306)
+    LibGit2Sharp.NativeBinaries (2.0.306)
+
 GROUP Tests
 STORAGE: NONE
 CONTENT: NONE

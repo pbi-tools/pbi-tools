@@ -227,6 +227,15 @@ Target.create "Publish" (fun _ ->
     "src/PBI-Tools/PBI-Tools.csproj"
     |> DotNet.publish
         (setParams ("win10-x64", distFullDir)) 
+
+    // Hack: Remove all libgit2sharp files
+    (distFullDir @@ "lib")
+    |> Directory.delete
+
+    !! (distFullDir @@ "*.*")
+    -- "**/pbi-tools.*"
+    |> File.deleteAll
+
     
     // Core build
     [ "win10-x64",      "win-x64"
