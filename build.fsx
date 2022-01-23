@@ -279,17 +279,21 @@ Target.create "SmokeTest" (fun _ ->
     // Run 'pbi-tools extract' on all
     // Fail if error code is returned
 
+    let dir = match Environment.environVarOrNone "PBITOOLS_TempDir" with
+              | Some x -> x
+              | None -> tempDir
+
     !! "data/**/*.pbix"
     -- "data/external/**"
-    |> Shell.copyFilesWithSubFolder tempDir
+    |> Shell.copyFilesWithSubFolder dir
 
     // 'external' folder contains files with deeply nested folder structures,
     // likely to hit the Windows 260-character limit for paths
     // copying those without sub folders to keep extracted paths shorter
     !! "data/external/**/*.pbix"
-    |> Shell.copyFiles tempDir
+    |> Shell.copyFiles dir
 
-    !! (tempDir @@ "**/*.pbix")
+    !! (dir @@ "**/*.pbix")
     |> Seq.iter (fun path ->
         [ "extract"; path ]
         |> CreateProcess.fromRawCommand (distFullDir @@ "pbi-tools.exe")
