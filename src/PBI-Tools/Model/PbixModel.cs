@@ -40,13 +40,27 @@ namespace PbiTools.Model
 
         PbixProject PbixProj { get; }
         PbixModelSource Type { get; }
+        string SourcePath { get; }
     }
 
 
     public enum PbixModelSource
     {
+        /// <summary>
+        /// The PBIX Model was created from a .pbix/.pbit file. <see cref="SourcePath"/> contains the path to the original file.
+        /// </summary>
         PowerBIPackage,
+        /// <summary>
+        /// The PBIX Model was created from a PbixProj folder. <see cref="SourcePath"/> contains the path to the folder.
+        /// </summary>
         PbixProjFolder,
+        /// <summary>
+        /// The PBIX Model was created from a Tabular model. <see cref="SourcePath"/> contains the path to the original file or folder the model was read from.
+        /// </summary>
+        TabularModel,
+        /// <summary>
+        /// The PBIX Model was created from a live Power BI Desktop session. <see cref="SourcePath"/> contains the path to the original .pbix/.pbit file, if available.
+        /// </summary>
         LiveSession
     }
 
@@ -205,16 +219,48 @@ namespace PbiTools.Model
             }
         }
 
+
+        public static PbixModel FromTabularModelFolder(string path, PbixProject pbixProject = null)
+        { 
+            Log.Debug("Building PbixModel from tabular model folder: {Path}", path);
+
+            using (var modelFolder = new ProjectRootFolder(path))
+            {
+                var serializer = new TabularModelSerializer(modelFolder.GetFolder(), new());
+
+                var pbixModel = new PbixModel(modelFolder.BasePath, PbixModelSource.TabularModel)
+                {
+                    PbixProj = pbixProject ?? new()
+                };
+                pbixModel.DataModel = serializer.DeserializeSafe();
+
+                return pbixModel;
+            }
+        }
+
+        public static PbixModel FromTabularModelJson(JObject tmsl, string originalPath, PbixProject pbixProject = null)
+        { 
+            Log.Debug("Building PbixModel from tabular model json file: {Path}", originalPath);
+
+            var pbixModel = new PbixModel(originalPath, PbixModelSource.TabularModel)
+            {
+                PbixProj = pbixProject ?? new()
+            };
+            pbixModel.DataModel = tmsl ?? throw new ArgumentNullException(nameof(tmsl));
+
+            return pbixModel;
+        }
+
         /// <summary>
         /// Serializes the entire model to a file system folder.
         /// </summary>
         /// <param name="path">A custom location to extract the model to (optional).</param>
-        public void ToFolder(string path = null)
+        public void ToFolder(string path = null, PbixProjectSettings settings = null)
         {
             var rootFolderPath = path ?? this.GetProjectFolder();
             using (var projectFolder = new ProjectRootFolder(rootFolderPath))
             {
-                var serializers = new PowerBIPartSerializers(projectFolder, this.PbixProj.Settings);
+                var serializers = new PowerBIPartSerializers(projectFolder, settings ?? this.PbixProj.Settings);
 
                 Log.Information("Extracting PBIX file to: {Path}", projectFolder.BasePath);
 
@@ -325,12 +371,13 @@ namespace PbiTools.Model
             switch (this.Type) 
             {
                 case PbixModelSource.PbixProjFolder:
+                case PbixModelSource.TabularModel:
                     return this.SourcePath;
                 case PbixModelSource.PowerBIPackage:
                 case PbixModelSource.LiveSession:
                     return PbixProject.GetDefaultProjectFolderForFile(this.SourcePath);
                 default:
-                    throw new NotSupportedException();
+                        throw new NotSupportedException($"Unsupported PbixModelSource: {this.Type}.");
             }
         }
 

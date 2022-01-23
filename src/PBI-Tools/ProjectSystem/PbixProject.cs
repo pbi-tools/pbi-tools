@@ -118,6 +118,7 @@ namespace PbiTools.ProjectSystem
         public PbixProject()
         {
             this.Version = CurrentVersion;
+            this.Created = DateTimeOffset.Now;
         }
 
 
@@ -131,40 +132,101 @@ namespace PbiTools.ProjectSystem
             {
                 Log.Information("Reading PBIXPROJ settings from: {Path}", file.Path);
 
-                using (var reader = new StreamReader(stream))
+                try
                 {
-                    try
-                    {
-                        var proj = JsonConvert.DeserializeObject<PbixProject>(reader.ReadToEnd(), DefaultJsonSerializerSettings);
-                        proj.OriginalPath = file.Path;
-                        return proj;
-                        // at this stage we could perform version compatibility checks
-                    }
-                    catch (JsonReaderException e)
-                    {
-                        Log.Warning(e, "Failed to read PBIXPROJ file from {Path}. Using default settings.", file.Path);
-                    }
+                    var proj = FromStream(stream);
+                    proj.OriginalPath = file.Path;
+                    return proj;
+                    // at this stage we could perform version compatibility checks
+                }
+                catch (JsonReaderException e)
+                {
+                    Log.Warning(e, "Failed to read PBIXPROJ file from {Path}. Using default settings.", file.Path);
                 }
             }
 
             Log.Debug("No existing or invalid PBIXPROJ file found at {Path}. Generating new project file.", file.Path);
 
-            return new PbixProject { Created = DateTimeOffset.Now, Version = CurrentVersion };
+            return new() { OriginalPath = file.Path };
         }
 
-        public void Save(IProjectRootFolder folder)
+
+        /// <summary>
+        /// Loads the <see cref="PbixProject"/> metadata file from the specified folder, using the default filename ".pbixproj.json".
+        /// Creates a new, blank, instance if the file doesn't exist or is invalid.
+        /// </summary>
+        public static PbixProject FromFolder(string path)
+            => FromFile(Path.Combine(path, Filename));
+
+
+        /// <summary>
+        /// Loads the <see cref="PbixProject"/> metadata file from the specified file.
+        /// Creates a new, blank, instance if the file doesn't exist or is invalid.
+        /// </summary>
+        public static PbixProject FromFile(string path)
+        { 
+            if (File.Exists(path))
+            {
+                Log.Information("Reading PBIXPROJ settings from: {Path}", path);
+                
+                using var stream = File.OpenRead(path);
+                try
+                {
+                    var proj = FromStream(stream);
+                    proj.OriginalPath = new FileInfo(path).FullName;
+                    return proj;
+                    // at this stage we could perform version compatibility checks
+                }
+                catch (JsonReaderException e)
+                {
+                    Log.Warning(e, "Failed to read PBIXPROJ file from {Path}. Using default settings.", path);
+                }
+            }
+
+            Log.Debug("No existing or invalid PBIXPROJ file found at {Path}. Generating new project file.", path);
+
+            return new() { OriginalPath = new FileInfo(path).FullName };
+        }
+
+        public static PbixProject FromStream(Stream fileStream)
+        { 
+            using (var reader = new StreamReader(fileStream))
+            {
+                return JsonConvert.DeserializeObject<PbixProject>(reader.ReadToEnd(), DefaultJsonSerializerSettings) ?? new();
+            }
+        }
+
+
+        public void Save(IProjectRootFolder folder, bool setModified = false)
         {
             var json = JObject.FromObject(this, JsonSerializer.Create(DefaultJsonSerializerSettings));
             if (this.Settings.IsDefault()) json.Remove("settings");
+
+            if (setModified) this.LastModified = DateTimeOffset.UtcNow;
 
             folder.GetFile(Filename).Write(json);
         }
 
         /// <summary>
+        /// Saves the project file to the given path, or overwrites the original path if <c>null</c> is specified.
+        /// </summary>
+        public void Save(string path = null, bool setModified = false)
+        {
+            var json = JObject.FromObject(this, JsonSerializer.Create(DefaultJsonSerializerSettings));
+            if (this.Settings.IsDefault()) json.Remove("settings");
+
+            if (setModified) this.LastModified = DateTimeOffset.UtcNow;
+
+            using var writer = new JsonTextWriter(File.CreateText(path ?? this.OriginalPath));
+            writer.Formatting = Formatting.Indented;
+            json.WriteTo(writer);
+        }
+
+
+        /// <summary>
         /// Determines the default project folder location for the given PBIX file path.
         /// </summary>
         public static string GetDefaultProjectFolderForFile(string pbixPath) =>
-            // ReSharper disable once AssignNullToNotNullAttribute
             Path.Combine(
                 Path.GetDirectoryName(pbixPath),
                 Path.GetFileNameWithoutExtension(pbixPath)

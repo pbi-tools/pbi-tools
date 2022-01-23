@@ -25,7 +25,8 @@ namespace PbiTools.Serialization
 
         internal static readonly ILogger Log = Serilog.Log.ForContext<TabularModelSerializer>();
 
-        public static string FolderName => "Model";
+        public const string FolderName = "Model";
+        public const string DefaultDatabaseFileName = "database.json";
 
         public static class Names
         {
@@ -46,6 +47,7 @@ namespace PbiTools.Serialization
         private readonly IProjectFolder _modelFolder;
         private readonly ModelSettings _settings;
         private readonly IDictionary<string, string> _queries;
+        private readonly string _fileName = DefaultDatabaseFileName;
 
 
         public TabularModelSerializer(IProjectRootFolder rootFolder, ModelSettings settings, IDictionary<string, string> queries = null)
@@ -54,6 +56,14 @@ namespace PbiTools.Serialization
             _modelFolder = rootFolder.GetFolder(FolderName);
             _settings = settings;
             _queries = queries ?? new Dictionary<string, string>();
+        }
+
+        public TabularModelSerializer(IProjectFolder modelFolder, ModelSettings settings, string dbFileName = DefaultDatabaseFileName)
+        {
+            _modelFolder = modelFolder ?? throw new ArgumentNullException(nameof(modelFolder));
+            _settings = settings;
+            _fileName = dbFileName;
+            _queries = new Dictionary<string, string>();
         }
 
         public string BasePath => _modelFolder.BasePath;
@@ -72,8 +82,8 @@ namespace PbiTools.Serialization
                     .RemoveProperties(_settings?.IgnoreProperties)
                     .ApplyAnnotationRules(_settings?.Annotations);
 
-                var dataSources = db.SelectToken("model.dataSources") as JArray ?? new JArray();
 #if NETFRAMEWORK
+                var dataSources = db.SelectToken("model.dataSources") as JArray ?? new JArray();
                 var idCache = new TabularModelIdCache(dataSources, _queries); // Applies to legacy PBIX files only (is ignored for V3 models)
 #elif NET
                 var idCache = default(IQueriesLookup);
@@ -82,9 +92,16 @@ namespace PbiTools.Serialization
                 db = SerializeTables(db, _modelFolder, idCache);
                 db = SerializeExpressions(db, _modelFolder);
                 db = SerializeCultures(db, _modelFolder);
+
+                // Perspectives
+                // Roles
+                // Translations
+                // Relationships
             }
 
-            SaveDatabase(db, _modelFolder);
+            // TODO: ModelSerializationMode.TabularEditor
+
+            SaveDatabase(db, _modelFolder, _fileName);
 
             return true;
         }
@@ -362,9 +379,9 @@ namespace PbiTools.Serialization
         }
 
 
-        internal static void SaveDatabase(JObject db, IProjectFolder folder)
+        internal static void SaveDatabase(JObject db, IProjectFolder folder, string filename = DefaultDatabaseFileName)
         {
-            folder.Write(db, "database.json");
+            folder.Write(db, filename);
         }
 
 #endregion

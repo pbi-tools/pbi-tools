@@ -1,8 +1,10 @@
 // Copyright (c) Mathias Thierbach
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using System.IO;
 using System.Runtime.Serialization;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace PbiTools.ProjectSystem
 {
@@ -54,6 +56,16 @@ namespace PbiTools.ProjectSystem
         }
 #endregion
 
+        public void Save(string path)
+        {
+            var json = JObject.FromObject(this, JsonSerializer.Create(PbixProject.DefaultJsonSerializerSettings));
+
+            using (var writer = new JsonTextWriter(File.CreateText(path)))
+            {
+                writer.Formatting = Formatting.Indented;
+                json.WriteTo(writer);
+            }
+        }
     }
 
 }
