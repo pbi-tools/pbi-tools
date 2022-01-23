@@ -7,13 +7,14 @@ using System.Data.Common;
 using System.Linq;
 using System.Xml.XPath;
 using Newtonsoft.Json.Linq;
-using PbiTools.Serialization;
-using PbiTools.Utils;
 using Xunit;
 using TOM = Microsoft.AnalysisServices.Tabular;
 
 namespace PbiTools.Tests
 {
+    using Serialization;
+    using Utils;
+
     public class TabularModelSerializerTests : HasTempFolder
     {
         private readonly MockProjectFolder folder = new MockProjectFolder();
@@ -434,7 +435,7 @@ namespace PbiTools.Tests
             [Fact]
             public void DoesNothingWhenRulesAreNull() 
             {
-                JsonTransforms.ApplyAnnotationRules(new JObject(), default);
+                new JObject().ApplyAnnotationRules(default);
             }
 
             [Fact]

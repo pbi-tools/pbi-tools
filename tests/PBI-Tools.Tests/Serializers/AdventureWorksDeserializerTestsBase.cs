@@ -110,12 +110,13 @@ namespace PbiTools.Tests
         }
 
         [Fact]
-        public void Deserialize_Table_Annotations()
+        public void Deserialize_Column_Annotations()
         {
-            var table = _model.Tables.Find("Sales by Color and Business Type");
-            var annotation = table.Annotations.Find("PBI_Id");
+            var table = _model.Tables.Find("Customer");
+            var column = table.Columns.Find("City");
+            var annotation = column.Annotations.Find("SummarizationSetBy");
 
-            Assert.Equal("b636b2d3a54244c7a0706aeb8339c24f", annotation.Value);
+            Assert.Equal("Automatic", annotation.Value);
         }
 
         [TestNotImplemented]
