@@ -2,7 +2,6 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using PowerArgs;
 
 namespace PbiTools.ProjectSystem
@@ -22,7 +21,6 @@ namespace PbiTools.ProjectSystem
     public class ModelSettings : IHasDefaultValue
     {
         [JsonProperty("serializationMode")]
-        [JsonConverter(typeof(StringEnumConverter))]
         public ModelSerializationMode SerializationMode { get; set; } = ModelSerializationMode.Default;
 
         [JsonIgnore]

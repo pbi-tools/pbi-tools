@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using Serilog;
@@ -55,14 +56,14 @@ namespace PbiTools.ProjectSystem
          */
 
 
-        private static readonly JsonSerializerSettings DefaultJsonSerializerSettings = new JsonSerializerSettings
+        internal static readonly JsonSerializerSettings DefaultJsonSerializerSettings = new JsonSerializerSettings
         {
             DateFormatString = "yyyy-MM-ddTHH:mm:ssK",
             Formatting = Formatting.Indented,
             //ContractResolver = new DefaultContractResolver { NamingStrategy = new CamelCaseNamingStrategy() },
-            // don't use CamelCaseContractResolver as it will modify query names
+            // don't use CamelCaseContractResolver as we need to maintain casing in query names, custom settings, and deployment manifest labels
             DefaultValueHandling = DefaultValueHandling.Ignore
-        };
+        }.WithConverters(new StringEnumConverter());
 
         #region Version
 
