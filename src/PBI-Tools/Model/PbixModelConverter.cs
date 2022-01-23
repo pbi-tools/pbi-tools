@@ -76,10 +76,6 @@ namespace PbiTools.Model
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="outputPath"></param>
-        /// <exception cref="PbiToolsCliException"></exception>
-        /// <exception cref="NotSupportedException"></exception>
-        /// <exception cref="NotImplementedException"></exception>
         public void SaveAs(string outputPath = null)
         {
             var output = ResolveOutput(outputPath);
@@ -88,7 +84,7 @@ namespace PbiTools.Model
             if ((new DirectoryInfo(output.Path).Exists || new FileInfo(output.Path).Exists)
                 && !AllowOverwrite)
             { 
-                throw new PbiToolsCliException(ExitCode.OverwriteNotAllowed, "The destination folder/file exists, however, the '-overwrite' has not been specified.");
+                throw new PbiToolsCliException(ExitCode.OverwriteNotAllowed, "The destination folder/file exists, however, the '-overwrite' has not been specified. Aborting conversion. Please retry with '-overwrite'.");
             }
 
             // settings
@@ -123,8 +119,8 @@ namespace PbiTools.Model
             }
 
             // updateSettings
-            if (UpdateSettings && ProjectSettings != Model.PbixProj)
-                ProjectSettings.Save();
+            if (UpdateSettings)
+                settings.Save();
 
         }
 

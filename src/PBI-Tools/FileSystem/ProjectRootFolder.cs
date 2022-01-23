@@ -98,6 +98,9 @@ namespace PbiTools.FileSystem
                 return;
             }
 
+            // Protect the PbixProj file in root
+            _filesWritten.Add(ProjectSystem.PbixProject.GetDefaultPath(BasePath));
+
             // Remove any existing files that have not been updated
             foreach (var path in Directory.GetFiles(BasePath, "*.*", SearchOption.AllDirectories))
             {

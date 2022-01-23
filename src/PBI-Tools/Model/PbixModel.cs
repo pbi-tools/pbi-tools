@@ -309,7 +309,9 @@ namespace PbiTools.Model
                 this.PbixProj.Version = PbixProject.CurrentVersion; // always set latest version on new pbixproj file
                 if (this.PbixProj.Created == default) this.PbixProj.Created = DateTimeOffset.Now;
                 this.PbixProj.LastModified = DateTimeOffset.Now;
-                this.PbixProj.Save(projectFolder);
+
+                if (settings == null) // Do not persist the PbixProj file if it was provided explicitly
+                    this.PbixProj.Save(projectFolder);
 
                 projectFolder.Commit();
             }
