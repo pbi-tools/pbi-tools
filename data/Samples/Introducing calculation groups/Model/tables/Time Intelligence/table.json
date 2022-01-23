@@ -1,0 +1,51 @@
+{
+  "name": "Time Intelligence",
+  "calculationGroup": {
+    "precedence": 10,
+    "calculationItems": [
+      {
+        "name": "CY",
+        "expression": "SELECTEDMEASURE ()",
+        "ordinal": 0
+      },
+      {
+        "name": "QTD",
+        "expression": [
+          "CALCULATE (",
+          "    SELECTEDMEASURE (),",
+          "    DATESQTD ( 'Date'[Date] )",
+          ")"
+        ],
+        "ordinal": 3
+      },
+      {
+        "name": "YTD",
+        "expression": [
+          "CALCULATE (",
+          "    SELECTEDMEASURE (),",
+          "    DATESYTD ( 'Date'[Date] )",
+          ")"
+        ],
+        "ordinal": 2
+      },
+      {
+        "name": "SPLY",
+        "expression": [
+          "CALCULATE (",
+          "    SELECTEDMEASURE (),",
+          "    SAMEPERIODLASTYEAR ( 'Date'[Date] )",
+          ")"
+        ],
+        "ordinal": 1
+      }
+    ]
+  },
+  "partitions": [
+    {
+      "name": "Partition",
+      "source": {
+        "type": "calculationGroup"
+      }
+    }
+  ]
+}

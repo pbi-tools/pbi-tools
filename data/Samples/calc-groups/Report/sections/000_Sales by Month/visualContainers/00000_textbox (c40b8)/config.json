@@ -1,0 +1,60 @@
+{
+  "name": "c40b82b0c64059e56f26",
+  "layouts": [
+    {
+      "id": 0,
+      "position": {
+        "x": 253.92111368909514,
+        "y": 629.7911832946636,
+        "z": 3000,
+        "width": 1025.707656612529,
+        "height": 90.208816705336432
+      }
+    }
+  ],
+  "singleVisual": {
+    "visualType": "textbox",
+    "drillFilterOtherVisuals": true,
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "This is the sample PBIX file containing all the examples of the following article:",
+                    "textStyle": {
+                      "fontWeight": "bold",
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "13.5pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "https://www.sqlbi.com/articles/introducing-calculation-groups/",
+                    "textStyle": {
+                      "fontWeight": "bold",
+                      "fontSize": "13.5pt"
+                    },
+                    "url": "https://www.sqlbi.com/articles/introducing-calculation-groups/"
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": ""
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
