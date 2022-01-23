@@ -12,6 +12,7 @@ using Serilog;
 namespace PbiTools.ProjectSystem
 {
     using FileSystem;
+    using Utils;
 
     public class PbixProject
     {

@@ -5,9 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace PbiTools.Serialization
+namespace PbiTools.Utils
 {
     using FileSystem;
 
@@ -138,5 +139,14 @@ namespace PbiTools.Serialization
             return array;
         }
 
+        /// <summary>
+        /// Adds the specified converters to the <see cref="JsonSerializerSettings"/> instance.
+        /// </summary>
+        public static JsonSerializerSettings WithConverters(this JsonSerializerSettings settings, params JsonConverter[] converters)
+        { 
+            if (converters != null && converters.Length > 0)
+                Array.ForEach(converters, settings.Converters.Add);
+            return settings;
+        }
     }
 }

@@ -9,6 +9,7 @@ using Newtonsoft.Json.Linq;
 namespace PbiTools.Serialization
 {
     using FileSystem;
+    using Utils;
 
     public class ReportSerializer : IPowerBIPartSerializer<JObject>
     {

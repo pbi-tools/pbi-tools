@@ -16,6 +16,7 @@ namespace PbiTools.Serialization
 {
     using FileSystem;
     using ProjectSystem;
+    using Utils;
 
     /// <summary>
     /// Serializes a tabular database (represented as TMSL/json) into a <see cref="IProjectFolder"/>.
