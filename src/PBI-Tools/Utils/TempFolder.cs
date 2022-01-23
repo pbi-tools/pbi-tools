@@ -3,6 +3,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using Polly;
 using Serilog;
 
@@ -34,6 +35,11 @@ namespace PbiTools.Utils
             Log.Verbose("Created TEMP folder at {Path}", tempPath);
             return tempPath;
         }
+
+        /// <summary>
+        /// Combines the path segments specified with the base path of this instance and returns the resulting path.
+        /// </summary>
+        public string GetPath(params string[] paths) => System.IO.Path.Combine(new[] { this.Path }.Concat(paths).ToArray());
 
         void IDisposable.Dispose()
         {
