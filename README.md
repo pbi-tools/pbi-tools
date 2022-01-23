@@ -25,7 +25,8 @@ An example project is available here: <https://github.com/pbi-tools/adventurewor
 ### Prerequisites
 
 - Visual Studio 2019 or later (for MSBuild dependencies)
-- .Net Core SDK 3.x or later
+- .Net 4.7.2 Targeting Pack
+- .Net 6.0 SDK
 - Power BI Desktop x64 (Must be installed in default location for local development: `C:\Program Files\Microsoft Power BI Desktop\`)
 
 ### List Build Targets
@@ -56,7 +57,7 @@ The project strictly adheres to [SemVer v2](https://semver.org/) for release ver
 
     .\build.cmd Test
 
-### Run All Targets (Build, Test, UsageDocs, Publish, Pack)
+### Run All Targets (Build, Publish, Test, UsageDocs, Pack)
 
     .\build.cmd Pack
 
@@ -71,12 +72,12 @@ The project strictly adheres to [SemVer v2](https://semver.org/) for release ver
 
 _That is generally not needed as the `build.cmd` script takes care of fetching dependencies. However, it could be useful to run this manually on a fresh clone or after making changes in the `paket.dependencies` file._
 
-### Update Dependency to latest version (ex: AMO)
+### Update Specific Dependency to latest version (ex: AMO)
 
     dotnet paket update Microsoft.AnalysisServices.retail.amd64
     dotnet paket update Microsoft.AnalysisServices.AdomdClient.retail.amd64
 
-### Updating Build Dependencies
+### Updating All Dependencies (NuGet)
 
     dotnet paket update
     dotnet paket update -g Fake-Build
@@ -107,3 +108,13 @@ _That is generally not needed as the `build.cmd` script takes care of fetching d
 
     .\build.cmd Publish -s
     .\build.cmd Pack -s
+
+## Git Submodules
+
+### Clone with submodules
+
+   git clone --recurse-submodules https://github.com/pbi-tools/pbi-tools.git
+
+### Pulling in Upstream Changes
+
+    git submodule update --remote
