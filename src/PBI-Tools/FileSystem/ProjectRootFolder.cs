@@ -14,7 +14,7 @@ namespace PbiTools.FileSystem
     /// </summary>
     public interface IProjectRootFolder : IDisposable
     {
-        IProjectFolder GetFolder(string name);
+        IProjectFolder GetFolder(string name = null);
 
         IProjectFile GetFile(string relativePath);
 
@@ -49,9 +49,15 @@ namespace PbiTools.FileSystem
             Log.Verbose("File written: {Path}", fullPath);
         }
 
-        public IProjectFolder GetFolder(string name)
+        /// <summary>
+        /// Gets a subfolder of the root folder, or the root folder itself if no argument is provided.
+        /// </summary>
+        /// <param name="name">The subfolder name, or <c>null</c>.</param>
+        public IProjectFolder GetFolder(string name = null)
         {
-            return new ProjectFolder(this, Path.Combine(BasePath, name));
+            return String.IsNullOrEmpty(name)
+                ? new ProjectFolder(this, BasePath)
+                : new ProjectFolder(this, Path.Combine(BasePath, name));
         }
 
         public IProjectFile GetFile(string relativePath)
