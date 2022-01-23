@@ -20,6 +20,18 @@ namespace PbiTools.ProjectSystem
 
     public class ModelSettings : IHasDefaultValue
     {
+        /* TODO Support all TOM SerializeOptions:
+            public bool IgnoreInferredProperties { get; set; }
+            public bool IgnoreInferredObjects { get; set; }
+            public bool IgnoreChildren { get; set; }
+            public bool IgnoreChildrenExceptAnnotations { get; set; }
+            public bool IgnoreTimestamps { get; set; }
+            public bool PartitionsMergedWithTable { get; set; }
+            public bool SplitMultilineStrings { get; set; }
+            public bool IncludeTranslatablePropertiesOnly { get; set; }
+            public bool IncludeRestrictedInformation { get; set; }        
+        */
+
         [JsonProperty("serializationMode")]
         public ModelSerializationMode SerializationMode { get; set; } = ModelSerializationMode.Default;
 
@@ -50,6 +62,7 @@ namespace PbiTools.ProjectSystem
 
         [JsonProperty("annotations", NullValueHandling = NullValueHandling.Ignore)]
         public ModelAnnotationSettings Annotations { get; set; } = new ModelAnnotationSettings();
+
     }
 
     public class ModelAnnotationSettings : IHasDefaultValue

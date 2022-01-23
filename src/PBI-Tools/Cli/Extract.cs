@@ -8,6 +8,7 @@ using PowerArgs;
 namespace PbiTools.Cli
 {
     using PowerBI;
+    using ProjectSystem;
 
     public partial class CmdLineActions
     {
@@ -34,9 +35,9 @@ namespace PbiTools.Cli
             [ArgDescription("The extraction mode."), ArgDefaultValue(ExtractActionCompatibilityMode.Auto)]
                 ExtractActionCompatibilityMode mode,
             [ArgDescription("The model serialization mode.")]
-                ProjectSystem.ModelSerializationMode modelSerialization,
+                ModelSerializationMode modelSerialization,
             [ArgDescription("The mashup serialization mode.")]
-                ProjectSystem.MashupSerializationMode mashupSerialization
+                MashupSerializationMode mashupSerialization
         )
         {
             // TODO Support '-parts' parameter, listing specifc parts to extract only
@@ -61,10 +62,10 @@ namespace PbiTools.Cli
                         
                         using (var model = Model.PbixModel.FromReader(reader, targetFolder, pbiPort >= 1024 ? pbiPort : null))
                         {
-                            if (modelSerialization != default(ProjectSystem.ModelSerializationMode))
+                            if (modelSerialization != default)
                                 model.PbixProj.Settings.Model.SerializationMode = modelSerialization;
 
-                            if (mashupSerialization != default(ProjectSystem.MashupSerializationMode))
+                            if (mashupSerialization != default)
                                 model.PbixProj.Settings.Mashup.SerializationMode = mashupSerialization;
 
                             model.ToFolder(path: targetFolder);
@@ -89,7 +90,7 @@ namespace PbiTools.Cli
     public enum ExtractActionCompatibilityMode
     {
         [ArgDescription("Attempts extraction using the V3 model, and falls back to Legacy mode in case the PBIX file does not have V3 format.")]
-        Auto, 
+        Auto = 0, 
         [ArgDescription("Extracts V3 PBIX files only. Fails if the file provided has a legacy format.")]
         V3,
         [ArgDescription("Extracts legacy PBIX files only. Fails if the file provided has the V3 format.")]

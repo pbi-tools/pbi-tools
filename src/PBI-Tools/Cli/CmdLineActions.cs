@@ -14,7 +14,7 @@ namespace PbiTools.Cli
 #if !DEBUG
     [ArgExceptionBehavior(ArgExceptionPolicy.StandardExceptionHandling)]  // PowerArgs will print the user friendly error message as well as the auto-generated usage documentation for the program.
 #endif
-    [ArgDescription(AssemblyVersionInformation.AssemblyProduct + " (" + AppSettings.Edition + "), " + AssemblyVersionInformation.AssemblyInformationalVersion)]
+    [ArgDescription(AssemblyVersionInformation.AssemblyProduct + " (" + AppSettings.Edition + "), " + AssemblyVersionInformation.AssemblyInformationalVersion + " - https://pbi.tools/")]
     [ArgProductVersion(AssemblyVersionInformation.AssemblyVersion)]
     [ArgProductName(AssemblyVersionInformation.AssemblyProduct)]
     [ApplyDefinitionTransforms]
@@ -36,19 +36,12 @@ namespace PbiTools.Cli
             _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
         }
 
-
+        /// <remarks>
+        /// See default usage template at <see href="https://github.com/adamabdelhamed/PowerArgs/blob/master/PowerArgs/ArgUsage.cs" />.
+        /// </remarks>
         [HelpHook, ArgShortcut("-?"), ArgDescription("Shows this help")]
         public bool Help { get; set; }
 
     }
 
-
-    public enum ExternalToolAction
-    {
-        List = 1,
-        Install = 2,
-        Uninstall = 3,
-        ExtractCurrentProject = 4,
-        LaunchInteractive = 5
-    }
 }

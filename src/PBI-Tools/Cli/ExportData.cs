@@ -39,7 +39,7 @@ namespace PbiTools.Cli
 #endif
             [ArgDescription("The output directory. Uses PBIX file directory if not provided, or the current working directory when connecting to Tabular Server instance.")]
                 string outPath,
-            [ArgDescription("The format to use for DateTime values. Must be a valid .Net format string."), ArgDefaultValue("s")]
+            [ArgDescription("The format to use for DateTime values. Must be a valid .Net format string, see: https://docs.microsoft.com/dotnet/standard/base-types/standard-date-and-time-format-strings."), ArgDefaultValue("s")]
                 string dateTimeFormat
         )
         {

@@ -86,6 +86,9 @@ namespace PbiTools.Configuration
             if (this.LevelSwitch.MinimumLevel == LogEventLevel.Verbose && !overwriteVerbose)
                 return new Disposable(() => {});
 
+            if (this.LevelSwitch.MinimumLevel == logLevel)
+                return new Disposable(() => {});
+
             var prevLogLevel = this.LevelSwitch.MinimumLevel;
             this.LevelSwitch.MinimumLevel = logLevel;
             return new Disposable(() => 

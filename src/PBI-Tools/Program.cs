@@ -145,6 +145,10 @@ namespace PbiTools
             this.ErrorCode = errorCode;
         }
 
+        public PbiToolsCliException(ExitCode errorCode, Exception inner, string message) : base(message, inner) {
+            this.ErrorCode = errorCode;
+        }
+
         protected PbiToolsCliException(
             System.Runtime.Serialization.SerializationInfo info,
             System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
@@ -157,9 +161,11 @@ namespace PbiTools
         InvalidArgs = -2,
         NoArgsProvided = -1,
         Success = 0,
-        FileNotFound = 1,
+        PathNotFound = 1,
         DependenciesNotInstalled = 2,
         FileExists = 3,
+        UnsupportedFileType = 4,
+        OverwriteNotAllowed = 5,
     }
 
 }
