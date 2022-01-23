@@ -1,0 +1,38 @@
+{
+  "version": "0.10",
+  "created": "2022-01-22T18:36:40.8333597+00:00",
+  "deployments": {
+    "Folders": {
+      "description": "Use './data' base path.",
+      "mode": "Report",
+      "source": {
+        "type": "Folder",
+        "path": "./Samples/Adventure Works *"
+      },
+      "authentication": {
+        "type": "ServicePrincipal",
+        "tenantId": "pbitools.org",
+        "clientId": "%PBI_CLIENT_ID%",
+        "clientSecret": "%PBI_CLIENT_SECRET%"
+      },
+      "options": {
+        "import": {
+          "nameConflict": "CreateOrOverwrite"
+        }
+      },
+      "parameters": {
+      },
+      "environments": {
+        "Development": {
+          "workspace": "{{ENVIRONMENT}}"
+        },
+        "UAT": {
+          "workspace": "{{ENVIRONMENT}}"
+        },
+        "Production": {
+          "workspace": "{{ENVIRONMENT}}"
+        }
+      }
+    }
+  }
+}

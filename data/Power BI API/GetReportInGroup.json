@@ -1,0 +1,14 @@
+{
+    "@odata.context": "http://wabi-uk-south-b-primary-redirect.analysis.windows.net/v1.0/myorg/groups/82d08e54-8dd8-4af1-84fd-013c008f695d/$metadata#reports/$entity",
+    "id": "7732c45f-5f0b-4ae2-8dd4-376e1f809c6c",
+    "reportType": "PowerBIReport",
+    "name": "Sales Insight Report1",
+    "webUrl": "https://app.powerbi.com/groups/82d08e54-8dd8-4af1-84fd-013c008f695d/reports/7732c45f-5f0b-4ae2-8dd4-376e1f809c6c",
+    "embedUrl": "https://app.powerbi.com/reportEmbed?reportId=7732c45f-5f0b-4ae2-8dd4-376e1f809c6c&groupId=82d08e54-8dd8-4af1-84fd-013c008f695d&w=2&config=*********",
+    "isFromPbix": true,
+    "isOwnedByMe": true,
+    "datasetId": "cb8781bc-11f4-42a7-b6b6-53e9a8e8adcb",
+    "datasetWorkspaceId": "313d6b68-aa84-4ba5-b65b-53d0e8889489",
+    "users": [],
+    "subscriptions": []
+}

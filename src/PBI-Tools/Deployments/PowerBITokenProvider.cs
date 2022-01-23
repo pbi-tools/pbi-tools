@@ -15,17 +15,21 @@ namespace PbiTools.Deployments
     public class ServicePrincipalPowerBITokenProvider : IPowerBITokenProvider
     {
         public const string POWERBI_API_RESOURCE = "https://analysis.windows.net/powerbi/api";
-        private static string[] scopes = new [] { $"{POWERBI_API_RESOURCE}/.default" };
+        private static readonly string[] scopes = new [] { $"{POWERBI_API_RESOURCE}/.default" };
         private readonly IConfidentialClientApplication _app;
 
 
-        public ServicePrincipalPowerBITokenProvider(string clientId, string clientSecret, Uri authority)
+        public ServicePrincipalPowerBITokenProvider(PbiDeploymentAuthentication options)
         {
-            _app = ConfidentialClientApplicationBuilder
-                .Create(clientId)
-                .WithClientSecret(clientSecret)
-                .WithAuthority(authority)
-                .Build();            
+            var builder = ConfidentialClientApplicationBuilder
+                .Create(options.ClientId)
+                .WithClientSecret(options.ClientSecret);
+                // TODO Support Certificate
+
+            _app = (options.Authority != null
+                ? builder.WithAuthority(options.Authority, options.ValidateAuthority)
+                : builder.WithTenantId(options.TenantId)
+            ).Build();
         }
         
         public Task<AuthenticationResult> AcquireTokenAsync() => _app.AcquireTokenForClient(scopes).ExecuteAsync();

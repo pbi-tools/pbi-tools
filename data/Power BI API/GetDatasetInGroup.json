@@ -1,0 +1,18 @@
+{
+    "@odata.context": "http://api.powerbi.com/v1.0/myorg/groups/313d6b68-aa84-4ba5-b65b-53d0e8889489/$metadata#datasets/$entity",
+    "id": "cb8781bc-11f4-42a7-b6b6-53e9a8e8adcb",
+    "name": "Sales Insight",
+    "webUrl": "https://app.powerbi.com/groups/313d6b68-aa84-4ba5-b65b-53d0e8889489/datasets/cb8781bc-11f4-42a7-b6b6-53e9a8e8adcb",
+    "addRowsAPIEnabled": false,
+    "configuredBy": "mathias@pbitools.org",
+    "isRefreshable": true,
+    "isEffectiveIdentityRequired": true,
+    "isEffectiveIdentityRolesRequired": true,
+    "isOnPremGatewayRequired": true,
+    "targetStorageMode": "Abf",
+    "createdDate": "2021-10-17T13:27:10.253Z",
+    "createReportEmbedURL": "https://app.powerbi.com/reportEmbed?config=*********",
+    "qnaEmbedURL": "https://app.powerbi.com/qnaEmbed?config=******",
+    "upstreamDatasets": [],
+    "users": []
+}
