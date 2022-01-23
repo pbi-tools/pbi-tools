@@ -10,6 +10,7 @@ open Fake.IO.FileSystemOperators
 open Fake.IO.Globbing.Operators
 open System
 open System.IO
+open System.Text.RegularExpressions
 
 // [x] clean
 // [x] assemblyinfo
@@ -98,7 +99,16 @@ let fileVersion = sprintf "%i.%i.%s"
                    release.SemVer.Major
                    release.SemVer.Minor
                    timestampString
+let (|HasCustomVersion|_|) = function
+    | head :: _ -> let m = Regex.Match(head, @"<version:([0-9a-zA-Z\-\.\+]+)>")
+                   if (m.Success) then Some (m.Groups.[1].Value)
+                   else None
+    | _ -> None
+let releaseVersion = match release.Notes with
+                     | HasCustomVersion version -> version
+                     | _ -> release.NugetVersion
 
+Trace.logfn "Release Version:\n%s" releaseVersion
 Trace.logfn "Current Release:\n%O" release
 
 let stable = 
@@ -139,7 +149,7 @@ let genCSAssemblyInfo (projectPath : string) =
         AssemblyInfo.Description summary
         AssemblyInfo.Version release.AssemblyVersion
         AssemblyInfo.FileVersion fileVersion
-        AssemblyInfo.InformationalVersion release.NugetVersion
+        AssemblyInfo.InformationalVersion releaseVersion
         AssemblyInfo.Metadata ("PBIBuildVersion", match pbiBuildVersion.Value with | Some v -> v | _ -> "" ) ]
 
 // Generate assembly info files with the right version & up-to-date information
@@ -232,14 +242,14 @@ Target.create "Publish" (fun _ ->
 
 Target.create "Pack" (fun _ ->
     !! (distFullDir @@ "*.*")
-    |> Zip.zip distFullDir (sprintf @"%s\pbi-tools.%s.zip" buildDir release.NugetVersion)
+    |> Zip.zip distFullDir (sprintf @"%s\pbi-tools.%s.zip" buildDir releaseVersion)
 
     distCoreDir
     |> Directory.EnumerateDirectories
     |> Seq.map (Path.GetFileName) 
     |> Seq.iter (fun dist ->
         !! (distCoreDir @@ dist @@ "*.*")
-        |> Zip.zip (distCoreDir @@ dist) (sprintf @"%s\pbi-tools.core.%s_%s.zip" buildDir release.NugetVersion dist)
+        |> Zip.zip (distCoreDir @@ dist) (sprintf @"%s\pbi-tools.core.%s_%s.zip" buildDir releaseVersion dist)
     )
 )
 
