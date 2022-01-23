@@ -7,6 +7,8 @@ using System.IO.Compression;
 
 namespace PbiTools.Tests
 {
+    using static PbiTools.Utils.Resources;
+
     public static class TestData
     {
 
@@ -63,5 +65,16 @@ namespace PbiTools.Tests
             }
         }
 
+        public static class AdventureWorks
+        {
+            internal static void WriteDatabaseJsonTo(string path)
+            {
+                using (var source = GetEmbeddedResourceStream("AdventureWorksDW2020.json"))
+                using (var dest = File.Create(path))
+                {
+                    source.CopyTo(dest);
+                }
+            }
+        }
     }
 }
