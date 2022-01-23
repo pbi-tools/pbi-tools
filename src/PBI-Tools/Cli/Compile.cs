@@ -19,16 +19,14 @@ namespace PbiTools.Cli
                 string folder,
             [ArgDescription("The path for the output file. If not provided, creates the file in the current working directory, using the foldername. A directory or file name can be provided. The full output path is created if it does not exist.")]
                 string outPath,
-            [ArgDescription("The target file format."), ArgDefaultValue(PbiFileFormat.PBIX)]
+            [ArgDescription("The target file format.")]
+            [ArgDefaultValue(PbiFileFormat.PBIX)]
                 PbiFileFormat format,
             [ArgDescription("Overwrite the destination file if it already exists, fail otherwise.")]
+            [ArgDefaultValue(false)]
                 bool overwrite
         )
         {
-            // format: pbix, pbit
-            // mode: Create, Merge
-            // mashupHandling: Auto, Skip, GenerateFromModel, FromFolder
-
             // SUCCESS
             // [x] PBIX from Report-Only
             // [x] PBIT from PBIT sources (incl Mashup)
