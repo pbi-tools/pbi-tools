@@ -31,7 +31,7 @@ open System.IO
 
 // The name of the project
 // (used by attributes in AssemblyInfo, name of a NuGet package and directory in 'src')
-let project = "Action BI Toolkit | pbi-tools"
+let project = "pbi-tools"
 
 // Short summary of the project
 // (used as description in AssemblyInfo and as a short summary for NuGet package)
@@ -43,7 +43,7 @@ let description = "A command-line tool to work with Power BI Desktop files. Enab
 
 // List of author names (for NuGet package)
 let authors = [ "Mathias Thierbach" ]
-let company = "Action BI Toolkit Ltd"
+let company = "Mathias Thierbach"
 
 // Tags for your project (for NuGet package)
 let tags = "powerbi, pbix, source-control, automation"
@@ -53,7 +53,7 @@ let solutionFile  = "PBI-TOOLS.sln"
 
 // Git configuration (used for publishing documentation in gh-pages branch)
 // The profile where the project is posted
-let gitOwner = "action-bi-toolkit"
+let gitOwner = "pbi-tools"
 let gitHome = "https://github.com/" + gitOwner
 
 // The name of the project on GitHub

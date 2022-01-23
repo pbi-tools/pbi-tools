@@ -1,17 +1,17 @@
-# Action BI Toolkit | pbi-tools
+# pbi-tools
 
 `pbi-tools` is a command-line tool bringing source-control features to Power BI. It works alongside Power BI Desktop and enables mature enterprise workflows for Power BI projects.
 
-An example project is available here: <https://github.com/action-bi-toolkit/adventureworksdw2020-pbix>
+An example project is available here: <https://github.com/pbi-tools/adventureworksdw2020-pbix>
 
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/action-bi-toolkit/pbi-tools)](https://github.com/action-bi-toolkit/pbi-tools/releases/latest)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/pbi-tools/pbi-tools)](https://github.com/pbi-tools/pbi-tools/releases/latest)
 [![Twitter Follow](https://img.shields.io/twitter/follow/mthierba)](https://twitter.com/mthierba)
 
-- Twitter Hashtag: [#ActionBIToolkit](https://twitter.com/search?q=%23ActionBIToolkit&src=typed_query)
+- Twitter Hashtag: [#pbitools](https://twitter.com/search?q=%23pbitools&src=typed_query)
 
 ## User Notes
 
-- See <https://toolkit.action-bi.com/pbi-tools/>
+- See <https://pbi.tools/cli/>
 
 ## Developer Notes
 
