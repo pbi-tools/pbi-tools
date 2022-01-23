@@ -80,3 +80,11 @@ group Fake-Tools
   storage: packages
 
   nuget xunit.runner.console
+
+group DotNet-Tools
+  source https://api.nuget.org/v3/index.json
+  storage: none
+  content: none
+
+  nuget fake-cli prerelease
+  nuget paket

@@ -331,6 +331,14 @@ NUGET
     WildcardMatch (1.0.7)
       NETStandard.Library (>= 1.6.1) - restriction: || (&& (== net472) (< net40)) (== net6.0)
 
+GROUP DotNet-Tools
+STORAGE: NONE
+CONTENT: NONE
+NUGET
+  remote: https://api.nuget.org/v3/index.json
+    fake-cli (5.21.0-alpha004)
+    Paket (6.2.1)
+
 GROUP Fake-Build
 STORAGE: NONE
 RESTRICTION: == net6.0
