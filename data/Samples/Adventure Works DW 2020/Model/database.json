@@ -1,6 +1,6 @@
 {
   "name": "Adventure Works DW 2020",
-  "compatibilityLevel": 1540,
+  "compatibilityLevel": 1550,
   "model": {
     "culture": "en-US",
     "dataAccessOptions": {
@@ -93,7 +93,7 @@
       },
       {
         "name": "PBIDesktopVersion",
-        "value": "2.91.701.0 (21.03)"
+        "value": "2.99.621.0 (21.11)"
       },
       {
         "name": "PBI_QueryOrder",
