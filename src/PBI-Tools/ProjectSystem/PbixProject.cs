@@ -237,5 +237,7 @@ namespace PbiTools.ProjectSystem
         public static bool IsPbixProjFolder(string path) =>
             File.Exists(Path.Combine(path, Filename));
 
+        public static string GetDefaultPath(string folder) =>
+            new FileInfo(Path.Combine(folder, Filename)).FullName;
     }
 }
