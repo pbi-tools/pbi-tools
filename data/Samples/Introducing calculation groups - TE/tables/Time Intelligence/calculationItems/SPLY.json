@@ -1,0 +1,10 @@
+{
+  "name": "SPLY",
+  "expression": [
+    "CALCULATE (",
+    "    SELECTEDMEASURE (),",
+    "    SAMEPERIODLASTYEAR ( 'Date'[Date] )",
+    ")"
+  ],
+  "ordinal": 1
+}

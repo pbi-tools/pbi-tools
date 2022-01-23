@@ -1,0 +1,7 @@
+{
+  "name": "Sales Quantity",
+  "expression": "[Sales Quantity]",
+  "formatStringDefinition": {
+    "expression": "\"#,##0\""
+  }
+}

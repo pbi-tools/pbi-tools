@@ -1,0 +1,22 @@
+{
+  "name": "Unit Discount",
+  "dataType": "double",
+  "isHidden": true,
+  "sourceColumn": "Unit Discount",
+  "formatString": "\\$#,0.00;(\\$#,0.00);\\$#,0.00",
+  "summarizeBy": "sum",
+  "annotations": [
+    {
+      "name": "Format",
+      "value": "<Format Format=\"CurrencyCustom\" Accuracy=\"2\" ThousandSeparator=\"True\"><Currency LCID=\"1033\" DisplayName=\"$ English (United States)\" Symbol=\"$\" PositivePattern=\"0\" NegativePattern=\"0\" /></Format>"
+    },
+    {
+      "name": "DataTypeAtRefresh",
+      "value": "Double#####not a type"
+    },
+    {
+      "name": "SummarizationSetBy",
+      "value": "Automatic"
+    }
+  ]
+}

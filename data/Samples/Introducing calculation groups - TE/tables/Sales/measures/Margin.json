@@ -1,0 +1,5 @@
+{
+  "name": "Margin",
+  "expression": "[Sales Amount] - [Total Cost]",
+  "formatString": "#,##0.00"
+}

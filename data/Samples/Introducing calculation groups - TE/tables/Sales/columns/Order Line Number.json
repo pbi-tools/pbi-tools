@@ -1,0 +1,21 @@
+{
+  "name": "Order Line Number",
+  "dataType": "int64",
+  "isHidden": true,
+  "sourceColumn": "Order Line Number",
+  "summarizeBy": "sum",
+  "annotations": [
+    {
+      "name": "Format",
+      "value": "<Format Format=\"General\" />"
+    },
+    {
+      "name": "DataTypeAtRefresh",
+      "value": "Int64#####not a type"
+    },
+    {
+      "name": "SummarizationSetBy",
+      "value": "Automatic"
+    }
+  ]
+}
