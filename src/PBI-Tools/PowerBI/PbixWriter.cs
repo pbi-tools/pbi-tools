@@ -98,6 +98,8 @@ namespace PbiTools.PowerBI
 
         public void Save(string path)
         {
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
+
             using (var pbixFile = File.Create(path))
             {
                 var proxy = new ProxyGenerator();
