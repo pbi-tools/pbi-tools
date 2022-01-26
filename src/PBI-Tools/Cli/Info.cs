@@ -35,7 +35,9 @@ namespace PbiTools.Cli
                     { "version", AssemblyVersionInformation.AssemblyInformationalVersion },
                     { "edition", AppSettings.Edition },
                     { "build", AssemblyVersionInformation.AssemblyFileVersion },
+#if NETFRAMEWORK
                     { "pbiBuildVersion", AssemblyVersionInformation.AssemblyMetadata_PBIBuildVersion },
+#endif
                     { "amoVersion", typeof(Microsoft.AnalysisServices.Tabular.Server).Assembly
                         .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion },
                     { "toolPath", Process.GetCurrentProcess().MainModule.FileName },
