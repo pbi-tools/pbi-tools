@@ -28,6 +28,7 @@ namespace PbiTools.Deployments
         public const string PBIXPROJ_NAME = nameof(PBIXPROJ_NAME);
         public const string FILE_PATH = nameof(FILE_PATH);
         public const string FILE_NAME = nameof(FILE_NAME);
+        public const string FILE_NAME_WITHOUT_EXT = nameof(FILE_NAME_WITHOUT_EXT);
         public const string ENVIRONMENT = nameof(ENVIRONMENT);
     }
 
@@ -215,7 +216,8 @@ namespace PbiTools.Deployments
                             .Aggregate(
                                 new Dictionary<string, string> {
                                         { DeploymentParameters.ENVIRONMENT, environment.Name },
-                                        { DeploymentParameters.PBIXPROJ_NAME, x.Directory.Name }
+                                        { DeploymentParameters.PBIXPROJ_NAME, x.Directory.Name },
+                                        { DeploymentParameters.FILE_NAME_WITHOUT_EXT, x.Directory.Name }
                                 },
                                 (dict, group) => {
                                     dict[group.Name == "0" ? DeploymentParameters.PBIXPROJ_FOLDER : group.Name] = group.Value;
@@ -226,7 +228,8 @@ namespace PbiTools.Deployments
                         Parameters = x.Match.Groups.Keys.Aggregate(
                             new Dictionary<string, string> {
                                 { DeploymentParameters.ENVIRONMENT, environment.Name },
-                                { DeploymentParameters.PBIXPROJ_NAME, x.Directory.Name }
+                                { DeploymentParameters.PBIXPROJ_NAME, x.Directory.Name },
+                                { DeploymentParameters.FILE_NAME_WITHOUT_EXT, x.Directory.Name }
                             },
                             (dict, key) => {
                                 dict[key == "0" ? DeploymentParameters.PBIXPROJ_FOLDER : key] = x.Match.Groups[key].Value;
@@ -308,7 +311,8 @@ namespace PbiTools.Deployments
                             .Aggregate(
                                 new Dictionary<string, string> {
                                         { DeploymentParameters.ENVIRONMENT, environment.Name },
-                                        { DeploymentParameters.FILE_NAME, x.File.Name }
+                                        { DeploymentParameters.FILE_NAME, x.File.Name },
+                                        { DeploymentParameters.FILE_NAME_WITHOUT_EXT, Path.GetFileNameWithoutExtension(x.File.Name) }
                                 },
                                 (dict, group) => {
                                     dict[group.Name == "0" ? DeploymentParameters.FILE_PATH : group.Name] = group.Value;
@@ -319,7 +323,8 @@ namespace PbiTools.Deployments
                         Parameters = x.Match.Groups.Keys.Aggregate(
                             new Dictionary<string, string> {
                                 { DeploymentParameters.ENVIRONMENT, environment.Name },
-                                { DeploymentParameters.FILE_NAME, x.File.Name }
+                                { DeploymentParameters.FILE_NAME, x.File.Name },
+                                { DeploymentParameters.FILE_NAME_WITHOUT_EXT, Path.GetFileNameWithoutExtension(x.File.Name) }
                             },
                             (dict, key) => {
                                 dict[key == "0" ? DeploymentParameters.FILE_PATH : key] = x.Match.Groups[key].Value;
