@@ -29,7 +29,7 @@ namespace PbiTools.Cli
         */
 
         [ArgActionMethod, ArgShortcut("convert")]
-        [ArgDescription("Performs an offline conversion of PbixProj or Tabular model sources into another format, either inline or targeting another destination.")]
+        [ArgDescription("Performs an offline conversion of PbixProj or Tabular model sources into another format, either in-place or into another destination.")]
         public void Convert(
             [ArgRequired, ArgDescription("The source(s) to convert. Can be a PbixProj folder, a Model/TE folder, or a TMSL json file.")]
                 string source,
