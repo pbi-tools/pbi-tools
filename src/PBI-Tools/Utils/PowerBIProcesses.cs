@@ -1,6 +1,7 @@
 // Copyright (c) Mathias Thierbach
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+#if NETFRAMEWORK
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,7 +13,6 @@ using System.Text;
 
 namespace PbiTools.Utils
 {
-#if NETFRAMEWORK
     public class PowerBIProcesses
     {
         private static readonly ILogger Log = Serilog.Log.ForContext<PowerBIProcesses>();
@@ -76,7 +76,6 @@ namespace PbiTools.Utils
 
         }
     }
-#endif
 
     public class PowerBIProcess
     {
@@ -90,3 +89,4 @@ namespace PbiTools.Utils
         public string PbixPath { get; set; }
     }
 }
+#endif

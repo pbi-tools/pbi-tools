@@ -1,0 +1,8 @@
+{
+  "name": "fcf11ed1-afec-495f-8897-4461f7a9d501",
+  "fromTable": "Sales",
+  "fromColumn": "ShipDateKey",
+  "toTable": "Date",
+  "toColumn": "DateKey",
+  "isActive": false
+}

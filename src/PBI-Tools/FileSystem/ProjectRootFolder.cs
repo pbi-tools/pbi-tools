@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Polly;
 using Serilog;
 
 namespace PbiTools.FileSystem
@@ -14,7 +15,7 @@ namespace PbiTools.FileSystem
     /// </summary>
     public interface IProjectRootFolder : IDisposable
     {
-        IProjectFolder GetFolder(string name);
+        IProjectFolder GetFolder(string name = null);
 
         IProjectFile GetFile(string relativePath);
 
@@ -29,9 +30,23 @@ namespace PbiTools.FileSystem
 
     public class ProjectRootFolder : IProjectRootFolder
     {
+        private static readonly ILogger Log = Serilog.Log.ForContext<ProjectRootFolder>();
+
         // central registry over all files written:
         private readonly HashSet<string> _filesWritten;
         private bool _committed;
+
+        /// <summary>
+        /// Handles <see cref="IOException"/>, waits, and retries twice.
+        /// </summary>
+        private static readonly Policy IOException_Retry_Policy = Policy
+            .Handle<IOException>()
+            .WaitAndRetry(new[] {
+                TimeSpan.FromMilliseconds(50),
+                TimeSpan.FromMilliseconds(100),
+            }, (ex, _) => 
+                Log.Warning(ex, "Retrying after IOException.")
+            );
 
         public ProjectRootFolder(string basePath)
         {
@@ -49,9 +64,15 @@ namespace PbiTools.FileSystem
             Log.Verbose("File written: {Path}", fullPath);
         }
 
-        public IProjectFolder GetFolder(string name)
+        /// <summary>
+        /// Gets a subfolder of the root folder, or the root folder itself if no argument is provided.
+        /// </summary>
+        /// <param name="name">The subfolder name, or <c>null</c>.</param>
+        public IProjectFolder GetFolder(string name = null)
         {
-            return new ProjectFolder(this, Path.Combine(BasePath, name));
+            return String.IsNullOrEmpty(name)
+                ? new ProjectFolder(this, BasePath)
+                : new ProjectFolder(this, Path.Combine(BasePath, name));
         }
 
         public IProjectFile GetFile(string relativePath)
@@ -68,19 +89,26 @@ namespace PbiTools.FileSystem
             {
                 if (Directory.Exists(BasePath))
                 {
-                    Directory.Delete(BasePath, recursive: true);
+                    IOException_Retry_Policy.Execute(() =>
+                        Directory.Delete(BasePath, recursive: true)
+                    );
                     Log.Information("No files written. Removed base folder: {Path}", BasePath);
                 }
 
                 return;
             }
 
+            // Protect the PbixProj file in root
+            _filesWritten.Add(ProjectSystem.PbixProject.GetDefaultPath(BasePath));
+
             // Remove any existing files that have not been updated
             foreach (var path in Directory.GetFiles(BasePath, "*.*", SearchOption.AllDirectories))
             {
                 if (!_filesWritten.Contains(path))
                 {
-                    File.Delete(path);
+                    IOException_Retry_Policy.Execute(() =>
+                        File.Delete(path)
+                    );
                     Log.Information("Removed file: {Path}", path);
                 }
             }
@@ -90,7 +118,9 @@ namespace PbiTools.FileSystem
             {
                 if (Directory.Exists(dir) && Directory.EnumerateFiles(dir, "*.*", SearchOption.AllDirectories).FirstOrDefault() == null)
                 {
-                    Directory.Delete(dir, recursive: true); // Could be root of a series of empty folders
+                    IOException_Retry_Policy.Execute(() =>
+                        Directory.Delete(dir, recursive: true) // Could be root of a series of empty folders
+                    );
                     Log.Information("Removed empty directory: {Path}", dir);
                 }
             }

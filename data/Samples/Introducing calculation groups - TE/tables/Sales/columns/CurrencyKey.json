@@ -1,0 +1,21 @@
+{
+  "name": "CurrencyKey",
+  "dataType": "int64",
+  "isHidden": true,
+  "sourceColumn": "CurrencyKey",
+  "summarizeBy": "count",
+  "annotations": [
+    {
+      "name": "Format",
+      "value": "<Format Format=\"General\" />"
+    },
+    {
+      "name": "DataTypeAtRefresh",
+      "value": "Int64#####not a type"
+    },
+    {
+      "name": "SummarizationSetBy",
+      "value": "Automatic"
+    }
+  ]
+}

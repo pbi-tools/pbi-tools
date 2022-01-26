@@ -26,7 +26,7 @@ namespace PbiTools.PowerBI
     {
         public static bool TryGetStream(this Func<Stream> part, out Stream stream)
         { 
-            stream = part == null ? null : part();
+            stream = (part == null) ? null : part();
             return (stream != null);
         }
     }

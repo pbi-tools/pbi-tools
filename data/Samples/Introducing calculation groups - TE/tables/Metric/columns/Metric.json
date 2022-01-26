@@ -1,0 +1,6 @@
+{
+  "name": "Metric",
+  "dataType": "string",
+  "sourceColumn": "Name",
+  "sortByColumn": "Ordinal"
+}

@@ -6,7 +6,7 @@ using System;
 namespace PbiTools.Serialization
 {
     /// <summary>
-    /// Transforms a Power BI package part, that has been converted to <see cref="T"/>,
+    /// Transforms a Power BI package part, represented as an instance of <see cref="T"/>,
     /// into (Serialize) and back from (Deserialize) the <c>PbixProj</c> file format.
     /// </summary>
     /// <typeparam name="T"></typeparam>

@@ -7,21 +7,20 @@ namespace PbiTools.Utils
 {
     public static class MashupHelpers
     {
-#if NETFRAMEWORK
+
         // ReSharper disable once InconsistentNaming
         public static string BuildPowerBIConnectionString(string globalPipe, byte[] mashup, string location)
         {
-            var bldr = new System.Data.OleDb.OleDbConnectionStringBuilder
+            var bldr = new System.Data.Common.DbConnectionStringBuilder
             {
-                Provider = "Microsoft.PowerBI.OleDb",
+                { "Provider", "Microsoft.PowerBI.OleDb" },
+                { "Global Pipe", globalPipe },
+                { "Mashup", Convert.ToBase64String(mashup) },
+                { "Location", location }
             };
-            bldr.Add("Global Pipe", globalPipe);
-            bldr.Add("Mashup", Convert.ToBase64String(mashup));
-            bldr.Add("Location", location);
 
             return bldr.ConnectionString;
         }
-#endif
 
         public static string ReplaceEscapeSeqences(string m)
         {

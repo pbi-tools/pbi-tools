@@ -1,0 +1,7 @@
+{
+  "name": "c4007daa-09a5-455d-ac3b-d8338a0e4468",
+  "fromTable": "Sales",
+  "fromColumn": "SalesTerritoryKey",
+  "toTable": "Sales Territory",
+  "toColumn": "SalesTerritoryKey"
+}

@@ -1,0 +1,8 @@
+{
+  "name": "cdc1f678-516d-402a-8bd3-13b1df211879",
+  "fromTable": "Sales",
+  "fromColumn": "Delivery Date",
+  "toTable": "Date",
+  "toColumn": "Date",
+  "isActive": false
+}

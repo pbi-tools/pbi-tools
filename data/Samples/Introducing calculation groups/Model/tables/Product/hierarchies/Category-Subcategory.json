@@ -1,0 +1,15 @@
+{
+  "name": "Category-Subcategory",
+  "levels": [
+    {
+      "name": "Category",
+      "ordinal": 0,
+      "column": "Category"
+    },
+    {
+      "name": "Subcategory",
+      "ordinal": 1,
+      "column": "Subcategory"
+    }
+  ]
+}

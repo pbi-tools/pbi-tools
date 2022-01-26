@@ -1,0 +1,21 @@
+{
+  "name": "OrderDateKey",
+  "dataType": "int64",
+  "isHidden": true,
+  "sourceColumn": "OrderDateKey",
+  "summarizeBy": "count",
+  "annotations": [
+    {
+      "name": "Format",
+      "value": "<Format Format=\"General\" />"
+    },
+    {
+      "name": "DataTypeAtRefresh",
+      "value": "Int64#####not a type"
+    },
+    {
+      "name": "SummarizationSetBy",
+      "value": "Automatic"
+    }
+  ]
+}

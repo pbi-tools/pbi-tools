@@ -1,0 +1,6 @@
+{
+  "name": "Time Intelligence",
+  "calculationGroup": {
+    "precedence": 10
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "Sales Amount",
+  "dataType": "decimal",
+  "sourceColumn": "Sales Amount",
+  "formatString": "\\$#,0.00;(\\$#,0.00);\\$#,0.00",
+  "summarizeBy": "none",
+  "annotations": [
+    {
+      "name": "SummarizationSetBy",
+      "value": "User"
+    },
+    {
+      "name": "Format",
+      "value": "<Format Format=\"CurrencyCustom\" Accuracy=\"2\" ThousandSeparator=\"True\"><Currency LCID=\"1033\" DisplayName=\"$ English (United States)\" Symbol=\"$\" PositivePattern=\"0\" NegativePattern=\"0\" /></Format>"
+    }
+  ]
+}

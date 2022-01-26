@@ -1,9 +1,0 @@
-<Measure Name="Total Sales Amount">
-  <Expression><![CDATA[SUM(Sales[Sales Amount])]]></Expression>
-  <FormatString>"£"#,0.###############;-"£"#,0.###############;"£"#,0.###############</FormatString>
-  <Annotation Name="Format">
-    <Format Format="CurrencyGeneral" ThousandSeparator="True">
-      <Currency LCID="2057" DisplayName="£ English (United Kingdom)" Symbol="£" PositivePattern="0" NegativePattern="1" />
-    </Format>
-  </Annotation>
-</Measure>

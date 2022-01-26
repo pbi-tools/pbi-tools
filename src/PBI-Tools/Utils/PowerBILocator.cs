@@ -16,6 +16,8 @@ using Serilog;
 
 namespace PbiTools.Utils
 {
+    using Configuration;
+    
     public class PowerBILocator
     {
         private const string PBIDesktop_exe = "PBIDesktop.exe";
@@ -103,7 +105,6 @@ namespace PbiTools.Utils
                                     ProductVersion = fileInfo.ProductVersion,
                                     Version = ParseProductVersion(fileInfo.ProductVersion),
                                     Location = PowerBIDesktopInstallationLocation.WindowsStore,
-                                    V3ModelEnabled = TryGetV3ModelEnabledFeatureSwitch(settingsPath, out var enabled) ? enabled : default(bool?),
                                 };
                             }
                         }
@@ -136,7 +137,6 @@ namespace PbiTools.Utils
                         ProductVersion = fileInfo.ProductVersion,
                         Version = ParseProductVersion(fileInfo.ProductVersion),
                         Location = PowerBIDesktopInstallationLocation.Installer,
-                        V3ModelEnabled = TryGetV3ModelEnabledFeatureSwitch(settingsPath, out var enabled) ? enabled : default(bool?),
                     };
                 }
             }
@@ -151,7 +151,7 @@ namespace PbiTools.Utils
 
         private static readonly Guid V3ModelFeatureGuid = new Guid("C15D05E2-F1C1-4F62-94B2-0F179E080741");
 
-        internal static bool TryGetV3ModelEnabledFeatureSwitch(string settingsPath, out bool enabled)
+        internal static bool TryGetFeatureSwitch(string settingsPath, Guid featureId, out bool enabled)
         {
             enabled = false;
             try
@@ -170,7 +170,7 @@ namespace PbiTools.Utils
                     using (var stream = entry.Open())
                     {
                         var xml = XDocument.Load(stream);
-                        var xEntry = xml.XPathSelectElement($"//Entry[@Type='{V3ModelFeatureGuid.ToString()}']");
+                        var xEntry = xml.XPathSelectElement($"//Entry[@Type='{featureId}']");
                         if (xEntry != null)
                         {
                             enabled = xEntry.Attribute("Value").Value.Contains("1");

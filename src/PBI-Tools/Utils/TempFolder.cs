@@ -3,6 +3,8 @@
 
 using System;
 using System.IO;
+using System.Linq;
+using Polly;
 using Serilog;
 
 namespace PbiTools.Utils
@@ -34,12 +36,26 @@ namespace PbiTools.Utils
             return tempPath;
         }
 
+        /// <summary>
+        /// Combines the path segments specified with the base path of this instance and returns the resulting path.
+        /// </summary>
+        public string GetPath(params string[] paths) => System.IO.Path.Combine(new[] { this.Path }.Concat(paths).ToArray());
+
         void IDisposable.Dispose()
         {
             if (!Delete) return;
-            Directory.Delete(Path, recursive: true);
-            Log.Verbose("Deleted TEMP folder at {Path}", Path);
-            // Provide failsafe Dispose() -- catch and log any errors, rather than re-throw
+
+            Policy
+                .Handle<IOException>()
+                .Fallback(() => { }, ex => 
+                {
+                    Log.Warning(ex, "Failed to delete temp folder at {Path}.", this.Path);
+                })
+                .Execute(() =>
+                {
+                    Directory.Delete(Path, recursive: true);
+                    Log.Verbose("Deleted TEMP folder at {Path}", Path);
+                });
         }
     }
 }

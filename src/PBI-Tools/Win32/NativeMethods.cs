@@ -1,5 +1,6 @@
 ﻿// Attribution: https://github.com/projectkudu/KuduHandles/tree/8c34ac5/KuduHandles
 
+#if NETFRAMEWORK
 using System;
 using System.IO;
 using System.Runtime.ConstrainedExecution;
@@ -158,3 +159,4 @@ namespace PbiTools.Win32
             [In] IntPtr templateFile);
     }
 }
+#endif

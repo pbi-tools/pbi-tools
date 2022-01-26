@@ -1,26 +1,30 @@
 ﻿// Copyright (c) Mathias Thierbach
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using System;
 using System.Collections.Generic;
-using System.Data.OleDb;
-using System.Xml;
+using System.Data.Common;
+using System.Linq;
 using System.Xml.XPath;
 using Newtonsoft.Json.Linq;
-using PbiTools.Serialization;
-using PbiTools.Utils;
 using Xunit;
+using TOM = Microsoft.AnalysisServices.Tabular;
 
 namespace PbiTools.Tests
 {
+    using Serialization;
+    using Utils;
+
     public class TabularModelSerializerTests : HasTempFolder
     {
+        private readonly MockProjectFolder folder = new MockProjectFolder();
+
 
         #region Tables
 
         [Fact]
         public void SerializeTables__RemovesTablesArrayFromOriginalJson()
         {
-            var folder = new MockProjectFolder();
             var db = JObject.Parse(@"
 {
     ""model"": {
@@ -36,7 +40,6 @@ namespace PbiTools.Tests
         [Fact]
         public void SerializeTables__CreatesFolderForEachTableUsingName()
         {
-            var folder = new MockProjectFolder();
             var db = JObject.Parse(@"
 {
     ""model"": {
@@ -64,7 +67,6 @@ namespace PbiTools.Tests
         [InlineData(@"foo?bar", "foo%3Fbar")]
         public void SerializeTables__SanitizesTableName(string tableName, string expectedFolderName)
         {
-            var folder = new MockProjectFolder();
             var db = new JObject 
             {
                 { "model", new JObject {
@@ -85,7 +87,6 @@ namespace PbiTools.Tests
         [Fact]
         public void SerializeTables__CreatesDaxFileForCalculatedTables()
         {
-            var folder = new MockProjectFolder();
             var table = Resources.GetEmbeddedResourceFromString("table--calculated.json", JObject.Parse);
             var table2 = TabularModelSerializer.SerializeTablePartitions(table, folder, @"tables\calculated", new MockQueriesLookup());
 
@@ -162,9 +163,7 @@ namespace PbiTools.Tests
         public void SerializeMeasures__DoesNothingIfThereAreNoMeasures()
         {
             var table = new JObject {};
-            var folder = new MockProjectFolder();
-            var result =
-                TabularModelSerializer.SerializeMeasures(table, folder, @"tables\table1\");
+            var result = TabularModelSerializer.SerializeMeasures(table, folder, @"tables\table1\");
 
             Assert.Equal(table.ToString(), result.ToString());
             Assert.Equal(0, folder.NumberOfFilesWritten);
@@ -181,7 +180,7 @@ namespace PbiTools.Tests
         { ""name"" : ""measure2"" }
     ]
 }");
-            var folder = new MockProjectFolder();
+
             TabularModelSerializer.SerializeMeasures(table, folder, @"tables\table1\");
 
             Assert.True(folder.ContainsPath(@"tables\table1\measures\measure1.xml"));
@@ -199,9 +198,8 @@ namespace PbiTools.Tests
         { ""name"" : ""measure2"" }
     ]
 }");
-            var folder = new MockProjectFolder();
-            var result =
-                TabularModelSerializer.SerializeMeasures(table, folder, @"tables\table1\");
+
+            var result = TabularModelSerializer.SerializeMeasures(table, folder, @"tables\table1\");
 
             Assert.Null(result.Property("measure"));
         }
@@ -225,7 +223,7 @@ namespace PbiTools.Tests
         }
     ]
 }");
-            var folder = new MockProjectFolder();
+
             TabularModelSerializer.SerializeMeasures(table, folder, @"tables\table1");
 
             var xml = folder.GetAsXml(@"tables\table1\measures\measure1.xml");
@@ -250,7 +248,6 @@ namespace PbiTools.Tests
         }
     ]
 }");
-            var folder = new MockProjectFolder();
             TabularModelSerializer.SerializeMeasures(table, folder, @"tables\table1");
 
             var expression = folder.GetAsString(@"tables\table1\measures\measure1.dax");
@@ -272,15 +269,57 @@ namespace PbiTools.Tests
         }
     ]
 }");
-            var folder = new MockProjectFolder();
+
             TabularModelSerializer.SerializeMeasures(table, folder, @"tables\table1");
 
             var expression = folder.GetAsString(@"tables\table1\measures\measure1.dax");
             Assert.Equal("CALCULATE ([SalesAmount], ALLSELECTED ( Customer[Occupation] ) )", expression);
         }
-        
 
-            #endregion
+        [Fact]
+        public void DeserializeMeasures__ExtendedProperties()
+        {
+            var table = new TOM.Table { Name = "Table1" };
+            table.Measures.Add(
+                TOM.JsonSerializer.DeserializeObject<TOM.Measure>(
+                    Resources.GetEmbeddedResourceString("measure--extendedProperties.json")));
+
+            var tableJsonSrc = JObject.Parse(TOM.JsonSerializer.SerializeObject(table));
+
+            var tableJsonOut = new JObject {
+                { "name", "Table1" },
+            };
+
+            using (var testFolder = new FileSystem.ProjectRootFolder(TestFolder.Path))
+            {
+                var modelFolder = testFolder.GetFolder(TabularModelSerializer.FolderName);
+
+                TabularModelSerializer.SerializeMeasures(tableJsonSrc, modelFolder, @"table");
+
+                TabularModelSerializer.DeserializeMeasures(modelFolder.GetSubfolder("table"), tableJsonOut);
+            }
+
+            // Assert expectations via TOM API
+            var tableOut = TOM.JsonSerializer.DeserializeObject<TOM.Table>(
+                tableJsonOut.ToString()
+            );
+
+            var measure = tableOut.Measures[0];
+            Assert.Collection(measure.ExtendedProperties,
+                x1 => Assert.Equal(TOM.ExtendedPropertyType.Json, x1.Type)
+            );
+
+            var prop = measure.ExtendedProperties[0] as TOM.JsonExtendedProperty;
+            Assert.NotNull(prop);
+            Assert.Equal("MeasureTemplate", prop.Name);
+
+            var propValue = JObject.Parse(prop.Value);
+            Assert.Equal("FilteredMeasure", propValue["daxTemplateName"]);
+            Assert.Equal(0, propValue["version"]);
+        }
+
+
+        #endregion
 
         #region Hierarchies
 
@@ -295,7 +334,7 @@ namespace PbiTools.Tests
         { ""name"" : ""hierarchy2"" }
     ]
 }");
-            var folder = new MockProjectFolder();
+
             TabularModelSerializer.SerializeHierarchies(table, folder, @"tables\table1\");
 
             Assert.True(folder.ContainsPath(@"tables\table1\hierarchies\hierarchy1.json"));
@@ -306,8 +345,191 @@ namespace PbiTools.Tests
 
         #endregion
 
+        #region Partitions
 
-        public class SerializeDataSources
+        public class Partitions
+        { 
+            [TestNotImplemented]
+            public void Serializes_M_Partitions()
+            {
+                //Given
+
+                //When
+
+                //Then
+            }
+
+            [TestNotImplemented]
+            public void Serializes_CalculationGroup_Partitions()
+            {
+                //Given
+
+                //When
+
+                //Then
+            }
+
+            [TestNotImplemented]
+            public void Serializes_Calculated_Partitions()
+            {
+                //Given
+
+                //When
+
+                //Then
+            }
+
+            [TestNotImplemented]
+            public void Serializes_PolicyRange_Partitions()
+            {
+                //Given
+
+                //When
+
+                //Then
+            }
+
+            [TestNotImplemented]
+            public void Serializes_Entity_Partitions()
+            {
+                //Given
+
+                //When
+
+                //Then
+            }
+
+            [TestNotImplemented]
+            public void Serializes_Query_Partitions()
+            {
+                //Given
+
+                //When
+
+                //Then
+            }
+
+        }
+
+        #endregion
+
+        #region Perspectives
+        #endregion
+
+        #region Roles
+        #endregion
+
+        #region Expressions
+        #endregion
+
+        #region Annotations
+
+        public class AnnotationRules
+        {
+            private static JArray CreateAnnotations(params string[] names) =>
+                new(names.Select(name => new JObject {
+                    { "name", name },
+                    { "value", $"{Guid.NewGuid()}" } 
+                }));
+
+            [Fact]
+            public void DoesNothingWhenRulesAreNull() 
+            {
+                new JObject().ApplyAnnotationRules(default);
+            }
+
+            [Fact]
+            public void RemovesAnnotationsPropertyWhenAllAnnotationsAreExcluded()
+            {
+                var result = JsonTransforms.ApplyAnnotationRules(
+                    new JObject {
+                        { "annotations", CreateAnnotations("Foo1", "foo_2") }
+                    }, 
+                    new ProjectSystem.ModelAnnotationSettings {
+                        Exclude = new[] { "foo*" }
+                    }
+                );
+
+                // 'annotations' property removed since both annotions were excluded
+                Assert.Empty(result.Properties());
+            }
+
+            [Fact]
+            public void AnnotationRulesAreCaseInsensitive()
+            {
+                var result = JsonTransforms.ApplyAnnotationRules(
+                    new JObject {
+                        { "annotations", CreateAnnotations(
+                            "PBI_Annotation1", 
+                            "PBI__VERSION"
+                        ) }
+                    },
+                    new ProjectSystem.ModelAnnotationSettings
+                    {
+                        Exclude = new[] { "pbi_*" },
+                        Include = new[] { "pbi__version" }
+                    }
+                );
+
+                // Both annotations matched ignoring casing
+                // One annotation remains because of Include rule
+                Assert.Collection(result.SelectTokens("$.annotations[*].name"),
+                    t => Assert.Equal("PBI__VERSION", t));
+            }
+
+            [Fact]
+            public void AllowsWildcardsInIncludeRules()
+            {
+                var result = JsonTransforms.ApplyAnnotationRules(
+                    new JObject {
+                        { "annotations", CreateAnnotations(
+                            "PBI_Annotation_1",
+                            "PBI_Annotation_10",
+                            "PBI__VERSION"
+                        ) }
+                    },
+                    new ProjectSystem.ModelAnnotationSettings
+                    {
+                        Exclude = new[] { "pbi_*" },
+                        Include = new[] { "pbi_annotation_?" }
+                    }
+                );
+
+                // Both annotations matched ignoring casing
+                // One annotation remains because of Include rule
+                Assert.Collection(result.SelectTokens("$.annotations[*].name"),
+                    t => Assert.Equal("PBI_Annotation_1", t));
+            }
+
+            [Fact]
+            public void DoesNothingWithoutExcludeRules()
+            {
+                var result = JsonTransforms.ApplyAnnotationRules(
+                    new JObject {
+                        { "annotations", CreateAnnotations(
+                            "PBI_Annotation1",
+                            "PBI__VERSION"
+                        ) }
+                    },
+                    new ProjectSystem.ModelAnnotationSettings
+                    {
+                        Include = new[] { "pbi__version" }
+                    }
+                );
+
+                // Only 'Include' rules provided: Json object is not modified
+                Assert.Collection(result.SelectTokens("$.annotations[*].name"),
+                    t => Assert.Equal("PBI_Annotation1", t),
+                    t => Assert.Equal("PBI__VERSION", t)
+                );
+            }
+
+        }
+
+        #endregion
+
+#if NETFRAMEWORK
+        public class SerializeLegacyDataSources
         {
             private readonly JObject _databaseJson = new JObject
             {
@@ -336,7 +558,7 @@ namespace PbiTools.Tests
 
             private readonly MockProjectFolder _folder;
 
-            public SerializeDataSources()
+            public SerializeLegacyDataSources()
             {
                 _folder = new MockProjectFolder();
                 TabularModelSerializer.SerializeDataSources(_databaseJson, _folder, _queriesLookup);
@@ -365,9 +587,9 @@ namespace PbiTools.Tests
                 var table1 = _folder.GetAsJson(@"dataSources\Table1\dataSource.json");
                 var table2 = _folder.GetAsJson(@"dataSources\Table2\dataSource.json");
 
-                var connStr1 = new OleDbConnectionStringBuilder(table1["connectionString"].Value<string>());
+                var connStr1 = new DbConnectionStringBuilder { ConnectionString = table1["connectionString"].Value<string>() };
                 Assert.False(connStr1.ContainsKey("Global Pipe"));
-                var connStr2 = new OleDbConnectionStringBuilder(table2["connectionString"].Value<string>());
+                var connStr2 = new DbConnectionStringBuilder { ConnectionString = table2["connectionString"].Value<string>() };
                 Assert.False(connStr2.ContainsKey("Global Pipe"));
             }
 
@@ -377,14 +599,14 @@ namespace PbiTools.Tests
                 var table1 = _folder.GetAsJson(@"dataSources\Table1\dataSource.json");
                 var table2 = _folder.GetAsJson(@"dataSources\Table2\dataSource.json");
 
-                var connStr1 = new OleDbConnectionStringBuilder(table1["connectionString"].Value<string>());
+                var connStr1 = new DbConnectionStringBuilder { ConnectionString = table1["connectionString"].Value<string>() };
                 Assert.False(connStr1.ContainsKey("Mashup"));
-                var connStr2 = new OleDbConnectionStringBuilder(table2["connectionString"].Value<string>());
+                var connStr2 = new DbConnectionStringBuilder { ConnectionString = table2["connectionString"].Value<string>() };
                 Assert.False(connStr2.ContainsKey("Mashup"));
             }
 
         }
-
+#endif
     }
 
 }

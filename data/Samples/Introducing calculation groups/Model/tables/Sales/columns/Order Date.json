@@ -1,0 +1,22 @@
+{
+  "name": "Order Date",
+  "dataType": "dateTime",
+  "isHidden": true,
+  "sourceColumn": "Order Date",
+  "formatString": "General Date",
+  "summarizeBy": "none",
+  "annotations": [
+    {
+      "name": "Format",
+      "value": "<Format Format=\"DateTimeGeneralPattern\"><DateTimes><DateTime LCID=\"1033\" Group=\"GeneralDateTimeLong\" FormatString=\"G\" /></DateTimes></Format>"
+    },
+    {
+      "name": "DataTypeAtRefresh",
+      "value": "DateTime#####not a type"
+    },
+    {
+      "name": "SummarizationSetBy",
+      "value": "Automatic"
+    }
+  ]
+}

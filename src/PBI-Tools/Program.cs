@@ -10,12 +10,16 @@ using PowerArgs;
 using Serilog;
 
 [assembly: InternalsVisibleTo("pbi-tools.tests")]
+[assembly: InternalsVisibleTo("pbi-tools.netcore.tests")]
 
 namespace PbiTools
 {
+    using Cli;
+    using Configuration;
 
     class Program
     {
+#if NETFRAMEWORK
         [DllImport("kernel32.dll")]
         private static extern ErrorModes SetErrorMode(ErrorModes uMode);
 
@@ -29,13 +33,15 @@ namespace PbiTools
             SEM_NOGPFAULTERRORBOX = 0x0002,
             SEM_NOOPENFILEERRORBOX = 0x8000
         }
+#endif
 
         static Program()
         {
+#if NETFRAMEWORK
             // Prevent the "This program has stopped working" messages.
             var prevMode = SetErrorMode(ErrorModes.SEM_NOGPFAULTERRORBOX);
             SetErrorMode(prevMode | ErrorModes.SEM_NOGPFAULTERRORBOX); // Set error mode w/o overwriting prev settings
-
+#endif
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.ControlledBy(AppSettings.LevelSwitch)
                 .WriteTo.Console(
@@ -139,6 +145,10 @@ namespace PbiTools
             this.ErrorCode = errorCode;
         }
 
+        public PbiToolsCliException(ExitCode errorCode, Exception inner, string message) : base(message, inner) {
+            this.ErrorCode = errorCode;
+        }
+
         protected PbiToolsCliException(
             System.Runtime.Serialization.SerializationInfo info,
             System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
@@ -151,9 +161,11 @@ namespace PbiTools
         InvalidArgs = -2,
         NoArgsProvided = -1,
         Success = 0,
-        FileNotFound = 1,
+        PathNotFound = 1,
         DependenciesNotInstalled = 2,
         FileExists = 3,
+        UnsupportedFileType = 4,
+        OverwriteNotAllowed = 5,
     }
 
 }

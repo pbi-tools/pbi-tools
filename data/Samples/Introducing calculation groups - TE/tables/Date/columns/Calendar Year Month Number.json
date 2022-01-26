@@ -1,0 +1,21 @@
+{
+  "name": "Calendar Year Month Number",
+  "dataType": "int64",
+  "isHidden": true,
+  "sourceColumn": "Calendar Year Month Number",
+  "summarizeBy": "sum",
+  "annotations": [
+    {
+      "name": "Format",
+      "value": "<Format Format=\"General\" />"
+    },
+    {
+      "name": "DataTypeAtRefresh",
+      "value": "Int64#####not a type"
+    },
+    {
+      "name": "SummarizationSetBy",
+      "value": "Automatic"
+    }
+  ]
+}

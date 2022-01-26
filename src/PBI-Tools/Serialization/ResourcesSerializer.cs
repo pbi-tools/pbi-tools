@@ -64,6 +64,7 @@ namespace PbiTools.Serialization
             foreach (var file in _folder.GetFiles("*", SearchOption.AllDirectories))
             {
                 if (file.TryReadFile(out var stream))
+                using (stream)
                 using (var buffer = new MemoryStream())
                 {
                     var relResourcePath = baseUri.MakeRelativeUri(new Uri(file.Path)).ToString();

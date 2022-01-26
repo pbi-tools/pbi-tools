@@ -1,0 +1,35 @@
+{
+  "name": "Metric",
+  "calculationGroup": {
+    "precedence": 1,
+    "calculationItems": [
+      {
+        "name": "Margin",
+        "expression": "[Margin]"
+      },
+      {
+        "name": "Sales Amount",
+        "expression": "[Sales Amount]"
+      },
+      {
+        "name": "Sales Quantity",
+        "expression": "[Sales Quantity]",
+        "formatStringDefinition": {
+          "expression": "\"#,##0\""
+        }
+      },
+      {
+        "name": "Total Cost",
+        "expression": "[Total Cost]"
+      }
+    ]
+  },
+  "partitions": [
+    {
+      "name": "Partition",
+      "source": {
+        "type": "calculationGroup"
+      }
+    }
+  ]
+}

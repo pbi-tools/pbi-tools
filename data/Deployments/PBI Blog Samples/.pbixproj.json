@@ -1,0 +1,38 @@
+{
+  "version": "0.10",
+  "created": "2022-01-22T15:27:04.403956+00:00",
+  "deployments": {
+    "Profile1": {
+      "description": "Use './data/external/powerbi-desktop-samples' base path.",
+      "mode": "Report",
+      "source": {
+        "type": "File",
+        "path": "./Monthly Desktop Blog Samples/{{YEAR}}/*.pbix"
+      },
+      "authentication": {
+        "type": "ServicePrincipal",
+        "tenantId": "pbitools.org",
+        "clientId": "%PBI_CLIENT_ID%",
+        "clientSecret": "%PBI_CLIENT_SECRET%"
+      },
+      "options": {
+        "import": {
+          "nameConflict": "CreateOrOverwrite"
+        }
+      },
+      "parameters": {
+      },
+      "environments": {
+        "Development": {
+          "workspace": "{{ENVIRONMENT}}"
+        },
+        "UAT": {
+          "workspace": "{{ENVIRONMENT}}"
+        },
+        "Production": {
+          "workspace": "{{ENVIRONMENT}}"
+        }
+      }
+    }
+  }
+}

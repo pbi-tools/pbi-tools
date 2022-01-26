@@ -1,0 +1,29 @@
+<LinguisticSchema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Language="en-US" DynamicImprovement="Default" xmlns="http://schemas.microsoft.com/sqlserver/2016/01/linguisticschema">
+  <Entities>
+    <Entity ConceptualEntity="Pod1" Source="Generated" Name="Sales_by_Month">
+      <Words>
+        <Word>Sales by Month</Word>
+      </Words>
+    </Entity>
+    <Entity ConceptualEntity="Pod" Source="Generated" Name="Metric">
+      <Words>
+        <Word>Metric</Word>
+      </Words>
+    </Entity>
+    <Entity ConceptualEntity="Pod2" Source="Generated" Name="Time_calc_YTD">
+      <Words>
+        <Word>Time calc (YTD)</Word>
+      </Words>
+    </Entity>
+    <Entity ConceptualEntity="Pod3" Source="Generated" Name="Time_calc_SPLY">
+      <Words>
+        <Word>Time calc (SPLY)</Word>
+      </Words>
+    </Entity>
+    <Entity ConceptualEntity="Pod4" Source="Generated" Name="Time_calc_original_measure">
+      <Words>
+        <Word>Time calc (original measure)</Word>
+      </Words>
+    </Entity>
+  </Entities>
+</LinguisticSchema>

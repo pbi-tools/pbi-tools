@@ -1,0 +1,83 @@
+{
+  "version": "0.10",
+  "created": "2022-01-23T10:40:51.8182079+00:00",
+  "deployments": {
+    "Report from File with folder wildcard": {
+      "description": "This profile deploys a number of reports from .pbix files. One of the path segments, {{WORKSPACE}}, is used as a deployment parameter for a destination workspace name.",
+      "mode": "Report",
+      "source": {
+        "type": "File",
+        "path": "./Reports/{{WORKSPACE}}/*.pbix"
+      },
+      "authentication": {
+        "type": "ServicePrincipal",
+        "authority": "https://login.microsoftonline.com/your-tenant-name-or-id",
+        "validateAuthority": true,
+        "tenantId": "Service Principal Tenant ID/Name. Use as shortcut instead of providing full AuthorityUrl.",
+        "clientId": "Service Principal ClientId",
+        "clientSecret": "%ENV_VARIABLE_NAME%"
+      },
+      "options": {
+        "pbiBaseUri": "https://api.powerbi.com",
+        "tempDir": "D:\\TEMP",
+        "import": {
+          "nameConflict": "CreateOrOverwrite",
+          "skipReport": false,
+          "overrideReportLabel": true,
+          "overrideModelLabel": true
+        }
+      },
+      "parameters": {
+        "WORKSPACE_PREFIX": "Team-A"
+      },
+      "environments": {
+        "Development": {
+          "workspace": "{{WORKSPACE_PREFIX}} - {{WORKSPACE}}"
+        },
+        "UAT": {
+          "workspace": "Workspace-Name"
+        },
+        "Production": {
+          "disabled": true,
+          "workspace": "00000000-0000-0000-0000-000000000000"
+        }
+      }
+    },
+    "Report from PbixProj folders wildcard": {
+      "description": "This profile deploys a number of reports from PbixProj folders. The .pbix files are compiled as part of the deployment process. Folders without a .pbixproj.json file are ignored.",
+      "mode": "Report",
+      "source": {
+        "type": "Folder",
+        "path": "./Reports/{{WORKSPACE}}/*"
+      },
+      "authentication": {
+        "type": "ServicePrincipal",
+        "validateAuthority": true,
+        "tenantId": "Service Principal Tenant ID/Name. The default AAD authority is used.",
+        "clientId": "Service Principal ClientId",
+        "clientSecret": "%ENV_VARIABLE_NAME%"
+      },
+      "options": {
+        "pbiBaseUri": "https://api.powerbi.com",
+        "tempDir": "%PATH_FROM_ENV%",
+        "import": {
+          "nameConflict": "Ignore"
+        }
+      },
+      "parameters": {},
+      "environments": {
+        "Development": {
+          "workspace": "{{WORKSPACE_PREFIX}} - {{WORKSPACE}}"
+        },
+        "UAT": {
+          "workspace": "Workspace-Name",
+          "displayName": "{{PBIXPROJ_NAME}} (UAT).pbix"
+        },
+        "Production": {
+          "disabled": true,
+          "workspace": "9a3b480b-f278-47a9-9c2d-b73c440d0529"
+        }
+      }
+    }
+  }
+}

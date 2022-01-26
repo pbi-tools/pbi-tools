@@ -1,0 +1,7 @@
+{
+  "name": "930316a3-701f-46ba-8e96-262c3375b3c9",
+  "fromTable": "Sales",
+  "fromColumn": "ProductKey",
+  "toTable": "Product",
+  "toColumn": "ProductKey"
+}

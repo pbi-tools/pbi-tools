@@ -1,0 +1,55 @@
+{
+  "name": "en-US",
+  "linguisticMetadata": {
+    "content": {
+      "Version": "1.0.0",
+      "Language": "en-US",
+      "DynamicImprovement": "HighConfidence"
+    },
+    "contentType": "json"
+  },
+  "translations": {
+    "model": {
+      "name": "Model",
+      "tables": [
+        {
+          "name": "Sales",
+          "measures": [
+            {
+              "name": "Total Cost",
+              "translatedCaption": "Total Cost"
+            },
+            {
+              "name": "Margin",
+              "translatedCaption": "Margin"
+            },
+            {
+              "name": "Sales Quantity",
+              "translatedCaption": "Sales Quantity"
+            }
+          ]
+        },
+        {
+          "name": "Time Intelligence",
+          "translatedCaption": "Time Intelligence",
+          "columns": [
+            {
+              "name": "Time Calc",
+              "translatedCaption": "Time Calc"
+            }
+          ]
+        },
+        {
+          "name": "Metric",
+          "translatedCaption": "Metric",
+          "columns": [
+            {
+              "name": "Metric",
+              "translatedCaption": "Metric"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

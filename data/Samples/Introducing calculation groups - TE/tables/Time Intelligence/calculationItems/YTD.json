@@ -1,0 +1,10 @@
+{
+  "name": "YTD",
+  "expression": [
+    "CALCULATE (",
+    "    SELECTEDMEASURE (),",
+    "    DATESYTD ( 'Date'[Date] )",
+    ")"
+  ],
+  "ordinal": 2
+}

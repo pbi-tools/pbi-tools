@@ -1,0 +1,21 @@
+{
+  "name": "Order Number",
+  "dataType": "string",
+  "isHidden": true,
+  "sourceColumn": "Order Number",
+  "summarizeBy": "none",
+  "annotations": [
+    {
+      "name": "Format",
+      "value": "<Format Format=\"Text\" />"
+    },
+    {
+      "name": "DataTypeAtRefresh",
+      "value": "String#####not a type"
+    },
+    {
+      "name": "SummarizationSetBy",
+      "value": "Automatic"
+    }
+  ]
+}

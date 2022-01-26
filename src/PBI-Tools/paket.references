@@ -5,12 +5,15 @@ Microsoft.AnalysisServices.AdomdClient.retail.amd64
 Newtonsoft.Json
 PowerArgs
 Polly
-StreamJsonRpc
 Castle.Core
 Costura.Fody
 Moq
 HtmlAgilityPack
 PeNet
 CsvHelper
+WildcardMatch
 Microsoft.Identity.Client
-Microsoft.PowerBI.API
+Microsoft.PowerBI.Api
+
+group Main-Local
+  LibGit2Sharp

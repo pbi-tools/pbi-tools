@@ -18,7 +18,7 @@ namespace PbiTools.Serialization
         string LookupOriginalDataSourceId(string currentDataSourceId);
     }
 
-#if NETFRAMEWORK
+
     public class TabularModelIdCache : IQueriesLookup
     {
         // TODO Must convert this into two separate components, 1 - PBIXPROJ file, 2 - IdCache
@@ -74,8 +74,8 @@ namespace PbiTools.Serialization
                 var connectionString = dataSource.Value<string>("connectionString");
                 if (name != null && connectionString != null)
                 {
-                    var connStrBldr = new System.Data.OleDb.OleDbConnectionStringBuilder(connectionString);
-                    if (connStrBldr.TryGetValue("location", out var location))
+                    var connStrBldr = new System.Data.Common.DbConnectionStringBuilder { ConnectionString = connectionString };
+                    if (connStrBldr.TryGetValue("Location", out var location))
                     {
                         onEntry(dict, name, location.ToString());
                     }
@@ -106,5 +106,5 @@ namespace PbiTools.Serialization
         // partition: lookup dataSource/location, then name (guid) from cache; keep current value if no cache
         // add new dataSources as they appear (remove old ones?)
     }
-#endif
+
 }

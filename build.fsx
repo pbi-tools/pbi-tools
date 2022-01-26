@@ -10,6 +10,7 @@ open Fake.IO.FileSystemOperators
 open Fake.IO.Globbing.Operators
 open System
 open System.IO
+open System.Text.RegularExpressions
 
 // [x] clean
 // [x] assemblyinfo
@@ -31,7 +32,7 @@ open System.IO
 
 // The name of the project
 // (used by attributes in AssemblyInfo, name of a NuGet package and directory in 'src')
-let project = "Action BI Toolkit | pbi-tools"
+let project = "pbi-tools"
 
 // Short summary of the project
 // (used as description in AssemblyInfo and as a short summary for NuGet package)
@@ -43,7 +44,7 @@ let description = "A command-line tool to work with Power BI Desktop files. Enab
 
 // List of author names (for NuGet package)
 let authors = [ "Mathias Thierbach" ]
-let company = "Action BI Toolkit Ltd"
+let company = "Mathias Thierbach"
 
 // Tags for your project (for NuGet package)
 let tags = "powerbi, pbix, source-control, automation"
@@ -53,7 +54,7 @@ let solutionFile  = "PBI-TOOLS.sln"
 
 // Git configuration (used for publishing documentation in gh-pages branch)
 // The profile where the project is posted
-let gitOwner = "action-bi-toolkit"
+let gitOwner = "pbi-tools"
 let gitHome = "https://github.com/" + gitOwner
 
 // The name of the project on GitHub
@@ -89,16 +90,24 @@ let releaseNotesData =
     |> ReleaseNotes.parseAll
 
 let release = List.head releaseNotesData
-let assemblyVersion = sprintf "%i.%i.0.0" release.SemVer.Major release.SemVer.Minor
 let timestampString =
     let now = DateTime.UtcNow
     let ytd = now - DateTime(now.Year,1,1,0,0,0,DateTimeKind.Utc)
-    String.Format("{0:yy}{1:ddd}.{0:HHmm}",now,ytd)
+    String.Format("{0:yy}{1:ddd}.{0:HHmm}",now,ytd + TimeSpan.FromDays(1.))
 let fileVersion = sprintf "%i.%i.%s"
                    release.SemVer.Major
                    release.SemVer.Minor
                    timestampString
+let (|HasCustomVersion|_|) = function
+    | head :: _ -> let m = Regex.Match(head, @"<version:([0-9a-zA-Z\-\.\+]+)>")
+                   if (m.Success) then Some (m.Groups.[1].Value)
+                   else None
+    | _ -> None
+let releaseVersion = match release.Notes with
+                     | HasCustomVersion version -> version
+                     | _ -> release.NugetVersion
 
+Trace.logfn "Release Version:\n%s" releaseVersion
 Trace.logfn "Current Release:\n%O" release
 
 let stable = 
@@ -139,7 +148,7 @@ let genCSAssemblyInfo (projectPath : string) =
         AssemblyInfo.Description summary
         AssemblyInfo.Version release.AssemblyVersion
         AssemblyInfo.FileVersion fileVersion
-        AssemblyInfo.InformationalVersion release.NugetVersion
+        AssemblyInfo.InformationalVersion releaseVersion
         AssemblyInfo.Metadata ("PBIBuildVersion", match pbiBuildVersion.Value with | Some v -> v | _ -> "" ) ]
 
 // Generate assembly info files with the right version & up-to-date information
@@ -171,6 +180,9 @@ Target.create "Clean" (fun _ ->
 Target.create "ZipSampleData" (fun _ ->
     !! "data/Samples/Adventure Works DW 2020/**/*.*"
     |> Zip.zip "data/Samples/Adventure Works DW 2020" (tempDir @@ "Adventure Works DW 2020.zip")
+
+    !! "data/Samples/Adventure Works DW 2020 - TE/**/*.*"
+    |> Zip.zip "data/Samples/Adventure Works DW 2020 - TE" (tempDir @@ "Adventure Works DW 2020 - TE.zip")
 )
 
 
@@ -211,32 +223,41 @@ Target.create "Publish" (fun _ ->
             }
     
     // Desktop build
-    DotNet.publish
+    "src/PBI-Tools/PBI-Tools.csproj"
+    |> DotNet.publish
         (setParams ("win10-x64", distFullDir)) 
-        "src/PBI-Tools/PBI-Tools.csproj"
+
+    // Hack: Remove all libgit2sharp files
+    (distFullDir @@ "lib")
+    |> Directory.delete
+
+    !! (distFullDir @@ "*.*")
+    -- "**/pbi-tools.*"
+    |> File.deleteAll
+
     
     // Core build
     [ "win10-x64",      "win-x64"
       "linux-x64",      "linux-x64"
       "linux-musl-x64", "alpine-x64" ]
     |> Seq.iter (fun (rid, path) ->
-        DotNet.publish 
+        "src/PBI-Tools.NETCore/PBI-Tools.NETCore.csproj"
+        |> DotNet.publish 
             (setParams (rid, distCoreDir @@ path)) 
-            "src/PBI-Tools.NETCore/PBI-Tools.NETCore.csproj"
     )
 )
 
 
 Target.create "Pack" (fun _ ->
     !! (distFullDir @@ "*.*")
-    |> Zip.zip distFullDir (sprintf @"%s\pbi-tools.%s.zip" buildDir release.NugetVersion)
+    |> Zip.zip distFullDir (sprintf @"%s\pbi-tools.%s.zip" buildDir releaseVersion)
 
     distCoreDir
     |> Directory.EnumerateDirectories
     |> Seq.map (Path.GetFileName) 
     |> Seq.iter (fun dist ->
         !! (distCoreDir @@ dist @@ "*.*")
-        |> Zip.zip (distCoreDir @@ dist) (sprintf @"%s\pbi-tools.core.%s_%s.zip" buildDir release.NugetVersion dist)
+        |> Zip.zip (distCoreDir @@ dist) (sprintf @"%s\pbi-tools.core.%s_%s.zip" buildDir releaseVersion dist)
     )
 )
 
@@ -247,6 +268,17 @@ Target.create "Test" (fun _ ->
     |> XUnit2.run (fun p -> { p with HtmlOutputPath = Some (testDir @@ "xunit.html")
                                      XmlOutputPath = Some (testDir @@ "xunit.xml")
                                      ToolPath = "packages/fake-tools/xunit.runner.console/tools/net472/xunit.console.exe" } )
+    // TODO Does XUnit2.run fail silently??
+
+    // https://fake.build/apidocs/v5/fake-dotnet-dotnet-testoptions.html
+    "tests/PBI-Tools.NetCore.Tests/PBI-Tools.NetCore.Tests.csproj"
+    |> DotNet.test (fun defaults ->
+       { defaults with
+           ResultsDirectory = Some "./.build/test"
+           Configuration = DotNet.BuildConfiguration.Release
+           ListTests = true
+           Logger = Some "trx;LogFileName=TestOutput.NetCore.xml"
+       })
 )
 
 
@@ -255,17 +287,21 @@ Target.create "SmokeTest" (fun _ ->
     // Run 'pbi-tools extract' on all
     // Fail if error code is returned
 
+    let dir = match Environment.environVarOrNone "PBITOOLS_TempDir" with
+              | Some x -> x
+              | None -> tempDir
+
     !! "data/**/*.pbix"
     -- "data/external/**"
-    |> Shell.copyFilesWithSubFolder tempDir
+    |> Shell.copyFilesWithSubFolder dir
 
     // 'external' folder contains files with deeply nested folder structures,
     // likely to hit the Windows 260-character limit for paths
     // copying those without sub folders to keep extracted paths shorter
     !! "data/external/**/*.pbix"
-    |> Shell.copyFiles tempDir
+    |> Shell.copyFiles dir
 
-    !! (tempDir @@ "**/*.pbix")
+    !! (dir @@ "**/*.pbix")
     |> Seq.iter (fun path ->
         [ "extract"; path ]
         |> CreateProcess.fromRawCommand (distFullDir @@ "pbi-tools.exe")
@@ -277,11 +313,15 @@ Target.create "SmokeTest" (fun _ ->
 
 
 Target.create "UsageDocs" (fun _ ->
-    [ "export-usage"; "-outPath"; "./docs/Usage.md" ]
-    |> CreateProcess.fromRawCommand (distFullDir @@ "pbi-tools.exe")
-    |> CreateProcess.ensureExitCode
-    |> Proc.run
-    |> ignore
+    [ (distFullDir @@ "pbi-tools.exe"), "./docs/usage.md"
+      (distCoreDir @@ "win-x64" @@ "pbi-tools.core.exe"), "./docs/usage-core.md" ]
+    |> Seq.iter (fun (command, output) ->
+        [ "export-usage"; "-outPath"; output ]
+        |> CreateProcess.fromRawCommand command
+        |> CreateProcess.ensureExitCode
+        |> Proc.run
+        |> ignore
+    )
 )
 
 

@@ -12,9 +12,8 @@ namespace PbiTools.PowerBI
     {
         private readonly Encoding _encoding;
 
-        public XmlPartConverter(Uri partUri) : this(partUri, Encoding.Unicode)
-        {
-        }
+        public XmlPartConverter(string relativePartUri) : this(new Uri(relativePartUri, UriKind.Relative), Encoding.Unicode)
+        { }
 
         public XmlPartConverter(Uri partUri, Encoding encoding)
         {

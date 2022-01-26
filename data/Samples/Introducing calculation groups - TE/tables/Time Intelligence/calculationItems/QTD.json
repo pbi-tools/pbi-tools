@@ -1,0 +1,10 @@
+{
+  "name": "QTD",
+  "expression": [
+    "CALCULATE (",
+    "    SELECTEDMEASURE (),",
+    "    DATESQTD ( 'Date'[Date] )",
+    ")"
+  ],
+  "ordinal": 3
+}

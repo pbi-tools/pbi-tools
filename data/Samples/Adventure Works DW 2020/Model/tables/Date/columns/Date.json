@@ -3,7 +3,7 @@
   "dataType": "dateTime",
   "isKey": true,
   "sourceColumn": "Date",
-  "formatString": "dd/mm/yyyy",
+  "formatString": "Short Date",
   "summarizeBy": "none",
   "annotations": [
     {

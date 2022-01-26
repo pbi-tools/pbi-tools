@@ -1,0 +1,21 @@
+{
+  "name": "Fiscal Year Quarter",
+  "dataType": "string",
+  "sourceColumn": "Fiscal Year Quarter",
+  "sortByColumn": "Fiscal Year Quarter Number",
+  "summarizeBy": "none",
+  "annotations": [
+    {
+      "name": "Format",
+      "value": "<Format Format=\"Text\" />"
+    },
+    {
+      "name": "DataTypeAtRefresh",
+      "value": "String#####not a type"
+    },
+    {
+      "name": "SummarizationSetBy",
+      "value": "Automatic"
+    }
+  ]
+}

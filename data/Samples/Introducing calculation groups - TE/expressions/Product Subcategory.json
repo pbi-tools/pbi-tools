@@ -1,0 +1,21 @@
+{
+  "name": "Product Subcategory",
+  "kind": "m",
+  "expression": [
+    "let",
+    "    Source = Sql.Database(\"Demo\", \"ContosoRetailDW\"),",
+    "    #\"DaxBook_Product Subcategory\" = Source{[Schema=\"DaxBook\",Item=\"Product Subcategory\"]}[Data]",
+    "in",
+    "    #\"DaxBook_Product Subcategory\""
+  ],
+  "annotations": [
+    {
+      "name": "PBI_NavigationStepName",
+      "value": "Navigation"
+    },
+    {
+      "name": "PBI_ResultType",
+      "value": "Table"
+    }
+  ]
+}

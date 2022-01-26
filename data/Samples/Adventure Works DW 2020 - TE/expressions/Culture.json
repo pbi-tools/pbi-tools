@@ -1,0 +1,16 @@
+{
+  "name": "Culture",
+  "description": "Used to format month names in the Date query.",
+  "kind": "m",
+  "expression": "\"en-US\" meta [IsParameterQuery=true, Type=\"Any\", IsParameterQueryRequired=true]",
+  "annotations": [
+    {
+      "name": "PBI_NavigationStepName",
+      "value": "Navigation"
+    },
+    {
+      "name": "PBI_ResultType",
+      "value": "Text"
+    }
+  ]
+}

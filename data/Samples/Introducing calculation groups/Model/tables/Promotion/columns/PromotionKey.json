@@ -1,0 +1,21 @@
+{
+  "name": "PromotionKey",
+  "dataType": "int64",
+  "isHidden": true,
+  "sourceColumn": "PromotionKey",
+  "summarizeBy": "none",
+  "annotations": [
+    {
+      "name": "Format",
+      "value": "<Format Format=\"General\" />"
+    },
+    {
+      "name": "DataTypeAtRefresh",
+      "value": "Int64#####not a type"
+    },
+    {
+      "name": "SummarizationSetBy",
+      "value": "Automatic"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "name": "Total Cost",
+  "expression": "SUMX ( Sales, Sales[Quantity] * Sales[Unit Cost] )",
+  "formatString": "#,##0.00"
+}

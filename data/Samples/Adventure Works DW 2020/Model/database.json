@@ -1,6 +1,6 @@
 {
   "name": "Adventure Works DW 2020",
-  "compatibilityLevel": 1540,
+  "compatibilityLevel": 1550,
   "model": {
     "culture": "en-US",
     "dataAccessOptions": {
@@ -74,46 +74,16 @@
     "expressions": [
       {
         "name": "SqlServerInstance",
-        "kind": "m",
-        "annotations": [
-          {
-            "name": "PBI_NavigationStepName",
-            "value": "Navigation"
-          },
-          {
-            "name": "PBI_ResultType",
-            "value": "Text"
-          }
-        ]
+        "kind": "m"
       },
       {
         "name": "SqlServerDatabase",
-        "kind": "m",
-        "annotations": [
-          {
-            "name": "PBI_NavigationStepName",
-            "value": "Navigation"
-          },
-          {
-            "name": "PBI_ResultType",
-            "value": "Text"
-          }
-        ]
+        "kind": "m"
       },
       {
         "name": "Culture",
         "description": "Used to format month names in the Date query.",
-        "kind": "m",
-        "annotations": [
-          {
-            "name": "PBI_NavigationStepName",
-            "value": "Navigation"
-          },
-          {
-            "name": "PBI_ResultType",
-            "value": "Text"
-          }
-        ]
+        "kind": "m"
       }
     ],
     "annotations": [
@@ -123,7 +93,7 @@
       },
       {
         "name": "PBIDesktopVersion",
-        "value": "2.91.701.0 (21.03)"
+        "value": "2.99.621.0 (21.11)"
       },
       {
         "name": "PBI_QueryOrder",

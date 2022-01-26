@@ -90,6 +90,7 @@ namespace PbiTools.FileSystem
         {
             if (file.TryReadFile(out var stream))
             {
+                using (stream)
                 using (var reader = XmlReader.Create(stream, readerSettings ?? new XmlReaderSettings { IgnoreWhitespace = true }))
                 {
                     try

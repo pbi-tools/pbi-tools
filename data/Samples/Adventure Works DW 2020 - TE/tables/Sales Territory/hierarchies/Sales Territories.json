@@ -1,0 +1,20 @@
+{
+  "name": "Sales Territories",
+  "levels": [
+    {
+      "name": "Group",
+      "ordinal": 0,
+      "column": "Group"
+    },
+    {
+      "name": "Region",
+      "ordinal": 2,
+      "column": "Region"
+    },
+    {
+      "name": "Country",
+      "ordinal": 1,
+      "column": "Country"
+    }
+  ]
+}

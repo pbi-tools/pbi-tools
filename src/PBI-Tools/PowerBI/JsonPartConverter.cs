@@ -14,9 +14,11 @@ namespace PbiTools.PowerBI
         private static readonly JsonSerializer DefaultSerializer = new JsonSerializer { };
         private readonly Encoding _encoding;
 
-        public JsonPartConverter(Uri partUri) : this(partUri, Encoding.Unicode)
-        {
-        }
+        public JsonPartConverter(string relativePartUri) : this(new Uri(relativePartUri, UriKind.Relative), Encoding.Unicode)
+        { }
+
+        public JsonPartConverter(string relativePartUri, Encoding encoding) : this(new Uri(relativePartUri, UriKind.Relative), encoding)
+        { }
 
         public JsonPartConverter(Uri partUri, Encoding encoding)
         {

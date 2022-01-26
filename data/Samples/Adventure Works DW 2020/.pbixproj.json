@@ -1,5 +1,23 @@
 {
-  "version": "0.9",
+  "version": "0.10",
   "created": "2021-03-14T22:09:07+00:00",
-  "lastModified": "2021-10-11T10:10:52.2007198+01:00"
+  "lastModified": "2022-01-23T14:02:58.3078872+00:00",
+  "settings": {
+    "model": {
+      "serializationMode": "Default",
+      "annotations": {
+        "exclude": [
+          "PBI_*"
+        ],
+        "include": [
+          "PBIDesktopVersion",
+          "PBI_QueryOrder"
+        ]
+      }
+    }
+  },
+  "custom": {
+    "attribute1": "foo",
+    "attribute2": 20
+  }
 }

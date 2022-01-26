@@ -46,26 +46,26 @@ namespace PbiTools.PowerBI
             if (modelName == null) throw new ArgumentNullException(nameof(modelName));
             if (resolver == null) throw new ArgumentNullException(nameof(resolver));
 
-            this.DataModel = new DataModelConverter(new Uri("/DataModel", UriKind.Relative), modelName, resolver);
+            this.DataModel = new DataModelConverter("/DataModel", modelName, resolver);
 #endif
         }
 
-        public IPowerBIPartConverter<string> Version { get; } = new StringPartConverter(new Uri("/Version", UriKind.Relative)) { IsOptional = false };
-        public IPowerBIPartConverter<JObject> ReportSettingsV3 { get; } = new JsonPartConverter(new Uri("/Settings", UriKind.Relative));
-        public IPowerBIPartConverter<JObject> ReportMetadataV3 { get; } = new JsonPartConverter(new Uri("/Metadata", UriKind.Relative));
-        public IPowerBIPartConverter<XDocument> LinguisticSchema { get; } = new XmlPartConverter(new Uri("/Report/LinguisticSchema", UriKind.Relative));
-        public IPowerBIPartConverter<JObject> LinguisticSchemaV3 { get; } = new JsonPartConverter(new Uri("/Report/LinguisticSchema", UriKind.Relative));
-        public IPowerBIPartConverter<JObject> DiagramViewState { get; } = new JsonPartConverter(new Uri("/DiagramState", UriKind.Relative));
-        public IPowerBIPartConverter<JObject> DiagramLayout { get; } = new JsonPartConverter(new Uri("/DiagramLayout", UriKind.Relative));
-        public IPowerBIPartConverter<JObject> ReportDocument { get; } = new JsonPartConverter(new Uri("/Report/Layout", UriKind.Relative));
+        public IPowerBIPartConverter<string> Version { get; } = new StringPartConverter("/Version") { IsOptional = false };
+        public IPowerBIPartConverter<JObject> ReportSettingsV3 { get; } = new JsonPartConverter("/Settings");
+        public IPowerBIPartConverter<JObject> ReportMetadataV3 { get; } = new JsonPartConverter("/Metadata");
+        public IPowerBIPartConverter<XDocument> LinguisticSchema { get; } = new XmlPartConverter("/Report/LinguisticSchema");
+        public IPowerBIPartConverter<JObject> LinguisticSchemaV3 { get; } = new JsonPartConverter("/Report/LinguisticSchema");
+        public IPowerBIPartConverter<JObject> DiagramViewState { get; } = new JsonPartConverter("/DiagramState");
+        public IPowerBIPartConverter<JObject> DiagramLayout { get; } = new JsonPartConverter("/DiagramLayout");
+        public IPowerBIPartConverter<JObject> ReportDocument { get; } = new JsonPartConverter("/Report/Layout");
 
-        public IPowerBIPartConverter<JObject> DataModelSchema { get; } = new JsonPartConverter(new Uri("/DataModelSchema", UriKind.Relative));
+        public IPowerBIPartConverter<JObject> DataModelSchema { get; } = new JsonPartConverter("/DataModelSchema");
 #if NETFRAMEWORK
         public IPowerBIPartConverter<JObject> DataModel { get; }
 #endif
-        public IPowerBIPartConverter<JObject> Connections { get; } = new JsonPartConverter(new Uri("/Connections", UriKind.Relative), Encoding.UTF8); // TODO Verify encoding
-        public IPowerBIPartConverter<byte[]> CustomVisuals { get; } = new BytesPartConverter(new Uri("/Report/CustomVisuals", UriKind.Relative));
-        public IPowerBIPartConverter<byte[]> StaticResources { get; } = new BytesPartConverter(new Uri("/Report/StaticResources", UriKind.Relative));
+        public IPowerBIPartConverter<JObject> Connections { get; } = new JsonPartConverter("/Connections", Encoding.UTF8);
+        public IPowerBIPartConverter<byte[]> CustomVisuals { get; } = new BytesPartConverter("/Report/CustomVisuals");
+        public IPowerBIPartConverter<byte[]> StaticResources { get; } = new BytesPartConverter("/Report/StaticResources");
 
 
         // TODO CustomProperties new Uri("/docProps/custom.xml", UriKind.Relative)

@@ -1,0 +1,21 @@
+{
+  "name": "Calendar Year Quarter",
+  "dataType": "string",
+  "sourceColumn": "Calendar Year Quarter",
+  "sortByColumn": "Calendar Year Quarter Number",
+  "summarizeBy": "none",
+  "annotations": [
+    {
+      "name": "Format",
+      "value": "<Format Format=\"Text\" />"
+    },
+    {
+      "name": "DataTypeAtRefresh",
+      "value": "String#####not a type"
+    },
+    {
+      "name": "SummarizationSetBy",
+      "value": "Automatic"
+    }
+  ]
+}

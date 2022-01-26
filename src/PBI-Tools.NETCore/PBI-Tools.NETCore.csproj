@@ -2,29 +2,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>pbi-tools.core</AssemblyName>
-    <RootNamespace>PbiTools</RootNamespace>
     <StartupObject>PbiTools.Program</StartupObject>
-    <Platforms>x64</Platforms>
-    <PlatformTarget>x64</PlatformTarget>
-    <LangVersion>latest</LangVersion>
-    <OutputPath>bin\$(Configuration)\</OutputPath>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <ApplicationIcon>..\PBI-Tools\pbi-tools.ico</ApplicationIcon>
-    <!-- <RuntimeIdentifiers>win-x64;linux-x64</RuntimeIdentifiers> -->
     <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>false</SelfContained>
     <IncludeNativeLibrariesForSelfExtract>false</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
-  <PropertyGroup>
-    <!-- See: https://github.com/dotnet/sdk/issues/2809 -->
-    <AssemblySearchPaths>$(ReferencePath);$(AssemblySearchPaths)</AssemblySearchPaths>
-    <SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>
-  </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\PBI-Tools\**\*.cs" Exclude="..\PBI-Tools\obj\**\*.*;..\PBI-Tools\Properties\**\*.*" />
+    <Compile Include="..\PBI-Tools\**\*.cs" Exclude="..\PBI-Tools\obj\**\*.*;..\PBI-Tools\Properties\**\*.*;..\PBI-Tools\Win32\**\*.*" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

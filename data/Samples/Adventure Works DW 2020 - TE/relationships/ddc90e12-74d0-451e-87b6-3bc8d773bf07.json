@@ -1,0 +1,9 @@
+{
+  "name": "ddc90e12-74d0-451e-87b6-3bc8d773bf07",
+  "fromCardinality": "one",
+  "fromTable": "Sales",
+  "fromColumn": "SalesOrderLineKey",
+  "toTable": "Sales Order",
+  "toColumn": "SalesOrderLineKey",
+  "crossFilteringBehavior": "bothDirections"
+}

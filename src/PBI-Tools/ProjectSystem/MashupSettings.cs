@@ -17,7 +17,7 @@ namespace PbiTools.ProjectSystem
         Expanded = 3
     }
 
-    public class MashupSettings
+    public class MashupSettings : IHasDefaultValue
     {
         [JsonIgnore]
         public bool IsDefault => SerializationMode == MashupSerializationMode.Default;

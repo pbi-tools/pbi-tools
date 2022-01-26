@@ -1,0 +1,8 @@
+{
+  "name": "a390c257-6a75-4c82-aab5-270f564d26b0",
+  "fromTable": "Sales",
+  "fromColumn": "DueDateKey",
+  "toTable": "Date",
+  "toColumn": "DateKey",
+  "isActive": false
+}

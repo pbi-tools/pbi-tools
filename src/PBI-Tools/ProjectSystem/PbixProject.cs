@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using Serilog;
@@ -12,13 +13,14 @@ using Serilog;
 namespace PbiTools.ProjectSystem
 {
     using FileSystem;
+    using Utils;
 
     public class PbixProject
     {
         private static readonly ILogger Log = Serilog.Log.ForContext<PbixProject>();
 
         public const string Filename = ".pbixproj.json";
-        public static readonly Version CurrentVersion = Version.Parse("0.9");
+        public static readonly Version CurrentVersion = Version.Parse("0.10");
 
         /*
          * PBIXPROJ Change Log
@@ -50,20 +52,22 @@ namespace PbiTools.ProjectSystem
          * 0.8   - /Mashup extracted from V3 models (when present in PBIX/PBIT)
          * 0.9   - Mashup serialization modes: Default, Raw, Expanded.
          *       - BREAKING CHANGE: 'Expanded' is now considered legacy and no longer the default serialization mode. (The `compile-pbix` action only supports projects extracted using the _Default_ or _Raw_ Mashup serialization mode.)
+         * 0.10  - Supports 'custom' token (not used by pbi-tools, but available to external clients)
+                 - #48 Breaking: 'nameConflict' moved into deployments/options/import
+                 - #48 Breaking: 'workspaceId' is now 'workspace' in deployments/environment
+                 - #48 New: Optional 'description' in deployment profile
+                 - #19 New Model settings: settings/model/annotations (exclude, include)
          */
 
-        /* Entries to add later: */
-        // Deployments
-        // CustomProperties
 
-        private static readonly JsonSerializerSettings DefaultJsonSerializerSettings = new JsonSerializerSettings
+        internal static readonly JsonSerializerSettings DefaultJsonSerializerSettings = new JsonSerializerSettings
         {
             DateFormatString = "yyyy-MM-ddTHH:mm:ssK",
             Formatting = Formatting.Indented,
             //ContractResolver = new DefaultContractResolver { NamingStrategy = new CamelCaseNamingStrategy() },
-            // don't use CamelCaseContractResolver as it will modify query names
+            // don't use CamelCaseContractResolver as we need to maintain casing in query names, custom settings, and deployment manifest labels
             DefaultValueHandling = DefaultValueHandling.Ignore
-        };
+        }.WithConverters(new StringEnumConverter());
 
         #region Version
 
@@ -103,6 +107,13 @@ namespace PbiTools.ProjectSystem
 
         #endregion
 
+        #region Custom
+
+        [JsonProperty("custom", NullValueHandling = NullValueHandling.Ignore)]
+        public JToken Custom { get; set; }
+
+        #endregion
+
         #region Deployments
 
         [JsonProperty("deployments", NullValueHandling = NullValueHandling.Ignore)]
@@ -113,6 +124,7 @@ namespace PbiTools.ProjectSystem
         public PbixProject()
         {
             this.Version = CurrentVersion;
+            this.Created = DateTimeOffset.Now;
         }
 
 
@@ -126,44 +138,110 @@ namespace PbiTools.ProjectSystem
             {
                 Log.Information("Reading PBIXPROJ settings from: {Path}", file.Path);
 
-                using (var reader = new StreamReader(stream))
+                try
                 {
-                    try
-                    {
-                        var proj = JsonConvert.DeserializeObject<PbixProject>(reader.ReadToEnd(), DefaultJsonSerializerSettings);
-                        proj.OriginalPath = file.Path;
-                        return proj;
-                        // at this stage we could perform version compatibility checks
-                    }
-                    catch (JsonReaderException e)
-                    {
-                        Log.Error(e, "Failed to read PBIXPROJ file from {Path}. Using default settings.", file.Path);
-                    }
+                    var proj = FromStream(stream);
+                    proj.OriginalPath = file.Path;
+                    return proj;
+                    // at this stage we could perform version compatibility checks
+                }
+                catch (JsonReaderException e)
+                {
+                    Log.Warning(e, "Failed to read PBIXPROJ file from {Path}. Using default settings.", file.Path);
                 }
             }
 
             Log.Debug("No existing or invalid PBIXPROJ file found at {Path}. Generating new project file.", file.Path);
 
-            return new PbixProject { Created = DateTimeOffset.Now, Version = CurrentVersion };
+            return new() { OriginalPath = file.Path };
         }
 
-        public void Save(IProjectRootFolder folder)
+
+        /// <summary>
+        /// Loads the <see cref="PbixProject"/> metadata file from the specified folder, using the default filename ".pbixproj.json".
+        /// Creates a new, blank, instance if the file doesn't exist or is invalid.
+        /// </summary>
+        public static PbixProject FromFolder(string path)
+            => FromFile(Path.Combine(path, Filename));
+
+
+        /// <summary>
+        /// Loads the <see cref="PbixProject"/> metadata file from the specified file.
+        /// Creates a new, blank, instance if the file doesn't exist or is invalid.
+        /// </summary>
+        public static PbixProject FromFile(string path)
+        { 
+            if (File.Exists(path))
+            {
+                Log.Information("Reading PBIXPROJ settings from: {Path}", path);
+                
+                using var stream = File.OpenRead(path);
+                try
+                {
+                    var proj = FromStream(stream);
+                    proj.OriginalPath = new FileInfo(path).FullName;
+                    return proj;
+                    // at this stage we could perform version compatibility checks
+                }
+                catch (JsonReaderException e)
+                {
+                    Log.Warning(e, "Failed to read PBIXPROJ file from {Path}. Using default settings.", path);
+                }
+            }
+
+            Log.Debug("No existing or invalid PBIXPROJ file found at {Path}. Generating new project file.", path);
+
+            return new() { OriginalPath = new FileInfo(path).FullName };
+        }
+
+        public static PbixProject FromStream(Stream fileStream)
+        { 
+            using (var reader = new StreamReader(fileStream))
+            {
+                return JsonConvert.DeserializeObject<PbixProject>(reader.ReadToEnd(), DefaultJsonSerializerSettings) ?? new();
+            }
+        }
+
+
+        public void Save(IProjectRootFolder folder, bool setModified = false)
         {
             var json = JObject.FromObject(this, JsonSerializer.Create(DefaultJsonSerializerSettings));
             if (this.Settings.IsDefault()) json.Remove("settings");
+
+            if (setModified) this.LastModified = DateTimeOffset.UtcNow;
 
             folder.GetFile(Filename).Write(json);
         }
 
         /// <summary>
+        /// Saves the project file to the given path, or overwrites the original path if <c>null</c> is specified.
+        /// </summary>
+        public void Save(string path = null, bool setModified = false)
+        {
+            var json = JObject.FromObject(this, JsonSerializer.Create(DefaultJsonSerializerSettings));
+            if (this.Settings.IsDefault()) json.Remove("settings");
+
+            if (setModified) this.LastModified = DateTimeOffset.UtcNow;
+
+            using var writer = new JsonTextWriter(File.CreateText(path ?? this.OriginalPath));
+            writer.Formatting = Formatting.Indented;
+            json.WriteTo(writer);
+        }
+
+
+        /// <summary>
         /// Determines the default project folder location for the given PBIX file path.
         /// </summary>
         public static string GetDefaultProjectFolderForFile(string pbixPath) =>
-            // ReSharper disable once AssignNullToNotNullAttribute
             Path.Combine(
                 Path.GetDirectoryName(pbixPath),
                 Path.GetFileNameWithoutExtension(pbixPath)
             ); // TODO make this configurable
 
+        public static bool IsPbixProjFolder(string path) =>
+            File.Exists(Path.Combine(path, Filename));
+
+        public static string GetDefaultPath(string folder) =>
+            new FileInfo(Path.Combine(folder, Filename)).FullName;
     }
 }

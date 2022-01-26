@@ -1,4 +1,7 @@
-﻿using Newtonsoft.Json.Linq;
+﻿// Copyright (c) Mathias Thierbach
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
+using Newtonsoft.Json.Linq;
 using PbiTools.Serialization;
 using Xunit;
 

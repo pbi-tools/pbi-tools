@@ -1,0 +1,22 @@
+{
+  "name": "Date",
+  "dataType": "dateTime",
+  "isKey": true,
+  "sourceColumn": "Date",
+  "formatString": "dd/mm/yyyy",
+  "summarizeBy": "none",
+  "annotations": [
+    {
+      "name": "SummarizationSetBy",
+      "value": "Automatic"
+    },
+    {
+      "name": "UnderlyingDateTimeDataType",
+      "value": "Date"
+    },
+    {
+      "name": "Format",
+      "value": "<Format Format=\"DateTimeGeneralPattern\"><DateTimes><DateTime LCID=\"1033\" Group=\"ShortDate\" FormatString=\"MM/dd/yyyy\" /></DateTimes></Format>"
+    }
+  ]
+}

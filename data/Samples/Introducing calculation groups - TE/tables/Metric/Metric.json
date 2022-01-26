@@ -1,0 +1,6 @@
+{
+  "name": "Metric",
+  "calculationGroup": {
+    "precedence": 1
+  }
+}

@@ -1,17 +1,17 @@
-# Action BI Toolkit | pbi-tools
+# pbi-tools
 
 `pbi-tools` is a command-line tool bringing source-control features to Power BI. It works alongside Power BI Desktop and enables mature enterprise workflows for Power BI projects.
 
-An example project is available here: <https://github.com/action-bi-toolkit/adventureworksdw2020-pbix>
+An example project is available here: <https://github.com/pbi-tools/adventureworksdw2020-pbix>
 
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/action-bi-toolkit/pbi-tools)](https://github.com/action-bi-toolkit/pbi-tools/releases/latest)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/pbi-tools/pbi-tools)](https://github.com/pbi-tools/pbi-tools/releases/latest)
 [![Twitter Follow](https://img.shields.io/twitter/follow/mthierba)](https://twitter.com/mthierba)
 
-- Twitter Hashtag: [#ActionBIToolkit](https://twitter.com/search?q=%23ActionBIToolkit&src=typed_query)
+- Twitter Hashtag: [#pbitools](https://twitter.com/search?q=%23pbitools&src=typed_query)
 
 ## User Notes
 
-- See <https://toolkit.action-bi.com/pbi-tools/>
+- See <https://pbi.tools/cli/>
 
 ## Developer Notes
 
@@ -25,12 +25,17 @@ An example project is available here: <https://github.com/action-bi-toolkit/adve
 ### Prerequisites
 
 - Visual Studio 2019 or later (for MSBuild dependencies)
-- .Net Core SDK 3.x or later
+- .Net 4.7.2 Targeting Pack
+- .Net 6.0 SDK
 - Power BI Desktop x64 (Must be installed in default location for local development: `C:\Program Files\Microsoft Power BI Desktop\`)
+
+### List Build Targets
+
+    dotnet fake build --list
 
 ### Versioning
 
-The strictly adheres to [SemVer v2](https://semver.org/) for release versioning. The build system uses the first entry in [RELEASE_NOTES.md](./RELEASE_NOTES.md) to inject version numbers into build artifacts.
+The project strictly adheres to [SemVer v2](https://semver.org/) for release versioning. The build system uses the first entry in [RELEASE_NOTES.md](./RELEASE_NOTES.md) to inject version numbers into build artifacts.
 
 ### Diagnostics
 
@@ -52,6 +57,10 @@ The strictly adheres to [SemVer v2](https://semver.org/) for release versioning.
 
     .\build.cmd Test
 
+### Run All Targets (Build, Publish, Test, UsageDocs, Pack)
+
+    .\build.cmd Pack
+
 ### Run only the specified build target
 
     .\build.cmd UsageDocs -s
@@ -63,13 +72,14 @@ The strictly adheres to [SemVer v2](https://semver.org/) for release versioning.
 
 _That is generally not needed as the `build.cmd` script takes care of fetching dependencies. However, it could be useful to run this manually on a fresh clone or after making changes in the `paket.dependencies` file._
 
-### Update Dependency to latest version (ex: AMO)
+### Update Specific Dependency to latest version (ex: AMO)
 
     dotnet paket update Microsoft.AnalysisServices.retail.amd64
     dotnet paket update Microsoft.AnalysisServices.AdomdClient.retail.amd64
 
-### Updating Build Dependencies
+### Updating All Dependencies (NuGet)
 
+    dotnet paket update
     dotnet paket update -g Fake-Build
 
 ### Find outdated dependencies
@@ -98,3 +108,13 @@ _That is generally not needed as the `build.cmd` script takes care of fetching d
 
     .\build.cmd Publish -s
     .\build.cmd Pack -s
+
+## Git Submodules
+
+### Clone with submodules
+
+   git clone --recurse-submodules https://github.com/pbi-tools/pbi-tools.git
+
+### Pulling in Upstream Changes
+
+    git submodule update --remote

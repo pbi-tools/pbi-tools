@@ -1,0 +1,11 @@
+{
+  "array": [
+    "item1",
+    0.1,
+    {
+      "foo": "bar"
+    }
+  ],
+  "property1": "string",
+  "property2":  123
+}

@@ -1,0 +1,7 @@
+{
+  "name": "3921d624-3ba4-40ca-b78d-61fe4ebc7659",
+  "fromTable": "Sales",
+  "fromColumn": "CustomerKey",
+  "toTable": "Customer",
+  "toColumn": "CustomerKey"
+}

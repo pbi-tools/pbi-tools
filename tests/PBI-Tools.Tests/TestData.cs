@@ -1,9 +1,14 @@
-﻿using System;
+﻿// Copyright (c) Mathias Thierbach
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
+using System;
 using System.IO;
 using System.IO.Compression;
 
 namespace PbiTools.Tests
 {
+    using static PbiTools.Utils.Resources;
+
     public static class TestData
     {
 
@@ -60,5 +65,16 @@ namespace PbiTools.Tests
             }
         }
 
+        public static class AdventureWorks
+        {
+            internal static void WriteDatabaseJsonTo(string path)
+            {
+                using (var source = GetEmbeddedResourceStream("AdventureWorksDW2020.json"))
+                using (var dest = File.Create(path))
+                {
+                    source.CopyTo(dest);
+                }
+            }
+        }
     }
 }

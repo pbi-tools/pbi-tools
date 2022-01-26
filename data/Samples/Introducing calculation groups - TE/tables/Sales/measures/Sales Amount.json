@@ -1,0 +1,11 @@
+{
+  "name": "Sales Amount",
+  "expression": "SUMX ( Sales, Sales[Quantity] * Sales[Net Price] )",
+  "formatString": "#,0.00",
+  "annotations": [
+    {
+      "name": "Format",
+      "value": "<Format Format=\"NumberDecimal\" Accuracy=\"2\" ThousandSeparator=\"True\" />"
+    }
+  ]
+}

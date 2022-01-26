@@ -1,0 +1,26 @@
+{
+    "name": "Lead Volume (Read by Owner)",
+    "expression": [
+        "",
+        "CALCULATE([Lead Volume], 'Marketing Leads'[Viewed By Owner] IN { \"Viewed\" })"
+    ],
+    "formatString": "#,0",
+    "isHidden": true,
+    "lineageTag": "1d4caf1f-3131-4be1-a8ad-89b5b41d0635",
+    "extendedProperties": [
+        {
+            "type": "json",
+            "name": "MeasureTemplate",
+            "value": {
+                "version": 0,
+                "daxTemplateName": "FilteredMeasure"
+            }
+        }
+    ],
+    "annotations": [
+        {
+            "name": "Format",
+            "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" ThousandSeparator=\"True\" />"
+        }
+    ]
+}

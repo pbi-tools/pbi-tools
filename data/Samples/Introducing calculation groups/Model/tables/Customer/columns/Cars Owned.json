@@ -1,0 +1,20 @@
+{
+  "name": "Cars Owned",
+  "dataType": "int64",
+  "sourceColumn": "Cars Owned",
+  "summarizeBy": "sum",
+  "annotations": [
+    {
+      "name": "Format",
+      "value": "<Format Format=\"General\" />"
+    },
+    {
+      "name": "DataTypeAtRefresh",
+      "value": "Int64#####not a type"
+    },
+    {
+      "name": "SummarizationSetBy",
+      "value": "Automatic"
+    }
+  ]
+}

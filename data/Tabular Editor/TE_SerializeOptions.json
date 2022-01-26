@@ -1,0 +1,25 @@
+{
+  "IgnoreInferredObjects": true,
+  "IgnoreInferredProperties": true,
+  "IgnoreTimestamps": true,
+  "SplitMultilineStrings": true,
+  "PrefixFilenames": false,
+  "LocalTranslations": false,
+  "LocalPerspectives": false,
+  "LocalRelationships": false,
+  "Levels": [
+    "Data Sources",
+    "Perspectives",
+    "Relationships",
+    "Roles",
+    "Shared Expressions",
+    "Tables",
+    "Tables/Annotations",
+    "Tables/Calculation Items",
+    "Tables/Columns",
+    "Tables/Hierarchies",
+    "Tables/Measures",
+    "Tables/Partitions",
+    "Translations"
+  ]
+}
