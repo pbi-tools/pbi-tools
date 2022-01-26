@@ -25,7 +25,7 @@ namespace PbiTools.Cli
         public static CommandLineArgumentsDefinition RemoveAutoAliases(this CommandLineArgumentsDefinition def, bool isUsage,
             [System.Runtime.CompilerServices.CallerMemberName] string callerName = "")
         {
-            Log.Debug("'RemoveAutoAliases' invoked. Caller: {Caller}", callerName);
+            Log.Verbose("'RemoveAutoAliases' invoked. Caller: {Caller}", callerName);
 
             foreach (var action in def.Actions)
             {
@@ -63,22 +63,22 @@ namespace PbiTools.Cli
 
         public override void BeforeValidateDefinition(HookContext context)
         {
-            Log.Debug("Invoking 'BeforeValidateDefinition'");
+            Log.Verbose("Invoking 'BeforeValidateDefinition'");
 
-            foreach (var action in context.Definition.Actions)
+            if (Log.IsEnabled(Serilog.Events.LogEventLevel.Verbose))
             { 
-                if (Log.IsEnabled(Serilog.Events.LogEventLevel.Debug))
+                foreach (var action in context.Definition.Actions)
                 {
-                    Log.Debug("Action: {Source}", action.Source);
-                    Log.Debug(" Default Alias: {DefaultAlias}", action.DefaultAlias);
+                    Log.Verbose("Action: {Source}", action.Source);
+                    Log.Verbose(" Default Alias: {DefaultAlias}", action.DefaultAlias);
                     foreach (var alias in action.Aliases)
-                        Log.Debug(" Alias: {Alias}", alias);
+                        Log.Verbose(" Alias: {Alias}", alias);
                     foreach (var metadata in action.Metadata)
                     {
                         if (metadata is ArgShortcut shortcut)
-                            Log.Debug(" Shortcut: {Shortcut}", shortcut.Shortcut);
+                            Log.Verbose(" Shortcut: {Shortcut}", shortcut.Shortcut);
                         else
-                            Log.Debug(" Metadata: {Metadata}", metadata);
+                            Log.Verbose(" Metadata: {Metadata}", metadata);
                     }
                 }        
             }
@@ -89,7 +89,7 @@ namespace PbiTools.Cli
 
         public override void BeforeInvoke(HookContext context)
         {
-            Log.Debug("Invoking Action: {SpecifiedAction}", context.SpecifiedAction);
+            Log.Verbose("Invoking Action: {SpecifiedAction}", context.SpecifiedAction);
         }
 
         public override void BeforePrepareUsage(HookContext context)
