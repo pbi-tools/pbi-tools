@@ -90,11 +90,10 @@ let releaseNotesData =
     |> ReleaseNotes.parseAll
 
 let release = List.head releaseNotesData
-let assemblyVersion = sprintf "%i.%i.0.0" release.SemVer.Major release.SemVer.Minor
 let timestampString =
     let now = DateTime.UtcNow
     let ytd = now - DateTime(now.Year,1,1,0,0,0,DateTimeKind.Utc)
-    String.Format("{0:yy}{1:ddd}.{0:HHmm}",now,ytd)
+    String.Format("{0:yy}{1:ddd}.{0:HHmm}",now,ytd + TimeSpan.FromDays(1.))
 let fileVersion = sprintf "%i.%i.%s"
                    release.SemVer.Major
                    release.SemVer.Minor
