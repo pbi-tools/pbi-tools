@@ -148,5 +148,17 @@ namespace PbiTools.Utils
                 Array.ForEach(converters, settings.Converters.Add);
             return settings;
         }
+
+        public static bool TryParseJson<T>(this string json, out T result) where T : class
+        {
+            try {
+                result = JsonConvert.DeserializeObject<T>(json);
+                return (result != default);
+            }
+            catch {
+                result = default;
+                return false;
+            }
+        }
     }
 }

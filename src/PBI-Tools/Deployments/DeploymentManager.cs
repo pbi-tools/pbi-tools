@@ -12,6 +12,7 @@ using Microsoft.Identity.Client;
 using Microsoft.PowerBI.Api;
 using Microsoft.PowerBI.Api.Models;
 using Microsoft.Rest;
+using Newtonsoft.Json.Linq;
 using Serilog;
 using Serilog.Events;
 
@@ -21,6 +22,7 @@ namespace PbiTools.Deployments
     using Model;
     using PowerBI;
     using ProjectSystem;
+    using Utils;
 
     public static class DeploymentParameters
     {
@@ -178,7 +180,15 @@ namespace PbiTools.Deployments
                     continue;
                 }
 
-                await ImportReportAsync(report, powerbi, workspace, workspaceIdCache);
+                try { 
+                    await ImportReportAsync(report, powerbi, workspace, workspaceIdCache);
+                }
+                catch (Microsoft.Rest.HttpOperationException ex) {
+                    if (ex.Response.Content.TryParseJson<JObject>(out var json)) {
+                        throw new DeploymentException($"HTTP Error: {ex.Response.StatusCode}\n{json.ToString(Newtonsoft.Json.Formatting.Indented)}", ex);
+                    }
+                    throw;
+                }
             }
 
         }
