@@ -1,7 +1,50 @@
+# Release Notes
 
-## 1.0.0-beta.7+60.1 - 2021-12-31
+## 1.0.0-beta.8 - 2022-01-26
 
-- FIX #60 Introduced new env setting `PBITOOLS_AppDataDir`, allowing to customize the default AppData location (in the `%LOCALAPPDATA%` folder). When the Windows Store version of PBI Desktop is used, that location is used to shadow-copy the msmdsrv engine.
+- #48 'deploy' action, 2nd release
+  - Folder wildcard source
+  - Source path parameters
+  - Workspace Name & Id support
+  - 'File' source
+  - 'WhatIf' mode
+  - Support for all Azure Clouds (options/pbiBaseUri, authentication/authority)
+- #16 Core version
+  - Breaking: Now targets .Net 6 (LTS release)
+  - Removed various CLI options not applicable to Core edition (`cache`, `export-data`: *pbixPath*, `generate-bim`: *generateDataSources*)
+  - Edition ("Desktop" vs "Core") now displayed in `info` output and usage docs
+  - Dedicated usage page for Core version at <https://pbi.tools/cli/usage-core.html>
+  - Increased test coverage
+- PBIXPROJ v0.10 schema
+  - #29 Support for custom settings in `.pbixproj.json` for integration with external tools
+  - #48 Breaking: 'nameConflict' moved into deployments/options/import
+  - #48 Breaking: 'workspaceId' is now 'workspace' in deployments/environment
+  - #48 New: Optional 'description' in deployment profile
+  - #19 New Model settings: settings/model/annotations (exclude, include)
+- #61 New action: `convert`
+- #19 New Model serialization rules
+  - Model annotation exclude/include
+  - Suggested setting: `{ "exclude": [ "PBI_*" ], "include": [ "PBI_QueryOrder" ]}`
+- #59 Fixed: Measure/ExtendedProperties deserialization fails
+- #44 BREAKING: Two CLI actions renamed
+  - `extract-data` -> `export-data`
+  - `export-bim` -> `generate-bim`
+  - _Previous action names are still functional, but not exposed in usage docs._
+- #60 Fixed: Introduced new env setting `PBITOOLS_AppDataDir`, allowing to customize the default AppData location (in the `%LOCALAPPDATA%` folder). When the Windows Store version of PBI Desktop is used, that location is used to shadow-copy the msmdsrv engine. Some organizations prevent running executables from within `%LOCALAPPDATA%`. This is only needed to extract from .pbix files with an embedded model.
+- #64 New action: `init`
+- #62 New action: `git`
+- `info` action: *pbiInstallation* json no longer contains the `v3ModelEnabled` property (the V3 format is the default in PBI Desktop)
+- Fixed some memory leaks in xml and resources deserializers.
+- Various Dependencies upgraded, including:
+  - AMO/TOM: 19.32
+  - Power BI API: 4.2
+  - MSAL: 4.40
+- Build System
+  - SemVer build identifiers supported with special syntax in RELEASE_NOTES.md.
+  - Simplified csproj setup using a common `Directory.Build.targets` file in './src' (see: <https://docs.microsoft.com/visualstudio/msbuild/customize-your-build?#directorybuildprops-and-directorybuildtargets>).
+  - Optional env setting `PBITOOLS_TempDir` supported for the _SmokeTest_ target.
+  - Ensured compatibility with .Net 6 by upgrading to `fake-cli` 5.21.
+- Tested with Power BI Desktop 2.100 (Dec 2021)
 
 ## 1.0.0-beta.7 - 2021-11-07
 * #16 **pbi-tools Core Version** released (with distributions for Win x64, Linux Desktop x64, Linux Alpine x64). This version is available cross-platform and supports CI/CD deployment and automation scenarios where a local Power BI Desktop installation is not available.
@@ -12,7 +55,6 @@
 * Tested with Power BI Desktop 2.98 (Oct 2021)
 
 ## 1.0.0-beta.6 - 2021-10-11
-* #39 **Rebranded as "Action BI Toolkit | pbi-tools"**
 * #16 Infrastructure updates for upcoming .Net 5 version
 * Upgraded dependencies: CsvHelper, Fody, Costura.Fody
 * Upgraded AMO/TOM libraries to 19.26

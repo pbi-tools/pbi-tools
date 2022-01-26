@@ -53,6 +53,10 @@ namespace PbiTools.ProjectSystem
          * 0.9   - Mashup serialization modes: Default, Raw, Expanded.
          *       - BREAKING CHANGE: 'Expanded' is now considered legacy and no longer the default serialization mode. (The `compile-pbix` action only supports projects extracted using the _Default_ or _Raw_ Mashup serialization mode.)
          * 0.10  - Supports 'custom' token (not used by pbi-tools, but available to external clients)
+                 - #48 Breaking: 'nameConflict' moved into deployments/options/import
+                 - #48 Breaking: 'workspaceId' is now 'workspace' in deployments/environment
+                 - #48 New: Optional 'description' in deployment profile
+                 - #19 New Model settings: settings/model/annotations (exclude, include)
          */
 
 
