@@ -25,6 +25,7 @@ namespace PbiTools.Configuration
             public static readonly string LogLevel = $"{EnvPrefix}{nameof(LogLevel)}";
             public static readonly string PbiInstallDir = $"{EnvPrefix}{nameof(PbiInstallDir)}";
             public static readonly string AppDataDir = $"{EnvPrefix}{nameof(AppDataDir)}";
+            public static readonly string Debug = $"{EnvPrefix}{nameof(Debug)}";
         }
 
         public static string GetEnvironmentSetting(string name) => System.Environment.GetEnvironmentVariable(name)
@@ -32,6 +33,15 @@ namespace PbiTools.Configuration
             {
                 var value when value is not null => System.Environment.ExpandEnvironmentVariables(value),
                 _ => null
+            };
+
+        public static bool GetBooleanSetting(string name) => GetEnvironmentSetting(name)
+            switch
+            {
+                var value when bool.TryParse(value, out var result) => result,
+                "1" => true,
+                "0" => false,
+                _ => false
             };
 
         public AppSettings()
