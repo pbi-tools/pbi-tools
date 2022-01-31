@@ -2,6 +2,8 @@
 
 ## 1.0.0-beta.8 - 2022-01-26
 
+<version:1.0.0-beta.8+220131.01>
+
 - #48 'deploy' action, 2nd release
   - Folder wildcard source
   - Source path parameters
