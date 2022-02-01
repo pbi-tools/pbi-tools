@@ -61,6 +61,7 @@ namespace PbiTools.PowerBI
         private void CreateConfig(ASInstanceConfig config)
         {
             config.SetWorkingDir(_tempPath);
+            config.Language = 0;
 
             var iniFilePath = Path.Combine(_tempPath, "msmdsrv.ini");
             var iniTemplate = GetEmbeddedResource("msmdsrv.ini.xml", XDocument.Load);
