@@ -192,14 +192,23 @@ namespace PbiTools.PowerBI
 
             _proc = null;
             if (debugMode) return;
+            var failedConfigFound = false;
 
-            if (Log.IsEnabled(LogEventLevel.Debug))
+            foreach (var file in Directory.EnumerateFiles(_tempPath, "*", SearchOption.AllDirectories))
             {
-                foreach (var file in Directory.EnumerateFiles(_tempPath, "*", SearchOption.AllDirectories))
+                if (file.ToLower().Contains("failed")) {
+                    failedConfigFound = true;
+                    Log.Warning($"Config folder contains file {file}. Probably MSMDSRV.exe was unable to launch because of an invalid config. Deletion of the config files will skipped to allow inspection.");
+                }
+
+                if (Log.IsEnabled(LogEventLevel.Debug))
                 {
                     Log.Debug("Deleting file {Path}", file);
                 }
             }
+
+            if (failedConfigFound) return;
+
 
             Policy.Wrap(
                     Policy
