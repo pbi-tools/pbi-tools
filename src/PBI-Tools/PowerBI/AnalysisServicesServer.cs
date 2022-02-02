@@ -25,6 +25,7 @@ using TOM = Microsoft.AnalysisServices.Tabular;
 
 namespace PbiTools.PowerBI
 {
+    using Configuration;
 
     public class AnalysisServicesServer : IDisposable
     {
@@ -34,13 +35,17 @@ namespace PbiTools.PowerBI
 
         private readonly string _tempPath;
         private string _asToolPath;
+        private readonly bool debugMode = AppSettings.GetBooleanSetting(AppSettings.Environment.Debug);
 
         public AnalysisServicesServer(ASInstanceConfig config, IDependenciesResolver dependenciesResolver)
         {
             _dependenciesResolver = dependenciesResolver ?? throw new ArgumentNullException(nameof(dependenciesResolver));
-            _tempPath = Path.GetTempFileName(); // TODO Use TempFolder
-            File.Delete(_tempPath);
-            Directory.CreateDirectory(_tempPath);
+            _tempPath = debugMode ? Environment.CurrentDirectory : Path.GetTempFileName(); // TODO Use TempFolder
+            if (!debugMode)
+            { 
+                File.Delete(_tempPath);
+                Directory.CreateDirectory(_tempPath);
+            }
 
             if (dependenciesResolver.TryFindMsmdsrv(out var path))
                 _asToolPath = path;
@@ -56,15 +61,16 @@ namespace PbiTools.PowerBI
         private void CreateConfig(ASInstanceConfig config)
         {
             config.SetWorkingDir(_tempPath);
+            config.Language = 0;
 
             var iniFilePath = Path.Combine(_tempPath, "msmdsrv.ini");
             var iniTemplate = GetEmbeddedResource("msmdsrv.ini.xml", XDocument.Load);
 
             ASIniFile.WriteConfig(config, iniTemplate, iniFilePath);
 
-            if (Log.IsEnabled(LogEventLevel.Verbose))
+            if (Log.IsEnabled(LogEventLevel.Debug))
             {
-                Log.Verbose(File.ReadAllText(iniFilePath));
+                Log.Debug(File.ReadAllText(iniFilePath));
             }
         }
 
@@ -104,8 +110,8 @@ namespace PbiTools.PowerBI
             if (HideWindow)
             {
                 // TODO Could declare receivers on instance, otherwise fwd output to logger
-                _proc.OutputDataReceived += (sender, e) => Log.Verbose("MSMDSRV INF: {Data}", e.Data);
-                _proc.ErrorDataReceived += (sender, e) => Log.Verbose("MSMDSRV ERR: {Data}", e.Data);
+                _proc.OutputDataReceived += (sender, e) => Log.Debug("MSMDSRV INF: {Data}", e.Data);
+                _proc.ErrorDataReceived += (sender, e) => Log.Debug("MSMDSRV ERR: {Data}", e.Data);
             }
 
             _proc.StartInfo = procStartInfo;
@@ -120,7 +126,7 @@ namespace PbiTools.PowerBI
                 })
                 .Execute(_proc.Start);
 
-            Log.Verbose("Started MSMDSRV, PID: {PID}", _proc.Id);
+            Log.Debug("Started MSMDSRV, PID: {PID}", _proc.Id);
 
             if (HideWindow)
             {
@@ -185,6 +191,7 @@ namespace PbiTools.PowerBI
             }
 
             _proc = null;
+            if (debugMode) return;
 
             if (Log.IsEnabled(LogEventLevel.Debug))
             {

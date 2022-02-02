@@ -178,6 +178,8 @@ Target.create "Clean" (fun _ ->
 // Build library & test project
 
 Target.create "ZipSampleData" (fun _ ->
+    tempDir |> Directory.ensure
+    
     !! "data/Samples/Adventure Works DW 2020/**/*.*"
     |> Zip.zip "data/Samples/Adventure Works DW 2020" (tempDir @@ "Adventure Works DW 2020.zip")
 
