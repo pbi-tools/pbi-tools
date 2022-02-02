@@ -1,8 +1,20 @@
 # Release Notes
 
-## 1.0.0-beta.8 - 2022-01-26
+## 1.0.0-beta.9 - 2022-02-02
 
-<version:1.0.0-beta.8+220201.01>
+<version:1.0.0-beta.9+220202>
+
+- Fixed #72 `pbi-tools git branch` does not propagate exception if no repo is found
+- Fixed #79 Ensure `./.temp` exists on fresh clone of repo
+- Fixed #78 `pbi-tools extract` fails when msmdsrv cannot be started
+  - New env setting `PBITOOLS_Debug` will launch msmdsrv in debug mode (set to "1", "True", "true" to enable)
+    - CWD is used as working directory (be careful as this creates a potentially large number of files!)
+    - Working directory is not removed after extraction - files are kept for inspection
+  - `<Language/>` setting in `msmdsrv.ini` is always left as "0" (instead of `CultureInfo.CurrentCulture.LCID`, which might lead to unsupported values on non-English OS)
+- Build system: Upgraded FAKE to 5.21.1
+- Dependencies updated: PeNet (2.9.4)
+
+## 1.0.0-beta.8 - 2022-01-26
 
 - #48 'deploy' action, 2nd release
   - Folder wildcard source
