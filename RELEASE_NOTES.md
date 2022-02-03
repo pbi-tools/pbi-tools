@@ -11,6 +11,7 @@
     - CWD is used as working directory (be careful as this creates a potentially large number of files!)
     - Working directory is not removed after extraction - files are kept for inspection
   - `<Language/>` setting in `msmdsrv.ini` is always left as "0" (instead of `CultureInfo.CurrentCulture.LCID`, which might lead to unsupported values on non-English OS)
+  - Thanks to @janmechtel for diagnosing the issue!
 - Build system: Upgraded FAKE to 5.21.1
 - Dependencies updated: PeNet (2.9.4)
 
