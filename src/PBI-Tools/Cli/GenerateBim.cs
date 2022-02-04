@@ -8,6 +8,8 @@ using PowerArgs;
 
 namespace PbiTools.Cli
 {
+    using Tabular;
+
     public partial class CmdLineActions
     {
 
@@ -32,7 +34,7 @@ namespace PbiTools.Cli
 #if NETFRAMEWORK
                     if (generateDataSources)
                     {
-                        var dataSources = TabularModel.TabularModelConversions.GenerateDataSources(db);
+                        var dataSources = TabularModelConversions.GenerateDataSources(db);
                         db["model"]["dataSources"] = dataSources;
                     }
 #endif

@@ -12,7 +12,7 @@ using Serilog;
 using System.IO;
 using CsvHelper;
 
-namespace PbiTools.TabularModel
+namespace PbiTools.Tabular
 {
 
     public class TabularDataReader : IDisposable

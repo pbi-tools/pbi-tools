@@ -11,7 +11,7 @@ using PbiTools.Serialization;
 using Serilog;
 using Moq;
 
-namespace PbiTools.TabularModel
+namespace PbiTools.Tabular
 {
     public class TabularModelConversions
     {
