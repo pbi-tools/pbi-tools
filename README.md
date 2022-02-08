@@ -5,7 +5,7 @@
 An example project is available here: <https://github.com/pbi-tools/adventureworksdw2020-pbix>
 
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/pbi-tools/pbi-tools)](https://github.com/pbi-tools/pbi-tools/releases/latest)
-[![Twitter Follow](https://img.shields.io/twitter/follow/mthierba)](https://twitter.com/mthierba)
+[![Twitter Follow](https://img.shields.io/twitter/follow/mthierba)](https://twitter.com/mthierba) [![Join the chat at https://gitter.im/pbi-tools/general](https://badges.gitter.im/pbi-tools/general.svg)](https://gitter.im/pbi-tools/general?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 - Twitter Hashtag: [#pbitools](https://twitter.com/search?q=%23pbitools&src=typed_query)
 
