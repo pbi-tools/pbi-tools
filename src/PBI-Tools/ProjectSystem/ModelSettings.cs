@@ -1,6 +1,7 @@
 // Copyright (c) Mathias Thierbach
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using System.Runtime.Serialization;
 using Newtonsoft.Json;
 using PowerArgs;
 
@@ -63,6 +64,20 @@ namespace PbiTools.ProjectSystem
         [JsonProperty("annotations", NullValueHandling = NullValueHandling.Ignore)]
         public ModelAnnotationSettings Annotations { get; set; } = new ModelAnnotationSettings();
 
+
+#region Json Serialization Support
+        [OnSerializing]
+        private void HideDefaultValuesOnSerializing(StreamingContext context)
+        {
+            if (Annotations.IsDefault()) Annotations = null;
+        }
+
+        [OnSerialized]
+        private void ResetDefaultValuesAfterSerializing(StreamingContext context)
+        {
+            if (Annotations == null) Annotations = new();
+        }
+#endregion
     }
 
     public class ModelAnnotationSettings : IHasDefaultValue
