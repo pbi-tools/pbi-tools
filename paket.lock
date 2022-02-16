@@ -39,7 +39,7 @@ NUGET
     Microsoft.Identity.Client (4.41)
     Microsoft.NETCore.Platforms (6.0.1)
     Microsoft.NETCore.Targets (5.0)
-    Microsoft.PowerBI.Api (4.2.1)
+    Microsoft.PowerBI.Api (4.3)
       Microsoft.Rest.ClientRuntime (>= 2.3.21)
       Newtonsoft.Json (>= 11.0.2)
       System.Security.Cryptography.Cng (>= 4.7)
