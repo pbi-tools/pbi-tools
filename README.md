@@ -118,3 +118,7 @@ _That is generally not needed as the `build.cmd` script takes care of fetching d
 ### Pulling in Upstream Changes
 
     git submodule update --remote
+
+### Clone specific single branch into named folder, with submodules
+
+    git clone -b Release/1.0.0-beta.9 --single-branch --recurse-submodules https://github.com/pbi-tools/pbi-tools.git ./1.0.0-beta.9
