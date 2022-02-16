@@ -69,7 +69,7 @@ namespace PbiTools.Serialization
                 jSection.ExtractObject("config", sectionFolder);
                 jSection.ExtractArray("filters", sectionFolder);
 
-                var visualFolderNames = new HashSet<string>(); // ensures visualContainer folder names are unique
+                var visualFolderNames = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase); // ensures visualContainer folder names are unique
 
                 // visualContainers:
                 foreach (var jVisual in jSection.RemoveArrayAs<JObject>("visualContainers"))

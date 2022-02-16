@@ -2,7 +2,7 @@
 
 ## 1.0.0-beta.9 - 2022-02-02
 
-<version:1.0.0-beta.9+220202>
+<version:1.0.0-beta.9+220216>
 
 - Fixed #72 `pbi-tools git branch` does not propagate exception if no repo is found
 - Fixed #79 Ensure `./.temp` exists on fresh clone of repo
@@ -12,8 +12,12 @@
     - Working directory is not removed after extraction - files are kept for inspection
   - `<Language/>` setting in `msmdsrv.ini` is always left as "0" (instead of `CultureInfo.CurrentCulture.LCID`, which might lead to unsupported values on non-English OS)
   - Thanks to @janmechtel for diagnosing the issue!
-- Build system: Upgraded FAKE to 5.21.1
-- Dependencies updated: PeNet (2.9.4)
+- Fixed #85 Report visuals don't re-compile correctly when names differ only in casing ("READY" vs "Ready")
+  - Now using case-insensitive folder name comparer
+  - Thanks to @joeg76 for diagnosing and reporting!
+- `.pbixproj.json`: *settings.model.annotations* not serialized when empty
+- Build system: Upgraded FAKE to 5.22
+- Dependencies updated: PeNet (2.9.6), Power BI API (4.3), AMO/TOM (19.34.1), MSAL (4.41), HtmlAgilityPack (1.11.42)
 
 ## 1.0.0-beta.8 - 2022-01-26
 
