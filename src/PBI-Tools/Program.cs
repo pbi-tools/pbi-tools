@@ -60,6 +60,8 @@ namespace PbiTools
             
             if (AppSettings.LevelSwitch.MinimumLevel < LogEventLevel.Information)
                 Log.Information("Log level: {LogLevel}", AppSettings.LevelSwitch.MinimumLevel);
+
+            ArgRevivers.SetReviver(CmdLineActions.NullableRevivers.Int);
         }
 
         //internal static IConfigurationRoot Configuration { get; }
