@@ -10,7 +10,6 @@
   <ItemGroup>
     <None Remove="PowerBI\msmdsrv.ini.xml" />
     <EmbeddedResource Include="PowerBI\msmdsrv.ini.xml" />
-    <EmbeddedResource Include="..\..\packages\main-local\LibGit2Sharp.NativeBinaries\runtimes\win-x64\native\git*.dll" LinkBase="Costura64" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.IO.Compression" />

@@ -32,12 +32,6 @@ group Main
   nuget Microsoft.PowerBI.Api
   nuget Microsoft.NETCore.Platforms
   nuget Microsoft.NETCore.Targets
-
-group Main-Local
-  source https://api.nuget.org/v3/index.json
-  framework: net472,net6.0
-  storage: packages
-
   nuget LibGit2Sharp
 
 group Tests

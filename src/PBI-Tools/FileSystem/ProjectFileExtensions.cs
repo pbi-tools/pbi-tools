@@ -46,6 +46,10 @@ namespace PbiTools.FileSystem
             });
         }
 
+        /// <summary>
+        /// Parses the file contents as a Json object.
+        /// Returns an empty object in case of a Json parser error.
+        /// </summary>
         public static JObject ReadJson(this IProjectFile file, JsonLoadSettings settings = null)
         {
             if (file.TryReadFile(out var stream))
@@ -66,6 +70,10 @@ namespace PbiTools.FileSystem
             return default(JObject);
         }
 
+        /// <summary>
+        /// Parses the file contents as a Json array.
+        /// Returns an empty array in case of a Json parser error.
+        /// </summary>
         public static JArray ReadJsonArray(this IProjectFile file, JsonLoadSettings settings = null)
         {
             if (file.TryReadFile(out var stream))

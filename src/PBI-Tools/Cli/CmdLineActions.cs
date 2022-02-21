@@ -42,6 +42,18 @@ namespace PbiTools.Cli
         [HelpHook, ArgShortcut("-?"), ArgDescription("Shows this help")]
         public bool Help { get; set; }
 
+        public static class NullableRevivers
+        {
+            [ArgReviver]
+            public static Nullable<int> Int(string key, string value)
+            {
+                if (String.IsNullOrEmpty(value))
+                    return null;
+                if (int.TryParse(value, out var parsed))
+                    return parsed;
+                throw new ValidationArgException($"'{value}' is not an int.");
+            }
+        }
     }
 
 }
