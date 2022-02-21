@@ -38,7 +38,7 @@ namespace PbiTools.PowerBI
             if (pbixPath == null) throw new ArgumentNullException(nameof(pbixPath));
             if (!File.Exists(pbixPath)) throw new FileNotFoundException("PBIX file not found.", pbixPath);
 
-            _pbixStream = File.OpenRead(pbixPath);
+            _pbixStream = new FileStream(pbixPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             _package = PowerBIPackager.Open(_pbixStream); // TODO Handle errors
             this.Path = pbixPath;
 
@@ -65,10 +65,12 @@ namespace PbiTools.PowerBI
         {
             if (_package.DataModelSchema != null)
             {
+                Log.Information("Extracting DataModel from PBIT");
                 return _converters.DataModelSchema.FromPackagePart(_package.DataModelSchema.AsFunc());
             }
             else if (_package.DataModel != null)
             {
+                Log.Information("Extracting DataModel from PBIX");
                 return _converters.DataModel.FromPackagePart(_package.DataModel.AsFunc());
             }
 
@@ -77,6 +79,7 @@ namespace PbiTools.PowerBI
 
         public JObject ReadDataModelFromRunningInstance(int port)
         {
+            Log.Information("Extracting DataModel from {Server}", $"localhost:{port}");
             return DataModelConverter.ExtractModelFromAS($".:{port}", dbs => dbs[0]);
         }
 
@@ -168,6 +171,7 @@ namespace PbiTools.PowerBI
 
         public void Dispose()
         {
+            Log.Debug("Closing PBIX file.");
             _package.Dispose();
             _pbixStream?.Dispose();  // null if initialized from existing package
         }
