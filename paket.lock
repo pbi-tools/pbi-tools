@@ -26,6 +26,9 @@ NUGET
       System.Threading.Tasks.Extensions (>= 4.5.2) - restriction: || (== net472) (&& (== net6.0) (>= net47)) (&& (== net6.0) (< netstandard2.1))
     Fody (6.6)
     HtmlAgilityPack (1.11.42)
+    LibGit2Sharp (0.26.2)
+      LibGit2Sharp.NativeBinaries (2.0.306)
+    LibGit2Sharp.NativeBinaries (2.0.306)
     Microsoft.AnalysisServices.AdomdClient.NetCore.retail.amd64 (19.34.1) - restriction: == net6.0
       Microsoft.Identity.Client (>= 4.6)
     Microsoft.AnalysisServices.AdomdClient.retail.amd64 (19.34.1) - restriction: == net472
@@ -586,15 +589,6 @@ STORAGE: PACKAGES
 NUGET
   remote: https://api.nuget.org/v3/index.json
     xunit.runner.console (2.4.1)
-
-GROUP Main-Local
-STORAGE: PACKAGES
-RESTRICTION: || (== net472) (== net6.0)
-NUGET
-  remote: https://api.nuget.org/v3/index.json
-    LibGit2Sharp (0.26.2)
-      LibGit2Sharp.NativeBinaries (2.0.306)
-    LibGit2Sharp.NativeBinaries (2.0.306)
 
 GROUP Tests
 STORAGE: NONE
