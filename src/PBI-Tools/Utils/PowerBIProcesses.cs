@@ -43,21 +43,23 @@ namespace PbiTools.Utils
                     var portFilePath = Path.Combine(args["-s"], "msmdsrv.port.txt");
                     var port = File.Exists(portFilePath)
                         ? Convert.ToInt32(File.ReadAllText(portFilePath, Encoding.Unicode))
-                        : new Nullable<int>();
+                        : new int?();
 
                     using (var parent = proc.GetParent())
                     {
                         var pbixPathCandidates = SystemUtility.GetHandles(new[] { parent.Id })
-                            .Where(f => Path.GetExtension(f.DosFilePath ?? "").StartsWith(".pbi"))
+                            .Where(f => Path.GetExtension(f.DosFilePath ?? "").StartsWith(".pbi") && File.Exists(f.DosFilePath))
                             .ToArray();
 
                         if (Log.IsEnabled(Serilog.Events.LogEventLevel.Debug))
                         {
                             Array.ForEach(
                                 pbixPathCandidates, 
-                                h => Log.Debug("Found PBIx handle: {Path}; Is File: {IsFile}", h.DosFilePath, File.Exists(h.DosFilePath))
+                                h => Log.Debug("Found PBIx handle: {Path}", h.DosFilePath)
                             );
                         }
+
+                        pbixPathCandidates = pbixPathCandidates.Where(p => !IsTempSavePath(p.DosFilePath)).ToArray();
 
                         yield return new PowerBIProcess
                         {
@@ -68,13 +70,19 @@ namespace PbiTools.Utils
                             Port = port,
                             WorkspaceName = args["-n"],
                             WorkspaceDir = args["-s"],
-                            PbixPath = pbixPathCandidates.FirstOrDefault(h => File.Exists(h.DosFilePath))?.DosFilePath
+                            PbixPath = pbixPathCandidates.FirstOrDefault()?.DosFilePath
                         };
                     }
                 }
             }
 
         }
+
+        public static bool IsTempSavePath(string path) =>
+            path != null
+            && path.StartsWith(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), StringComparison.InvariantCultureIgnoreCase)
+            && path.Contains("TempSaves");
+
     }
 
     public class PowerBIProcess

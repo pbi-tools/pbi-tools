@@ -101,6 +101,7 @@ namespace PbiTools.Utils
                                 yield return new PowerBIDesktopInstallation
                                 {
                                     InstallDir = Path.GetDirectoryName(fileInfo.FileName),
+                                    SettingsDir = settingsPath,
                                     Is64Bit = fileInfo.FileName.Contains("x64"),
                                     ProductVersion = fileInfo.ProductVersion,
                                     Version = ParseProductVersion(fileInfo.ProductVersion),
@@ -133,6 +134,7 @@ namespace PbiTools.Utils
                     yield return new PowerBIDesktopInstallation
                     {
                         InstallDir = Path.GetDirectoryName(fileInfo.FileName),
+                        SettingsDir = settingsPath,
                         Is64Bit = win64.Equals("yes", StringComparison.OrdinalIgnoreCase),
                         ProductVersion = fileInfo.ProductVersion,
                         Version = ParseProductVersion(fileInfo.ProductVersion),
