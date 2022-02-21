@@ -6,3 +6,7 @@
 	path = data/external/adventureworksdw2020-pbix
 	url = https://github.com/pbi-tools/adventureworksdw2020-pbix.git
 	branch = main
+[submodule "data/external/pbiworkshops"]
+	path = data/external/pbiworkshops
+	url = https://github.com/microsoft/pbiworkshops.git
+	branch = main
