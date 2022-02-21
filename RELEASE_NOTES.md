@@ -1,9 +1,15 @@
 # Release Notes
 
-## 1.0.0-beta.9 - 2022-02-02
+## 1.0.0-beta.9 - 2022-02-21
 
-<version:1.0.0-beta.9+220216>
+<version:1.0.0-beta.9+220221>
 
+- #89 EXTRACT/WATCH Mode ***EXPERIMENTAL***
+  - Enabled using `-watch` flag
+  - Requires `-pid {ProcessID}` argument specifying PID of PBI Desktop process to attach to
+  - Example usage: `pbi-tools extract -pic 12345 -watch`
+  - PBIX file path and model port number are derived from PBI session info (available via `pbi-tools info`)
+  - Watch mode terminates when the PBI Desktop instance exits or on CTRL+C
 - Fixed #72 `pbi-tools git branch` does not propagate exception if no repo is found
 - Fixed #79 Ensure `./.temp` exists on fresh clone of repo
 - Fixed #78 `pbi-tools extract` fails when msmdsrv cannot be started
@@ -17,7 +23,8 @@
   - Thanks to @joeg76 for diagnosing and reporting!
 - `.pbixproj.json`: *settings.model.annotations* not serialized when empty
 - Build system: Upgraded FAKE to 5.22
-- Dependencies updated: PeNet (2.9.6), Power BI API (4.3), AMO/TOM (19.34.1), MSAL (4.41), HtmlAgilityPack (1.11.42)
+- Dependencies updated: PeNet (2.9.7), Power BI API (4.3), AMO/TOM (19.34.1), MSAL (4.41), HtmlAgilityPack (1.11.42)
+- Tested with Power BI Desktop 2.102 (Feb 2022)
 
 ## 1.0.0-beta.8 - 2022-01-26
 
