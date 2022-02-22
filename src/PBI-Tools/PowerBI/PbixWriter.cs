@@ -66,7 +66,10 @@ namespace PbiTools.PowerBI
             => ConvertContent(_converters.ReportMetadataV3, _pbixModel.ReportMetadata); 
 
         public IStreamablePowerBIPackagePartContent ReportSettings
-            => ConvertContent(_converters.ReportSettingsV3, _pbixModel.ReportSettings); 
+            => ConvertContent(_converters.ReportSettingsV3, _pbixModel.ReportSettings);
+
+        public IStreamablePowerBIPackagePartContent ReportMobileState
+            => ConvertContent(_converters.ReportMobileState, _pbixModel.ReportMobileState);
 
         public IStreamablePowerBIPackagePartContent Version
             => ConvertContent(_converters.Version, _pbixModel.Version); 
@@ -109,7 +112,7 @@ namespace PbiTools.PowerBI
                 // - Generate empty Report part
                 // - Generate Mashup part if pbix has DataModel
 
-                Microsoft.PowerBI.Packaging.PowerBIPackager.Save(powerbiPackage, pbixFile);
+                PowerBIPackager.Save(powerbiPackage, pbixFile);
             }
         }
 
@@ -211,6 +214,8 @@ namespace PbiTools.PowerBI
                 ProcessPart(package, _converters.DiagramLayout, _pbixModel.DiagramLayout, partsWritten);
                 // Report
                 ProcessPart(package, _converters.ReportDocument, _pbixModel.Report, partsWritten);
+                // MobileState
+                ProcessPart(package, _converters.ReportMobileState, _pbixModel.ReportMobileState, partsWritten);
                 // DataModelSchema
                 ProcessPart(package, _converters.DataModelSchema, _pbixModel.DataModel, partsWritten);
                 // Connection

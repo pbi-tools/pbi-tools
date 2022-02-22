@@ -58,6 +58,7 @@ namespace PbiTools.PowerBI
         public IPowerBIPartConverter<JObject> DiagramViewState { get; } = new JsonPartConverter("/DiagramState");
         public IPowerBIPartConverter<JObject> DiagramLayout { get; } = new JsonPartConverter("/DiagramLayout");
         public IPowerBIPartConverter<JObject> ReportDocument { get; } = new JsonPartConverter("/Report/Layout");
+        public IPowerBIPartConverter<JObject> ReportMobileState { get; } = new JsonPartConverter("/Report/MobileState");
 
         public IPowerBIPartConverter<JObject> DataModelSchema { get; } = new JsonPartConverter("/DataModelSchema");
 #if NETFRAMEWORK

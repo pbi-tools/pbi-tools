@@ -20,7 +20,7 @@ namespace PbiTools.ProjectSystem
         private static readonly ILogger Log = Serilog.Log.ForContext<PbixProject>();
 
         public const string Filename = ".pbixproj.json";
-        public static readonly Version CurrentVersion = Version.Parse("0.10");
+        public static readonly Version CurrentVersion = Version.Parse("0.11");
 
         /*
          * PBIXPROJ Change Log
@@ -57,6 +57,7 @@ namespace PbiTools.ProjectSystem
                  - #48 Breaking: 'workspaceId' is now 'workspace' in deployments/environment
                  - #48 New: Optional 'description' in deployment profile
                  - #19 New Model settings: settings/model/annotations (exclude, include)
+         * 0.11  - #91 Support for /Report/mobileState (./mobileState.json, ./exploratoinState.json)
          */
 
 
