@@ -30,14 +30,15 @@ async Task Main()
 	// "PBIDesktopSetup-2021-07_x64.exe";
 	// "PBIDesktopSetup-2021-08_x64.exe";
 	// "PBIDesktopSetup-2021-09_x64.exe";
-	//"PBIDesktopSetup-2021-10_x64.exe";
-	//"PBIDesktopSetup-2021-11_x64.exe";
+	// "PBIDesktopSetup-2021-10_x64.exe";
+	// "PBIDesktopSetup-2021-11_x64.exe";
+	// "PBIDesktopSetup-2021-12_x64.exe";
 	"PBIDesktopSetup_x64.exe";
 	var skipDownload = false;
 	var skipExtract = false;
 
 	/***************************************************************/
-	var rootFolder = Path.GetFullPath(Path.Combine(Util.CurrentQueryPath, "../../../pbi-downloader/PBIDesktop_x64")).Dump();
+	var rootFolder = Path.GetFullPath(Path.Combine(Util.CurrentQueryPath, "../../../../pbi-downloader/PBIDesktop_x64")).Dump();
 	/***************************************************************/
 	var tempFolder = Path.Combine(rootFolder, "_temp");
 	
@@ -45,7 +46,7 @@ async Task Main()
 
 	if (!skipDownload)
 	{
-		"Downloading...".Dump();
+		"Downloading...".Dump(downloadFilename);
 		using (var http = new HttpClient())
 		using (ConsoleProgressIndicator.Start())
 		{
