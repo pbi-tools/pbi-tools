@@ -11,7 +11,7 @@ namespace PbiTools.ProjectSystem
     {
         [ArgDescription("Serializes the tabular model into the default PbixProj folder structure and performs various transformations to optimize file contents for source control.")]
         Default = 1,
-        [ArgDescription("Serializes the tabular model into a single JSON file containing the full TMSL payload from the PBIX model. No transformation are applied.")]
+        [ArgDescription("Serializes the tabular model into a single JSON file containing the full TMSL payload from the PBIX model. No transformations are applied.")]
         Raw = 2,
         // [ArgDescription("Serializes the tabular model into a single JSON file containing the full TMSL payload from the PBIX model. All transformations are applied.")]
         // SingleFile = 3,
