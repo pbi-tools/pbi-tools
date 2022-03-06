@@ -35,6 +35,7 @@ namespace PbiTools.Cli
                     { "version", AssemblyVersionInformation.AssemblyInformationalVersion },
                     { "edition", AppSettings.Edition },
                     { "build", AssemblyVersionInformation.AssemblyFileVersion },
+                    { "pbixProjVersion", ProjectSystem.PbixProject.CurrentVersion.ToString() },
 #if NETFRAMEWORK
                     { "pbiBuildVersion", AssemblyVersionInformation.AssemblyMetadata_PBIBuildVersion },
 #endif

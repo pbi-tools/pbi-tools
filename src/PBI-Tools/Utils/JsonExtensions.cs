@@ -157,6 +157,20 @@ namespace PbiTools.Utils
         }
 
         /// <summary>
+        /// Returns the object with the specified name from the json object. Inserts a new empty object if the property doesn't exist.
+        /// </summary>
+        public static JObject EnsureObject(this JObject parent, string name)
+        {
+            var obj = parent[name] as JObject;
+            if (obj == null)
+            {
+                parent.Add(name, new JObject());
+                obj = parent[name] as JObject;
+            }
+            return obj;
+        }
+
+        /// <summary>
         /// Adds the specified converters to the <see cref="JsonSerializerSettings"/> instance.
         /// </summary>
         public static JsonSerializerSettings WithConverters(this JsonSerializerSettings settings, params JsonConverter[] converters)
@@ -177,5 +191,30 @@ namespace PbiTools.Utils
                 return false;
             }
         }
+
+        public static bool TryParseJsonObject(this string json, out JObject result)
+        {
+            try {
+                result = JObject.Parse(json);
+                return true;
+            }
+            catch {
+                result = default;
+                return false;
+            }
+        }        
+
+        public static bool TryParseJsonArray(this string json, out JArray result)
+        {
+            try {
+                result = JArray.Parse(json);
+                return true;
+            }
+            catch {
+                result = default;
+                return false;
+            }
+        }
+
     }
 }

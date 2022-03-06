@@ -20,7 +20,7 @@ namespace PbiTools.ProjectSystem
         private static readonly ILogger Log = Serilog.Log.ForContext<PbixProject>();
 
         public const string Filename = ".pbixproj.json";
-        public static readonly Version CurrentVersion = Version.Parse("0.10");
+        public static readonly Version CurrentVersion = Version.Parse("0.11");
 
         /*
          * PBIXPROJ Change Log
@@ -50,13 +50,21 @@ namespace PbiTools.ProjectSystem
          *       - Control Model serialization settings via settings.model in pbixproj file (Serialization Mode, Ignore Properties)
          * 0.7   - /Report: section and visualContainer folder names
          * 0.8   - /Mashup extracted from V3 models (when present in PBIX/PBIT)
-         * 0.9   - Mashup serialization modes: Default, Raw, Expanded.
+         * 0.9   - (Released in 1.0.0-beta.5)
+         *       - Mashup serialization modes: Default, Raw, Expanded.
          *       - BREAKING CHANGE: 'Expanded' is now considered legacy and no longer the default serialization mode. (The `compile-pbix` action only supports projects extracted using the _Default_ or _Raw_ Mashup serialization mode.)
-         * 0.10  - Supports 'custom' token (not used by pbi-tools, but available to external clients)
-                 - #48 Breaking: 'nameConflict' moved into deployments/options/import
-                 - #48 Breaking: 'workspaceId' is now 'workspace' in deployments/environment
-                 - #48 New: Optional 'description' in deployment profile
-                 - #19 New Model settings: settings/model/annotations (exclude, include)
+         * 0.10  - (Released wit 1.0.0-beta.8)
+         *       - Supports 'custom' token (ignored by pbi-tools, but available to external integrations)
+         *       - #48 Breaking: 'nameConflict' moved into deployments/options/import
+         *       - #48 Breaking: 'workspaceId' is now 'workspace' in deployments/environment
+         *       - #48 New: Optional 'description' in deployment profile
+         *       - #19 New Model settings: settings/model/annotations (exclude, include)
+         * 0.11  - (Released with 1.0.0-rc.1)
+         *       - #96 New Model settings: settings/model/measures (format, extractExpression)
+         *       - #96 BREAKING CHANGE: Measures json format now default
+         *       - #90 Always serialize (partial) partitions payload, ensuring 'queryGroup' property is retained
+         *       - #19 Do not serialize empty model/annotations[]
+         *       - #85 Visuals with titles only differing in casing are now extracted into unique folders
          */
 
 

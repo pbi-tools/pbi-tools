@@ -3,6 +3,7 @@
 
 using System;
 using System.IO;
+using System.Text;
 
 namespace PbiTools.Utils
 {
@@ -13,6 +14,26 @@ namespace PbiTools.Utils
         /// </summary>
         public static string WithoutExtension(this string path) =>
             Path.GetFileNameWithoutExtension(path ?? throw new ArgumentNullException(nameof(path)));
+
+        /// <summary>
+        /// Returns the file extension converted to lowercase.
+        /// </summary>
+        public static string GetExtension(this string path) =>
+            Path.GetExtension(path ?? throw new ArgumentNullException(nameof(path)))?.ToLowerInvariant();
+
+        public static string ToPascalCase(this string s)
+        {
+            var sb = new StringBuilder(s);
+            if (sb.Length > 0) sb[0] = Char.ToUpper(s[0]);
+            return sb.ToString();
+        }
+
+        public static string ToCamelCase(this string s)
+        {
+            var sb = new StringBuilder(s);
+            if (sb.Length > 0) sb[0] = Char.ToLower(s[0]);
+            return sb.ToString();
+        }
 
     }
 }
