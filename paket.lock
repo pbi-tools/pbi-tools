@@ -340,7 +340,7 @@ CONTENT: NONE
 NUGET
   remote: https://api.nuget.org/v3/index.json
     fake-cli (5.22)
-    Paket (6.2.1)
+    Paket (7.0.2)
 
 GROUP Fake-Build
 STORAGE: NONE
