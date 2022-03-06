@@ -61,6 +61,10 @@ namespace PbiTools
             if (AppSettings.LevelSwitch.MinimumLevel < LogEventLevel.Information)
                 Log.Information("Log level: {LogLevel}", AppSettings.LevelSwitch.MinimumLevel);
 
+            if (!AppSettings.TryApplyCustomCulture(out var error)) {
+                Log.Warning(error, $"The UI Culture specified in [{AppSettings.Environment.UICulture}] could not be applied. Continuing with default OS settings.");
+            }
+
             ArgRevivers.SetReviver(CmdLineActions.NullableRevivers.Int);
         }
 
