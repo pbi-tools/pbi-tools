@@ -231,7 +231,17 @@ namespace PbiTools.Serialization
 
         internal static JObject SerializeTablePartitions(JObject table, IProjectFolder modelFolder, string pathPrefix, IQueriesLookup idCache)
         {
-            // TODO Allow option to export raw partitions, w/o transforms
+/*  public enum PartitionSourceType
+    {
+        *Query = 1,
+        *Calculated = 2,
+        None = 3,
+        *M = 4,
+        Entity = 5,
+        PolicyRange = 6,
+        CalculationGroup = 7,
+        Inferred = 8
+    }*/
 
             var _table = new JObject(table);
 
@@ -246,13 +256,13 @@ namespace PbiTools.Serialization
             var mPartitions = _table.SelectTokens("partitions[?(@.source.type == 'm')]").OfType<JObject>().ToArray();
             if (mPartitions.Length == 1)
             {
+                var expression = mPartitions[0].SelectToken("source.expression");
                 modelFolder.Write(
-                    ConvertExpression(mPartitions[0].SelectToken("source.expression")),
+                    ConvertExpression(expression),
                     Path.Combine(Names.Queries, $"{table.Value<string>("name").SanitizeFilename()}.m")
                 );
-                mPartitions[0].Remove();
+                expression.Parent.Remove(); // Only remove 'expression' property, but retain partition object
             }
-            // TODO Determine payload for Incremental Refresh partitions...
 
             var calcPartitions = _table.SelectTokens("partitions[?(@.source.type == 'calculated')]").OfType<JObject>().ToArray();
             if (calcPartitions.Length == 1)
@@ -461,15 +471,20 @@ namespace PbiTools.Serialization
             foreach (var tableFolder in tablesFolder.GetSubfolders("*"))
             {
                 var tableFile = tableFolder.GetFirstFile("table.json", $"{tableFolder.Name}.json");
-                if (!tableFile.Exists()) continue;
+                if (!tableFile.Exists()) {
+                    // TODO Log Warning
+                    continue;
+                }
 
                 var tableJson = tableFile.ReadJson();
                 var tableName = tableJson.Value<string>("name");
+                var tableQuery = queriesFolder.GetFiles($"{tableName.SanitizeFilename()}.m", SearchOption.AllDirectories).FirstOrDefault();
 
                 // PARTITIONS
                 var partitionsFolder = tableFolder.GetSubfolder(Names.Partitions);
                 if (partitionsFolder.Exists())
                 {
+                    // If '/Partitions' folder exists, any existing partitions[] element is replaced!
                     tableJson["partitions"] = new JArray(partitionsFolder
                         .GetFiles("*.json")
                         .Select(f => f.ReadJson())
@@ -477,11 +492,13 @@ namespace PbiTools.Serialization
                 }
                 else
                 {
+                    // No '/Partitions' folder: Partitions are either implicit (from 'Queries') or held in table json already
+
                     var partitionsJson = tableJson.EnsureArray("partitions");
 
                     if (partitionsJson.Count == 1) // TODO Handle multiple partitions
                     {
-                        var partition = partitionsJson[0];
+                        var partition = partitionsJson[0] as JObject;
 
                         // LEGACY models only: Convert to M partition
                         if (partition.SelectToken("source.query") != null)
@@ -499,7 +516,7 @@ namespace PbiTools.Serialization
                         }
 
                         // Calculated table: Insert partition expression from *.dax file (if exists)
-                        if (partition.SelectToken("source.type")?.Value<string>() == "calculated")
+                        else if (partition.SelectToken("source.type")?.Value<string>() == "calculated")
                         {
                             var daxFile = tableFolder.GetFile("table.dax");
                             if (daxFile.Exists())
@@ -507,10 +524,21 @@ namespace PbiTools.Serialization
                                 partition["source"]["expression"] = ConvertExpression(daxFile.ReadText());
                             }
                         }
-                    }
+
+                        // M partition: Merge expression
+                        else if (tableQuery != null && (partition.SelectToken("source") == null || partition.SelectToken("source.type")?.Value<string>() == "m"))
+                        {
+                            partition.Merge(new JObject {
+                                { "source", new JObject {
+                                    { "type", "m" },
+                                    { "expression", ConvertExpression(tableQuery.ReadText()) }
+                                }}
+                            });
+                        }
+
+                    } // Single partition present
 
                     // Get (single) query from '/queries' folder matching the current table's name
-                    var tableQuery = queriesFolder.GetFiles($"{tableName.SanitizeFilename()}.m", SearchOption.AllDirectories).FirstOrDefault();
                     if (tableQuery != null && partitionsJson.Count == 0)
                     {
                         var partitionName = partitionsJson.Count == 0
@@ -521,7 +549,6 @@ namespace PbiTools.Serialization
                         {
                             { "name", partitionName },
                             { "mode", "import" },
-                            // { "queryGroup", "TODO" },
                             { "source", new JObject
                             {
                                 { "type", "m" },
