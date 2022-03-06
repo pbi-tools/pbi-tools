@@ -191,5 +191,30 @@ namespace PbiTools.Utils
                 return false;
             }
         }
+
+        public static bool TryParseJsonObject(this string json, out JObject result)
+        {
+            try {
+                result = JObject.Parse(json);
+                return true;
+            }
+            catch {
+                result = default;
+                return false;
+            }
+        }        
+
+        public static bool TryParseJsonArray(this string json, out JArray result)
+        {
+            try {
+                result = JArray.Parse(json);
+                return true;
+            }
+            catch {
+                result = default;
+                return false;
+            }
+        }
+
     }
 }

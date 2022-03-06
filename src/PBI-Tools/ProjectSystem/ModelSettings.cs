@@ -62,7 +62,10 @@ namespace PbiTools.ProjectSystem
         #endregion
 
         [JsonProperty("annotations", NullValueHandling = NullValueHandling.Ignore)]
-        public ModelAnnotationSettings Annotations { get; set; } = new ModelAnnotationSettings();
+        public ModelAnnotationSettings Annotations { get; set; } = new();
+
+        [JsonProperty("measures", NullValueHandling = NullValueHandling.Ignore)]
+        public ModelMeasureSettings Measures { get; set; } = new();
 
 
 #region Json Serialization Support
@@ -70,12 +73,14 @@ namespace PbiTools.ProjectSystem
         private void HideDefaultValuesOnSerializing(StreamingContext context)
         {
             if (Annotations.IsDefault()) Annotations = null;
+            if (Measures.IsDefault()) Measures = null;
         }
 
         [OnSerialized]
         private void ResetDefaultValuesAfterSerializing(StreamingContext context)
         {
             if (Annotations == null) Annotations = new();
+            if (Measures == null) Measures = new();
         }
 #endregion
     }
@@ -98,6 +103,28 @@ namespace PbiTools.ProjectSystem
 
         [JsonIgnore]
         public bool IsDefault => Exclude.IsDefault() && Include.IsDefault();
+    }
+
+    public class ModelMeasureSettings : IHasDefaultValue
+    {
+        [JsonProperty("format", NullValueHandling = NullValueHandling.Ignore)]
+        public ModelMeasureSerializationFormat Format { get; set; } = ModelMeasureSerializationFormat.Json;
+
+        /// <summary>
+        /// Determines whether to extract measure expressions into separate *.dax files when using the <c>Json</c>
+        /// serialization format. The default is <c>true</c>.
+        /// </summary>
+        [JsonProperty("extractExpression", NullValueHandling = NullValueHandling.Ignore)]
+        public bool ExtractExpression { get; set; } = true;
+
+        [JsonIgnore]
+        public bool IsDefault => Format == ModelMeasureSerializationFormat.Json && ExtractExpression;
+    }
+
+    public enum ModelMeasureSerializationFormat
+    { 
+        Json = 1,
+        Xml = 2
     }
 
 }

@@ -90,7 +90,7 @@ namespace PbiTools.Serialization
                 var idCache = default(IQueriesLookup);
 #endif
                 db = SerializeDataSources(db, _modelFolder, idCache);
-                db = SerializeTables(db, _modelFolder, idCache);
+                db = SerializeTables(db, _modelFolder, idCache, _settings.Measures);
                 db = SerializeExpressions(db, _modelFolder);
                 db = SerializeCultures(db, _modelFolder);
 
@@ -107,7 +107,7 @@ namespace PbiTools.Serialization
             return true;
         }
 
-        internal static JObject SerializeTables(JObject db, IProjectFolder modelFolder, IQueriesLookup idCache)
+        internal static JObject SerializeTables(JObject db, IProjectFolder modelFolder, IQueriesLookup idCache, ModelMeasureSettings measureSettings)
         {
             if (!(db.SelectToken("model.tables") is JArray tables)) return db;
 
@@ -120,7 +120,7 @@ namespace PbiTools.Serialization
                 var pathPrefix = $@"{Names.Tables}\{name.SanitizeFilename()}";
 
                 table = SerializeColumns(table, modelFolder, pathPrefix);
-                table = SerializeMeasures(table, modelFolder, pathPrefix);
+                table = SerializeMeasures(table, modelFolder, pathPrefix, measureSettings);
                 table = SerializeHierarchies(table, modelFolder, pathPrefix);
                 table = SerializeTablePartitions(table, modelFolder, pathPrefix, idCache);
 
@@ -162,7 +162,7 @@ namespace PbiTools.Serialization
             return table;
         }
 
-        internal static JObject SerializeMeasures(JObject table, IProjectFolder modelFolder, string pathPrefix)
+        internal static JObject SerializeMeasures(JObject table, IProjectFolder modelFolder, string pathPrefix, ModelMeasureSettings settings)
         {
             var measures = table["measures"]?.Value<JArray>();
             if (measures == null) return table;
@@ -172,19 +172,33 @@ namespace PbiTools.Serialization
                 var name = measure["name"]?.Value<string>();
                 if (name == null) continue;
 
-                modelFolder.WriteText(
-                    Path.Combine(pathPrefix, Names.Measures, $"{name.SanitizeFilename()}.xml"), 
-                    WriteMeasureXml(measure)
-                );
+                if (settings.Format == ModelMeasureSerializationFormat.Xml
+                    || (settings.Format == ModelMeasureSerializationFormat.Json && settings.ExtractExpression))
+                {
+                    var expression = measure.SelectToken("expression");
+                    if (expression != null)
+                    { 
+                        modelFolder.Write(
+                            ConvertExpression(expression),
+                            Path.Combine(pathPrefix, Names.Measures, $"{name.SanitizeFilename()}.dax")
+                        );
 
-                var expression = measure.SelectToken("expression");
-                if (expression != null)
-                { 
-                    modelFolder.Write(
-                        ConvertExpression(expression),
-                        Path.Combine(pathPrefix, Names.Measures, $"{name.SanitizeFilename()}.dax")
+                        expression.Parent.Remove();
+                    }
+                }
+
+                if (settings.Format == ModelMeasureSerializationFormat.Xml)
+                {
+                    modelFolder.WriteText(
+                        Path.Combine(pathPrefix, Names.Measures, $"{name.SanitizeFilename()}.xml"), 
+                        WriteMeasureXml(measure)
                     );
                 }
+                else
+                {
+                    modelFolder.Write(measure, Path.Combine(pathPrefix, Names.Measures, $"{name.SanitizeFilename()}.json"));
+                }
+
             }
 
             table = new JObject(table);
@@ -583,18 +597,35 @@ namespace PbiTools.Serialization
         }
 
         internal static void DeserializeMeasures(IProjectFolder tableFolder, JObject tableJson) =>
-            DeserializeTablePropertyFromFolder(tableFolder, tableJson, Names.Measures, 
+            DeserializeTablePropertyFromFolder(tableFolder, tableJson, Names.Measures,
                 (measuresFolder, file) =>
                 {
                     Log.Verbose("Processing measure file: {Path}", file.Path);
-                    var json = ConvertMeasureXml(file.ReadXml());
-                    var daxFile = measuresFolder.GetFile($"{Path.GetFileNameWithoutExtension(file.Path)}.dax");
-                    if (daxFile.Exists()) { 
+
+                    var extension = file.Path.GetExtension();
+
+                    JObject json = null;
+                    if (extension == ".json") {
+                        json = file.ReadJson();
+                    }
+                    else if (extension == ".xml") {
+                        var jsonFile = measuresFolder.GetFile($"{file.Path.WithoutExtension()}.json");
+                        if (jsonFile.Exists())
+                            return null; // Skip the xml file, json takes precedence
+                        else
+                            json = ConvertMeasureXml(file.ReadXml());
+                    }
+                    else // Ignore any other extensions
+                        return null;
+
+                    var daxFile = measuresFolder.GetFile($"{file.Path.WithoutExtension()}.dax");
+                    if (daxFile.Exists())
+                    {
                         json["expression"] = ConvertExpression(daxFile.ReadText());
                     }
                     return json;
                 }, 
-                "*.xml"
+                "*.*"
             );
 
         internal static void DeserializeColumns(IProjectFolder tableFolder, JObject tableJson) =>
@@ -733,27 +764,16 @@ namespace PbiTools.Serialization
                     xml.WriteStartElement("Measure");
                     xml.WriteAttributeString("Name", json.Value<string>("name"));
 
-#if false // Removed in pbixproj v0.6
-                    // Handle Expression
-                    if (json["expression"] != null)
-                    {
-                        xml.WriteStartElement("Expression");
-                        if (json["expression"] is JArray expr)
-                        {
-                            xml.WriteCData(String.Join(Environment.NewLine, expr.ToObject<string[]>()));
-                        }
-                        else
-                        {
-                            xml.WriteCData(json.Value<string>("expression"));
-                        }
-                        xml.WriteEndElement();
-                    }
-#endif
                     // Any other properties
                     foreach (var prop in json.Values<JProperty>().Where(p => !(new[] { "name", "expression", "annotations", "extendedProperties" }).Contains(p.Name)))
                     {
                         xml.WriteStartElement(prop.Name.ToPascalCase());
-                        xml.WriteValue(prop.Value.Value<string>());
+                        try {
+                            xml.WriteValue(prop.Value.Value<string>());
+                        }
+                        catch (System.InvalidCastException) {
+                            xml.WriteCData(prop.Value.ToString());
+                        }
                         xml.WriteEndElement();
                     }
 
@@ -801,13 +821,6 @@ namespace PbiTools.Serialization
                 { "name", xml.Root.Attribute("Name")?.Value }
             };
 
-            string ToCamelCase(string s)
-            {
-                var sb = new StringBuilder(s);
-                if (sb.Length > 0) sb[0] = Char.ToLower(s[0]);
-                return sb.ToString();
-            };
-
             foreach (var element in xml.Root.Elements())
             {
                 if (element.Name == "Annotation")
@@ -839,19 +852,19 @@ namespace PbiTools.Serialization
                 }
                 else if (element.Name == "IsHidden" && Boolean.TryParse(element.Value, out var boolValue))
                 {
-                    measure.Add(ToCamelCase(element.Name.LocalName), boolValue);
+                    measure.Add(element.Name.LocalName.ToCamelCase(), boolValue);
                 }
-                //		else if (Int64.TryParse(element.Value, out var intValue))
-                //		{
-                //			measure.Add(ToCamelCase(element.Name.LocalName), intValue);
-                //		}
-                //		else if (Double.TryParse(element.Value, out var doubleValue))
-                //		{
-                //			measure.Add(ToCamelCase(element.Name.LocalName), doubleValue);
-                //		}
+                else if (element.Value.TryParseJsonObject(out var obj))
+                { 
+                    measure.Add(element.Name.LocalName.ToCamelCase(), obj);
+                }
+                else if (element.Value.TryParseJsonArray(out var array))
+                { 
+                    measure.Add(element.Name.LocalName.ToCamelCase(), array);
+                }
                 else
                 {
-                    measure.Add(ToCamelCase(element.Name.LocalName), element.Value);
+                    measure.Add(element.Name.LocalName.ToCamelCase(), element.Value);
                 }
             }
 
@@ -864,13 +877,4 @@ namespace PbiTools.Serialization
 
     }
 
-    public static class XmlExtensions
-    {
-        public static string ToPascalCase(this string s)
-        {
-            var sb = new StringBuilder(s);
-            if (sb.Length > 0) sb[0] = Char.ToUpper(s[0]);
-            return sb.ToString();
-        }
-    }
 }
