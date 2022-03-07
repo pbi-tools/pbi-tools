@@ -1,18 +1,21 @@
 # Release Notes
 
-## 1.0.0-rc.1 - 2022-03-07
+## 1.0.0-rc.1 - 2022-03-06
 
-<version:1.0.0-rc.1+220306>
-
+- PbixProj v0.11 Schema
+  - #96 New Model settings: settings/model/measures (format, extractExpression)
+  - #96 BREAKING CHANGE: Measures json format now default
+  - #90 Always serialize (partial) partitions payload, ensuring 'queryGroup' property is retained
+  - #19 Do not serialize empty model/annotations[]
+  - #85 Visuals with titles only differing in casing are now extracted into unique folders
+  - #91 Support for /Report/mobileState (mobileState.json, explorationState.json)
 - #89 EXTRACT/WATCH Mode
   - Enabled using `-watch` flag
   - Requires `-pid {ProcessID}` argument specifying PID of PBI Desktop process to attach to
   - Example usage: `pbi-tools extract -pid 12345 -watch`
   - PBIX file path and model port number are derived from PBI session info (available via `pbi-tools info`)
   - Watch mode terminates when the PBI Desktop instance exits or on CTRL+C
-- `pbi-tools info`: Added _locale_ object
-  - Helps diagnosing culture-related tool issues
-- Fixed #72 `pbi-tools git branch` does not propagate exception if no repo is found
+- Fixed #72 `pbi-tools git branch` no longer propagates exception if no repo is found
 - Fixed #79 Ensure `./.temp` exists on fresh clone of repo
 - Fixed #78 `pbi-tools extract` fails when msmdsrv cannot be started
   - New env setting `PBITOOLS_Debug` will launch msmdsrv in debug mode (set to "1", "True", "true" to enable)
@@ -20,10 +23,26 @@
     - Working directory is not removed after extraction - files are kept for inspection
   - `<Language/>` setting in `msmdsrv.ini` is always left as "0" (instead of `CultureInfo.CurrentCulture.LCID`, which might lead to unsupported values on non-English OS)
   - Thanks to @janmechtel for diagnosing the issue!
+- #81 Clarified Compile/Format requirements
+  - Improved CLI docs
+  - Always fail 'compile' when data model is detected and 'PBIX' was selected. Display error w/o stack trace for better readability.
 - Fixed #85 Report visuals don't re-compile correctly when names differ only in casing ("READY" vs "Ready")
   - Now using case-insensitive folder name comparer
   - Thanks to @joeg76 for diagnosing and reporting!
-- `.pbixproj.json`: *settings.model.annotations* not serialized when empty
+- #90 Ensure "queryGroup" is always extracted for all partitions
+  - Breaking Change: PBID M partition declarations now remain in table.json (ensuring additional properties like 'queryGroup' ar retained)
+  - Thanks to @joeg76 for detailed issue report
+- #96 New Measure Serialization Settings
+  - ***BREAKING CHANGE***: 'json' now default, 'xml' opt-in
+  - Fixes #87 and #93: Non-scalar measure properties are serialized and deserialized correctly
+  - Thanks to @didierterrien and @scottstauffer-fc for reporting those!
+- `pbi-tools info` Enhancements
+  - "pbixProjVersion", "locale" added
+- New ENV setting: 'PBITOOLS_UICulture'
+  - Overwrite default UICulture set by OS
+  - Use and name supported by <https://docs.microsoft.com/en-us/dotnet/api/system.globalization.cultureinfo.createspecificculture>
+  - Specify "IVL" for *Invariant Culture* (Code: 127)
+- Docker image released for `pbi-tools Core`: <https://github.com/pbi-tools/pbi-tools/pkgs/container/pbi-tools-core>
 - Build system: Upgraded FAKE to 5.22, Paket to 7.0.2
 - Dependencies updated: PeNet (2.9.7), Power BI API (4.3), AMO/TOM (19.36), MSAL (4.42), HtmlAgilityPack (1.11.42)
 - Tested with Power BI Desktop 2.102 (Feb 2022)

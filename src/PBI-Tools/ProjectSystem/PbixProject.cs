@@ -65,6 +65,7 @@ namespace PbiTools.ProjectSystem
          *       - #90 Always serialize (partial) partitions payload, ensuring 'queryGroup' property is retained
          *       - #19 Do not serialize empty model/annotations[]
          *       - #85 Visuals with titles only differing in casing are now extracted into unique folders
+         *       - #91 Support for /Report/mobileState (mobileState.json, explorationState.json)
          */
 
 
