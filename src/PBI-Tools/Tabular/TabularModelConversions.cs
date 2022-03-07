@@ -6,12 +6,12 @@ using System.Collections.Generic;
 using System.Text;
 using Microsoft.Mashup.Host.Document;
 using Microsoft.Mashup.Host.Document.DataSourceDiscovery;
+using Moq;
 using Newtonsoft.Json.Linq;
 using PbiTools.Serialization;
 using Serilog;
-using Moq;
 
-namespace PbiTools.TabularModel
+namespace PbiTools.Tabular
 {
     public class TabularModelConversions
     {
@@ -27,7 +27,7 @@ namespace PbiTools.TabularModel
                 DI.RegisterInstance<ITracingHost>(new Mock<ITracingHost>().Object);
         }
 
-        public static JArray GenerateDataSources(JObject database)
+        public static string GenerateSectionDocumentFromModel(JObject database)
         {
             var tablePartitionExpr = database.SelectTokens("model.tables[*].partitions[?(@.source.type == 'm')]");
             var sharedExpr = database.SelectTokens("model.expressions[?(@.kind == 'm')]");
@@ -54,28 +54,15 @@ namespace PbiTools.TabularModel
 
             Log.Verbose("M Document Generated: {M}", m);
 
-            //var expressions = new Dictionary<string, string>();
-            //IEngine mEngine = Engines.Version1;
-
-            //var tokens = mEngine.Tokenize(m);
-            //var doc = mEngine.Parse(tokens, new TextDocumentHost(m), err => { });
-
-            //var valueOnly = false;
-            //if (doc is ISectionDocument sectionDoc)
-            //{
-            //    foreach (var export in sectionDoc.Section.Members)
-            //    {
-            //        if (expressions.ContainsKey(export.Name.Name)) continue;
-            //        if (valueOnly)
-            //            expressions.Add(export.Name.Name, tokens.GetText(export.Value.Range.Start, export.Value.Range.End).ToString());
-            //        else
-            //            expressions.Add(export.Name.Name, tokens.GetText(export.Range.Start, export.Range.End).ToString());
-            //    }
-            //}
-
+            return m;
+        }
+        
+        public static JArray GenerateDataSources(JObject database)
+        {
             var dataSources = new Dictionary<string, JObject>();
 
             var engine = Microsoft.Mashup.Engine.Host.Engines.Version1;
+            var m = GenerateSectionDocumentFromModel(database);
             var discoveries = DataSourceDiscoveryVisitor.FindDataSourcesForDocument(m);
 
             foreach (var mashupDiscovery in discoveries)

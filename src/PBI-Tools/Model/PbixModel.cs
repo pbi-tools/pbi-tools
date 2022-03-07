@@ -327,19 +327,18 @@ namespace PbiTools.Model
         {
             Log.Information("Generating {Format} file at '{Path}'...", format, path);
 
-#if NETFRAMEWORK
             if (format == PbiFileFormat.PBIX && this.DataModel != null)
-                Log.Warning("Compiling a project containing a data model into a PBIX file is currently unsupported and will most likely result in an invalid output. Please consider compiling into a PBIT file instead.");
+                throw new PbiToolsCliException(ExitCode.InvalidArgs,
+                    "Compiling a project containing a data model into a PBIX file is not supported. Please compile into a PBIT file instead."
+                );
 
+#if NETFRAMEWORK
             var modelName = PowerBIPartConverters.ConvertToValidModelName(Path.GetFileNameWithoutExtension(path));
             var converters = new PowerBIPartConverters(modelName, dependenciesResolver ?? DependenciesResolver.Default);
             var pbiPackage = new PbiPackage(this, converters, format); // TODO Handle missing Report part
 
             pbiPackage.Save(path);
 #elif NET
-            if (format == PbiFileFormat.PBIX && this.DataModel != null)
-                throw new NotSupportedException("Compiling a project containing a data model into a PBIX file is not supported by the Core edition of pbi-tools.");
-
             var writer = new PbixWriter(this, new PowerBIPartConverters(), format);
             writer.WriteTo(path);
 #endif

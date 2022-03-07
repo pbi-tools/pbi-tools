@@ -293,6 +293,8 @@ Target.create "SmokeTest" (fun _ ->
               | Some x -> x
               | None -> tempDir
 
+    dir |> Directory.ensure
+
     !! "data/**/*.pbix"
     -- "data/external/**"
     |> Shell.copyFilesWithSubFolder dir
@@ -341,7 +343,7 @@ open Fake.Core.TargetOperators
   ==> "Build"
   ==> "Test"
 
-"Build"
+"Publish"
   ==> "SmokeTest"
 
 "Build"

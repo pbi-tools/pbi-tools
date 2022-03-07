@@ -15,6 +15,7 @@ namespace PbiTools.Utils
         public Version Version { get; set; }
         public bool Is64Bit { get; set; }
         public string InstallDir { get; set; }
+        public string SettingsDir { get; set; }
         public PowerBIDesktopInstallationLocation Location { get; set; }
     }
 

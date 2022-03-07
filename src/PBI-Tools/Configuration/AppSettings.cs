@@ -2,7 +2,9 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using System;
+using System.Globalization;
 using System.Linq;
+using System.Threading;
 using Newtonsoft.Json.Linq;
 using Serilog.Core;
 using Serilog.Events;
@@ -26,6 +28,7 @@ namespace PbiTools.Configuration
             public static readonly string PbiInstallDir = $"{EnvPrefix}{nameof(PbiInstallDir)}";
             public static readonly string AppDataDir = $"{EnvPrefix}{nameof(AppDataDir)}";
             public static readonly string Debug = $"{EnvPrefix}{nameof(Debug)}";
+            public static readonly string UICulture = $"{EnvPrefix}{nameof(UICulture)}";
         }
 
         public static string GetEnvironmentSetting(string name) => System.Environment.GetEnvironmentVariable(name)
@@ -64,6 +67,27 @@ namespace PbiTools.Configuration
         public LoggingLevelSwitch LevelSwitch { get; }
 
         internal bool ShouldSuppressConsoleLogs { get; set; } = false;
+
+        public bool TryApplyCustomCulture(out Exception error) 
+        {
+            error = default;
+            var envSetting = GetEnvironmentSetting(Environment.UICulture);
+            if (String.IsNullOrWhiteSpace(envSetting))
+                return true;
+
+            try {
+                var culture = CultureInfo.CreateSpecificCulture(envSetting);
+
+                Thread.CurrentThread.CurrentUICulture = culture;
+                CultureInfo.DefaultThreadCurrentUICulture = culture;
+
+                return true;
+            }
+            catch (CultureNotFoundException ex) {
+                error = ex;
+                return false;
+            }
+        }
 
         public static JObject AsJson() =>
             new JObject(

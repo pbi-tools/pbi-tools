@@ -55,7 +55,7 @@ namespace PbiTools.Utils
         }
 
         /// <summary>
-        /// Parses a string-encoded json token out of a json object property, removes the property,
+        /// Parses a string-encoded json token from a json object property, removes the property from its parent,
         /// and optionally saves the token in the <see cref="IProjectFolder"/>.
         /// </summary>
         public static T ExtractToken<T>(this JObject parent, string property, IProjectFolder folder = null) where T : JToken
@@ -72,27 +72,44 @@ namespace PbiTools.Utils
         }
 
 
-        public static JObject InsertToken<T>(this JObject parent, string property, T token) where T : JToken
+        /// <summary>
+        /// Adds a new property to the json object, which the string-encoded value of the provided token as the value.
+        /// An existing property with the same name will be replaced. 
+        /// </summary>
+        /// <returns>The original json object, with the new property added.</returns>
+        public static JObject InsertTokenAsString<T>(this JObject parent, string property, T token) where T : JToken
         {
             if (token != null)
                 parent[property] = token.ToString(formatting: Newtonsoft.Json.Formatting.None);
             return parent;
         }
 
+        /// <summary>
+        /// Parses the contents of the file in the specified folder as a Json object and inserts it as a string-encoded
+        /// property into the parent object, using the filename (w/o extension) as the property name.
+        /// No property is inserted should the file not exist.
+        /// An empty Json object is inserted in case of a Json parser error.
+        /// </summary>
         public static JObject InsertObjectFromFile(this JObject parent, IProjectFolder folder, string fileName)
         { 
             var objectFile = folder.GetFile(fileName);
             if (objectFile.Exists()) {
-                parent.InsertToken(Path.GetFileNameWithoutExtension(fileName), objectFile.ReadJson());
+                parent.InsertTokenAsString(fileName.WithoutExtension(), objectFile.ReadJson());
             }
             return parent;
         }
 
+        /// <summary>
+        /// Parses the contents of the file in the specified folder as a Json array and inserts it as a string-encoded
+        /// property into the parent object.
+        /// No property is inserted should the file not exist.
+        /// An empty Json array is inserted in case of a Json parser error.
+        /// </summary>
         public static JObject InsertArrayFromFile(this JObject parent, IProjectFolder folder, string fileName)
         { 
             var arrayFile = folder.GetFile(fileName);
             if (arrayFile.Exists()) {
-                parent.InsertToken(Path.GetFileNameWithoutExtension(fileName), arrayFile.ReadJsonArray());
+                parent.InsertTokenAsString(fileName.WithoutExtension(), arrayFile.ReadJsonArray());
             }
             return parent;
         }
@@ -140,6 +157,20 @@ namespace PbiTools.Utils
         }
 
         /// <summary>
+        /// Returns the object with the specified name from the json object. Inserts a new empty object if the property doesn't exist.
+        /// </summary>
+        public static JObject EnsureObject(this JObject parent, string name)
+        {
+            var obj = parent[name] as JObject;
+            if (obj == null)
+            {
+                parent.Add(name, new JObject());
+                obj = parent[name] as JObject;
+            }
+            return obj;
+        }
+
+        /// <summary>
         /// Adds the specified converters to the <see cref="JsonSerializerSettings"/> instance.
         /// </summary>
         public static JsonSerializerSettings WithConverters(this JsonSerializerSettings settings, params JsonConverter[] converters)
@@ -160,5 +191,30 @@ namespace PbiTools.Utils
                 return false;
             }
         }
+
+        public static bool TryParseJsonObject(this string json, out JObject result)
+        {
+            try {
+                result = JObject.Parse(json);
+                return true;
+            }
+            catch {
+                result = default;
+                return false;
+            }
+        }        
+
+        public static bool TryParseJsonArray(this string json, out JArray result)
+        {
+            try {
+                result = JArray.Parse(json);
+                return true;
+            }
+            catch {
+                result = default;
+                return false;
+            }
+        }
+
     }
 }

@@ -35,12 +35,17 @@ namespace PbiTools.Cli
                     { "version", AssemblyVersionInformation.AssemblyInformationalVersion },
                     { "edition", AppSettings.Edition },
                     { "build", AssemblyVersionInformation.AssemblyFileVersion },
+                    { "pbixProjVersion", ProjectSystem.PbixProject.CurrentVersion.ToString() },
 #if NETFRAMEWORK
                     { "pbiBuildVersion", AssemblyVersionInformation.AssemblyMetadata_PBIBuildVersion },
 #endif
                     { "amoVersion", typeof(Microsoft.AnalysisServices.Tabular.Server).Assembly
                         .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion },
                     { "toolPath", Process.GetCurrentProcess().MainModule.FileName },
+                    { "locale", new JObject {
+                        { "system", $"{System.Globalization.CultureInfo.CurrentCulture.Name} ({System.Globalization.CultureInfo.CurrentCulture.LCID})" },
+                        { "ui", $"{System.Globalization.CultureInfo.CurrentUICulture.Name} ({System.Globalization.CultureInfo.CurrentUICulture.LCID})" }
+                    }},
                     { "settings", AppSettings.AsJson() },
                     { "runtime", new JObject {
                         { "platform", System.Runtime.InteropServices.RuntimeInformation.OSDescription },

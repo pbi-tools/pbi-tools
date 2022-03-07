@@ -3,11 +3,11 @@
 
 using System;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using PowerArgs;
 using Serilog;
+using Serilog.Events;
 
 [assembly: InternalsVisibleTo("pbi-tools.tests")]
 [assembly: InternalsVisibleTo("pbi-tools.netcore.tests")]
@@ -24,7 +24,6 @@ namespace PbiTools
         private static extern ErrorModes SetErrorMode(ErrorModes uMode);
 
         [Flags]
-        [SuppressMessage("ReSharper", "InconsistentNaming")]
         private enum ErrorModes : uint
         {
             SYSTEM_DEFAULT = 0x0,
@@ -46,14 +45,27 @@ namespace PbiTools
                 .MinimumLevel.ControlledBy(AppSettings.LevelSwitch)
                 .WriteTo.Console(
 #if !DEBUG
-                        outputTemplate: "{Message:lj}{NewLine}{Exception}"
+                        outputTemplate: AppSettings.LevelSwitch.MinimumLevel switch
+                        {
+                            LogEventLevel.Information
+                              => "{Message:lj}{NewLine}{Exception}",
+                            var level when level < LogEventLevel.Information
+                              => "[{Timestamp:HH:mm:ss.fff} {Level:u3}] [{SourceContext}] {Message:lj}{NewLine}{Exception}",
+                            _ => "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}"
+                        }
 #endif
                     )
                     .Filter.ByExcluding(_ => AppSettings.ShouldSuppressConsoleLogs)
                 .CreateLogger();
             
-            if (AppSettings.LevelSwitch.MinimumLevel < Serilog.Events.LogEventLevel.Information)
+            if (AppSettings.LevelSwitch.MinimumLevel < LogEventLevel.Information)
                 Log.Information("Log level: {LogLevel}", AppSettings.LevelSwitch.MinimumLevel);
+
+            if (!AppSettings.TryApplyCustomCulture(out var error)) {
+                Log.Warning(error, $"The UI Culture specified in [{AppSettings.Environment.UICulture}] could not be applied. Continuing with default OS settings.");
+            }
+
+            ArgRevivers.SetReviver(CmdLineActions.NullableRevivers.Int);
         }
 
         //internal static IConfigurationRoot Configuration { get; }

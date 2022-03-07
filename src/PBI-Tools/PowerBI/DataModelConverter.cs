@@ -50,6 +50,9 @@ namespace PbiTools.PowerBI
             {
                 server.Connect(connectionString);
 
+                if (server.Databases.Count == 0)
+                    return default;
+
                 using (var db = selectDb(server.Databases))
                 {
                     var json = TOM.JsonSerializer.SerializeDatabase(db, new TOM.SerializeOptions

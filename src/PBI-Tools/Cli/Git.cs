@@ -26,6 +26,7 @@ namespace PbiTools.Cli
                     var gitRepo = Repository.Discover(Environment.CurrentDirectory);
                     if (gitRepo == null) { 
                         Log.Warning("No valid git repository found at current working directory: {CWD}.", Environment.CurrentDirectory);
+                        return;
                     }
                     using (var repo = new Repository(gitRepo))
                     {

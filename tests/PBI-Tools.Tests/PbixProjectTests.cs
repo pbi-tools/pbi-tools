@@ -187,6 +187,41 @@ namespace PbiTools.Tests
         }
 
         [Fact]
+        public void Model_Annotations_are_not_serialized_when_default()
+        {
+            var project = new PbixProject {
+                Settings = new PbixProjectSettings { 
+                    Model = new ModelSettings { 
+                        SerializationMode = ModelSerializationMode.Raw, // NOT using default mode
+                        IgnoreProperties = default,
+                        Annotations = new ModelAnnotationSettings { }
+                    },
+                    Mashup = new MashupSettings { SerializationMode = MashupSerializationMode.Raw }
+                }
+            };
+
+            // Ensure the above Model settings are indeed Default values
+            Assert.False(project.Settings.Model.IsDefault);
+            Assert.True(project.Settings.Model.Annotations.IsDefault);
+
+            using (var rootFolder = new ProjectRootFolder(TestFolder.Path))
+            {
+                project.Save(rootFolder);
+            }
+
+            // Ensure the Save() method has not wiped the Model object
+            Assert.NotNull(project.Settings.Model);
+            Assert.NotNull(project.Settings.Model.Annotations);
+
+            var projJson = JObject.Parse(File.ReadAllText(_testFilePath));
+
+            // settings.model is not serialized
+            Assert.NotNull(projJson["settings"]);
+            Assert.NotNull(projJson["settings"]["model"]);
+            Assert.Null(projJson["settings"]["model"]["annotations"]);
+        }
+
+        [Fact]
         public void ModelSettings_default_enum_value_is_always_serialized()
         {
             var project = new PbixProject {

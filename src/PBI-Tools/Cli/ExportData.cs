@@ -8,6 +8,7 @@ using PowerArgs;
 namespace PbiTools.Cli
 {
     using PowerBI;
+    using Tabular;
 
     public partial class CmdLineActions
     {
@@ -70,7 +71,7 @@ namespace PbiTools.Cli
                     msmdsrv.Start();
                     msmdsrv.LoadPbixModel(package.DataModel.GetStream(), "Model", "Model");
 
-                    using (var reader = new TabularModel.TabularDataReader(msmdsrv.OleDbConnectionString))
+                    using (var reader = new TabularDataReader(msmdsrv.OleDbConnectionString))
                     {
                         reader.ExtractTableData(outPath, dateTimeFormat);
                     }
@@ -79,7 +80,7 @@ namespace PbiTools.Cli
             else
 #endif
             {
-                using (var reader = new TabularModel.TabularDataReader($"Provider=MSOLAP;Data Source=.:{port};"))
+                using (var reader = new TabularDataReader($"Provider=MSOLAP;Data Source=.:{port};"))
                 {
                     reader.ExtractTableData(outPath, dateTimeFormat);
                 }
