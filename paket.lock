@@ -48,7 +48,7 @@ NUGET
       System.Security.Cryptography.Cng (>= 4.7)
     Microsoft.Rest.ClientRuntime (2.3.23)
       Newtonsoft.Json (>= 10.0.3)
-    Moq (4.17.1)
+    Moq (4.17.2)
       Castle.Core (>= 4.4.1)
       System.Threading.Tasks.Extensions (>= 4.5.4)
     NETStandard.Library (2.0.3)
