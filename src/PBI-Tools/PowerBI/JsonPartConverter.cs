@@ -14,6 +14,9 @@ namespace PbiTools.PowerBI
         private static readonly JsonSerializer DefaultSerializer = new JsonSerializer { };
         private readonly Encoding _encoding;
 
+        /// <summary>
+        /// Creates a new <see cref="JsonPartConverter"/> with the specified Uri and UTF-16 encoding.
+        /// </summary>
         public JsonPartConverter(string relativePartUri) : this(new Uri(relativePartUri, UriKind.Relative), Encoding.Unicode)
         { }
 

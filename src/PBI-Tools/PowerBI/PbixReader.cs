@@ -137,6 +137,11 @@ namespace PbiTools.PowerBI
             return _converters.ReportSettingsV3.FromPackagePart(_package.ReportSettings.AsFunc());
         }
 
+        public JObject ReadReportMobileState()
+        {
+            return _converters.ReportMobileState.FromPackagePart(_package.ReportMobileState.AsFunc());
+        }
+
         public string ReadVersion()
         {
             return _converters.Version.FromPackagePart(_package.Version.AsFunc());
