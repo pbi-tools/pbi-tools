@@ -499,6 +499,7 @@ namespace PbiTools.Serialization
                 if (partitionsFolder.Exists())
                 {
                     // If '/Partitions' folder exists, any existing partitions[] element is replaced!
+                    // TODO Support Merge?
                     tableJson["partitions"] = new JArray(partitionsFolder
                         .GetFiles("*.json")
                         .Select(f => f.ReadJson())
@@ -588,7 +589,7 @@ namespace PbiTools.Serialization
                 }
 
 
-                // Calculation Items
+                // TODO Handle Calculation Items
 
                 tables.Add(tableJson);
             }
