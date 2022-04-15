@@ -33,6 +33,8 @@ async Task Main()
 	// "PBIDesktopSetup-2021-10_x64.exe";
 	// "PBIDesktopSetup-2021-11_x64.exe";
 	// "PBIDesktopSetup-2021-12_x64.exe";
+	// "PBIDesktopSetup-2022-02_x64.exe";
+	// "PBIDesktopSetup-2022-03_x64.exe";
 	"PBIDesktopSetup_x64.exe";
 	var skipDownload = false;
 	var skipExtract = false;
