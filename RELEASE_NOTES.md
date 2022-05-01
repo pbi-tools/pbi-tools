@@ -2,7 +2,7 @@
 
 ## 1.0.0-rc.2 - 2022-05-01
 
-<version:1.0.0-rc2.+20220501>
+<version:1.0.0-rc.2+20220501>
 
 - Fixed #109 'pbi-tools info' no longer fails when another instance of SSAS runs on the same machine
 
