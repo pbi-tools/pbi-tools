@@ -7,9 +7,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Serilog;
-using PbiTools.Win32;
 using System.Text;
+using PbiTools.Win32;
+using Serilog;
 
 namespace PbiTools.Utils
 {
@@ -19,7 +19,7 @@ namespace PbiTools.Utils
 
         public static IEnumerable<PowerBIProcess> EnumerateProcesses()
         {
-            foreach (var proc in Process.GetProcessesByName("msmdsrv"))
+            foreach (var proc in Process.GetProcessesByName("msmdsrv")) // TODO Look for "pbidesktop" instead??
             {
                 using (proc)
                 {
@@ -61,17 +61,28 @@ namespace PbiTools.Utils
 
                         pbixPathCandidates = pbixPathCandidates.Where(p => !IsTempSavePath(p.DosFilePath)).ToArray();
 
-                        yield return new PowerBIProcess
+                        var result = default(PowerBIProcess);
+                        try
+                        { 
+                            result = new PowerBIProcess
+                            {
+                                ProductName = parent.MainModule.FileVersionInfo.ProductName,
+                                ProductVersion = parent.MainModule.FileVersionInfo.ProductVersion,
+                                ExePath = parent.MainModule.FileVersionInfo.FileName,
+                                ProcessId = parent.Id,
+                                Port = port,
+                                WorkspaceName = args["-n"],
+                                WorkspaceDir = args["-s"],
+                                PbixPath = pbixPathCandidates.FirstOrDefault()?.DosFilePath
+                            };
+                        }
+                        catch (System.ComponentModel.Win32Exception ex)
                         {
-                            ProductName = parent.MainModule.FileVersionInfo.ProductName,
-                            ProductVersion = parent.MainModule.FileVersionInfo.ProductVersion,
-                            ExePath = parent.MainModule.FileVersionInfo.FileName,
-                            ProcessId = parent.Id,
-                            Port = port,
-                            WorkspaceName = args["-n"],
-                            WorkspaceDir = args["-s"],
-                            PbixPath = pbixPathCandidates.FirstOrDefault()?.DosFilePath
-                        };
+                            Log.Verbose(ex, "Skipping process due to access violation. (PID: {ProcessID})", parent.Id);
+                        }
+
+                        if (result != default)
+                            yield return result;
                     }
                 }
             }
