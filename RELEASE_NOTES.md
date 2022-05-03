@@ -1,5 +1,11 @@
 # Release Notes
 
+## 1.0.0-rc.2 - 2022-05-01
+
+<version:1.0.0-rc.2+20220501>
+
+- Fixed #109 'pbi-tools info' no longer fails when another instance of SSAS runs on the same machine
+
 ## 1.0.0-rc.1 - 2022-03-06
 
 - PbixProj v0.11 Schema
