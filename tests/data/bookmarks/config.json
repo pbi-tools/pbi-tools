@@ -1,0 +1,399 @@
+{
+  "version": "5.24",
+  "themeCollection": {
+    "baseTheme": {
+      "name": "CY18SU07",
+      "version": "3.15",
+      "type": 2
+    },
+    "customTheme": {
+      "name": "Electric",
+      "version": "5.28",
+      "type": 2
+    }
+  },
+  "activeSectionIndex": 18,
+  "modelExtensions": [
+    {
+      "name": "extension",
+      "entities": [
+        {
+          "name": "Customer",
+          "extends": "Customer",
+          "measures": [
+            {
+              "name": "Number of Customers",
+              "dataType": 3,
+              "expression": "COUNTROWS ( Customer )",
+              "errorMessage": null,
+              "hidden": false,
+              "formulaOverride": null,
+              "formatInformation": {
+                "formatString": "G",
+                "format": "General",
+                "thousandSeparator": false,
+                "currencyFormat": null,
+                "dateTimeCustomFormat": null
+              }
+            },
+            {
+              "name": "Number of Customers with Sales",
+              "dataType": 3,
+              "expression": "CALCULATE (\r\n    [Number of Customers],\r\n    Sales\r\n)",
+              "errorMessage": null,
+              "hidden": false,
+              "references": {
+                "unrecognizedReferences": false,
+                "measures": [
+                  {
+                    "schema": "extension",
+                    "entity": "Customer",
+                    "name": "Number of Customers"
+                  }
+                ]
+              },
+              "formulaOverride": null,
+              "formatInformation": {
+                "formatString": "G",
+                "format": "General",
+                "thousandSeparator": false,
+                "currencyFormat": null,
+                "dateTimeCustomFormat": null
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "bookmarks": [
+    {
+      "displayName": "<Group 1>",
+      "name": "Bookmarkf3efc5099c43b3b128c8",
+      "children": [
+        {
+          "displayName": "FY2018",
+          "name": "Bookmarke118f02ad6b977cb5b11",
+          "explorationState": {
+            "version": "1.3",
+            "activeSection": "ReportSection",
+            "sections": {
+              "ReportSection": {
+                "visualContainers": {
+                  "5fbd1f3a94930259664c": {
+                    "filters": {
+                      "byExpr": [
+                        {
+                          "type": "Categorical",
+                          "expression": {
+                            "Column": {
+                              "Expression": {
+                                "SourceRef": {
+                                  "Entity": "Customer"
+                                }
+                              },
+                              "Property": "Customer"
+                            }
+                          },
+                          "howCreated": 0
+                        },
+                        {
+                          "type": "Categorical",
+                          "expression": {
+                            "Column": {
+                              "Expression": {
+                                "SourceRef": {
+                                  "Entity": "Customer"
+                                }
+                              },
+                              "Property": "Customer ID"
+                            }
+                          },
+                          "howCreated": 0
+                        },
+                        {
+                          "type": "Advanced",
+                          "expression": {
+                            "Measure": {
+                              "Expression": {
+                                "SourceRef": {
+                                  "Entity": "Sales"
+                                }
+                              },
+                              "Property": "Total Sales Amount"
+                            }
+                          },
+                          "howCreated": 0
+                        }
+                      ]
+                    },
+                    "singleVisual": {
+                      "visualType": "tableEx",
+                      "objects": {}
+                    }
+                  },
+                  "8a45b304b1829e0e1216": {
+                    "filters": {
+                      "byExpr": [
+                        {
+                          "type": "Advanced",
+                          "expression": {
+                            "Measure": {
+                              "Expression": {
+                                "SourceRef": {
+                                  "Schema": "extension",
+                                  "Entity": "Customer"
+                                }
+                              },
+                              "Property": "Number of Customers"
+                            }
+                          },
+                          "howCreated": 0
+                        },
+                        {
+                          "type": "Advanced",
+                          "expression": {
+                            "Measure": {
+                              "Expression": {
+                                "SourceRef": {
+                                  "Schema": "extension",
+                                  "Entity": "Customer"
+                                }
+                              },
+                              "Property": "Number of Customers with Sales"
+                            }
+                          },
+                          "howCreated": 0
+                        }
+                      ]
+                    },
+                    "singleVisual": {
+                      "visualType": "multiRowCard",
+                      "objects": {},
+                      "orderBy": [
+                        {
+                          "Direction": 2,
+                          "Expression": {
+                            "Measure": {
+                              "Expression": {
+                                "SourceRef": {
+                                  "Schema": "extension",
+                                  "Entity": "Customer"
+                                }
+                              },
+                              "Property": "Number of Customers"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "2e36d3431b2d8e5b6995": {
+                    "filters": {
+                      "byExpr": [
+                        {
+                          "type": "Categorical",
+                          "expression": {
+                            "Column": {
+                              "Expression": {
+                                "SourceRef": {
+                                  "Entity": "Date"
+                                }
+                              },
+                              "Property": "Fiscal Year"
+                            }
+                          },
+                          "howCreated": 0
+                        },
+                        {
+                          "type": "Advanced",
+                          "expression": {
+                            "Measure": {
+                              "Expression": {
+                                "SourceRef": {
+                                  "Schema": "extension",
+                                  "Entity": "Customer"
+                                }
+                              },
+                              "Property": "Number of Customers with Sales"
+                            }
+                          },
+                          "howCreated": 0
+                        }
+                      ]
+                    },
+                    "singleVisual": {
+                      "visualType": "pivotTable",
+                      "objects": {},
+                      "activeProjections": {
+                        "Rows": [
+                          {
+                            "Column": {
+                              "Expression": {
+                                "SourceRef": {
+                                  "Entity": "Date"
+                                }
+                              },
+                              "Property": "Fiscal Year"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "2ae136c950139397c92b": {
+                    "filters": {
+                      "byExpr": [
+                        {
+                          "type": "Categorical",
+                          "expression": {
+                            "Column": {
+                              "Expression": {
+                                "SourceRef": {
+                                  "Entity": "Date"
+                                }
+                              },
+                              "Property": "Fiscal Year"
+                            }
+                          },
+                          "howCreated": 0
+                        }
+                      ]
+                    },
+                    "singleVisual": {
+                      "visualType": "slicer",
+                      "objects": {
+                        "merge": {
+                          "general": [
+                            {
+                              "properties": {
+                                "filter": {
+                                  "filter": {
+                                    "Version": 2,
+                                    "From": [
+                                      {
+                                        "Name": "d",
+                                        "Entity": "Date",
+                                        "Type": 0
+                                      }
+                                    ],
+                                    "Where": [
+                                      {
+                                        "Condition": {
+                                          "In": {
+                                            "Expressions": [
+                                              {
+                                                "Column": {
+                                                  "Expression": {
+                                                    "SourceRef": {
+                                                      "Source": "d"
+                                                    }
+                                                  },
+                                                  "Property": "Fiscal Year"
+                                                }
+                                              }
+                                            ],
+                                            "Values": [
+                                              [
+                                                {
+                                                  "Literal": {
+                                                    "Value": "'FY2018'"
+                                                  }
+                                                }
+                                              ]
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          ],
+                          "data": [
+                            {
+                              "properties": {
+                                "mode": {
+                                  "expr": {
+                                    "Literal": {
+                                      "Value": "'Basic'"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "activeProjections": {
+                        "Values": [
+                          {
+                            "Column": {
+                              "Expression": {
+                                "SourceRef": {
+                                  "Entity": "Date"
+                                }
+                              },
+                              "Property": "Fiscal Year"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "objects": {}
+          },
+          "options": {
+            "targetVisualNames": [
+              "2ae136c950139397c92b"
+            ],
+            "suppressDisplay": true,
+            "suppressActiveSection": true,
+            "applyOnlyToTargetVisuals": true
+          }
+        }
+      ]
+    }
+  ],
+  "defaultDrillFilterOtherVisuals": true,
+  "linguisticSchemaSyncVersion": 0,
+  "settings": {
+    "useNewFilterPaneExperience": true,
+    "allowChangeFilterTypes": true,
+    "useStylableVisualContainerHeader": true,
+    "exportDataMode": 1,
+    "allowDataPointLassoSelect": true
+  },
+  "objects": {
+    "section": [
+      {
+        "properties": {
+          "verticalAlignment": {
+            "expr": {
+              "Literal": {
+                "Value": "'Middle'"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "outspacePane": [
+      {
+        "properties": {
+          "expanded": {
+            "expr": {
+              "Literal": {
+                "Value": "true"
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+}

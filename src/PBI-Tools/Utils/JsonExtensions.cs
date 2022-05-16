@@ -19,9 +19,9 @@ namespace PbiTools.Utils
         /// to the provided <see cref="IProjectFolder"/>, using the property name as the filename (unless a null folder is provided).
         /// </summary>
         /// <returns>The <see cref="JObject"/> extracted from the property.</returns>
-        public static JObject ExtractObject(this JObject parent, string property, IProjectFolder folder)
+        public static JObject ExtractAndParseAsObject(this JObject parent, string property, IProjectFolder folder = null)
         {
-            return parent.ExtractToken<JObject>(property, folder);
+            return parent.ExtractAndParseTokenAs<JObject>(property, folder);
         }
 
         /// <summary>
@@ -29,14 +29,14 @@ namespace PbiTools.Utils
         /// to the provided <see cref="IProjectFolder"/>, using the property name as the filename (unless a null folder is provided).
         /// </summary>
         /// <returns>The <see cref="JArray"/> extracted from the property.</returns>
-        public static JArray ExtractArray(this JObject parent, string property, IProjectFolder folder)
+        public static JArray ExtractAndParseAsArray(this JObject parent, string property, IProjectFolder folder = null)
         {
-            return parent.ExtractToken<JArray>(property, folder);
+            return parent.ExtractAndParseTokenAs<JArray>(property, folder);
         }
 
-        public static IEnumerable<T> ExtractArrayAs<T>(this JObject parent, string property)
+        public static IEnumerable<T> ExtractAndParseArrayAs<T>(this JObject parent, string property)
         {
-            var array = parent.ExtractToken<JArray>(property, folder: null);
+            var array = parent.ExtractAndParseTokenAs<JArray>(property, folder: null);
             if (array != null) return array.OfType<T>();
             else return new T[0];
         }
@@ -58,7 +58,7 @@ namespace PbiTools.Utils
         /// Parses a string-encoded json token from a json object property, removes the property from its parent,
         /// and optionally saves the token in the <see cref="IProjectFolder"/>.
         /// </summary>
-        public static T ExtractToken<T>(this JObject parent, string property, IProjectFolder folder = null) where T : JToken
+        public static T ExtractAndParseTokenAs<T>(this JObject parent, string property, IProjectFolder folder = null) where T : JToken
         {
             T obj = null;
             var token = parent[property];
@@ -90,11 +90,12 @@ namespace PbiTools.Utils
         /// No property is inserted should the file not exist.
         /// An empty Json object is inserted in case of a Json parser error.
         /// </summary>
-        public static JObject InsertObjectFromFile(this JObject parent, IProjectFolder folder, string fileName)
-        { 
+        public static JObject InsertObjectFromFile(this JObject parent, IProjectFolder folder, string fileName, Func<IProjectFolder, JObject, JObject> extendObject = null)
+        {
             var objectFile = folder.GetFile(fileName);
             if (objectFile.Exists()) {
-                parent.InsertTokenAsString(fileName.WithoutExtension(), objectFile.ReadJson());
+                var _extendFunc = extendObject ?? ((_, json) => json);
+                parent.InsertTokenAsString(fileName.WithoutExtension(), _extendFunc(folder, objectFile.ReadJson()));
             }
             return parent;
         }
