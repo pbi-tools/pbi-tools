@@ -27,10 +27,10 @@ namespace PbiTools.Deployments
         public PbiDeploymentSource Source { get; set; }
 
         [JsonProperty("authentication")]
-        public PbiDeploymentAuthentication Authentication { get; set; }
+        public PbiDeploymentAuthentication Authentication { get; set; } = new();
 
         [JsonProperty("options")]
-        public PbiDeploymentOptions Options { get; set; }
+        public PbiDeploymentOptions Options { get; set; } = new();
 
         [JsonProperty("parameters")]
         public IDictionary<string, string> Parameters { get; set; }
@@ -131,10 +131,13 @@ namespace PbiTools.Deployments
         public bool LoadFullReportInfo { get; set; }
 
         [JsonProperty("import")]
-        public ImportOptions Import { get; set; }
+        public ImportOptions Import { get; set; } = new();
 
         [JsonProperty("refresh")]
-        public RefreshOptions Refresh { get; set; }
+        public RefreshOptions Refresh { get; set; } = new();
+
+        [JsonProperty("dataset")]
+        public DatasetOptions Dataset { get; set; } = new();
 
         public class ImportOptions
         {
@@ -192,6 +195,12 @@ namespace PbiTools.Deployments
                 API = 1,
                 XMLA = 2
             }
+        }
+
+        public class DatasetOptions
+        {
+            [JsonProperty("replaceParameters")]
+            public bool ReplaceParameters { get; set; }
         }
     }
 

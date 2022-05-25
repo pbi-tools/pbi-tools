@@ -21,6 +21,14 @@ namespace PbiTools.Deployments
             ? null
             : Environment.ExpandEnvironmentVariables(input);
 
+        /// <summary>
+        /// Replaces the name of each environment variable embedded in any of the dictionary values
+        /// with the string equivalent of the value of the variable, then returns a new dictionary
+        /// with all expanded values.
+        /// </summary>
+        public static IDictionary<string, string> ExpandEnv(this IDictionary<string, string> input) => input == null
+            ? new Dictionary<string, string>()
+            : input.ToDictionary(x => x.Key, x => x.Value.ExpandEnv(), StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
         /// Replaces the name of each parameter embedded in the specified string with the parameter value.

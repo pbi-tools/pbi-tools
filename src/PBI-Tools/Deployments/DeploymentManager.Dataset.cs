@@ -134,6 +134,18 @@ namespace PbiTools.Deployments
                 Log.Write(level, "* EstimatedSize         : {EstimatedSize}", db.EstimatedSize);
             };
 
+            if (dataset.Options.Dataset.ReplaceParameters)
+            {
+                foreach (var modelExpr in dbNew.Model.Expressions.Where(e => e.Kind == TOM.ExpressionKind.M))
+                {
+                    if (dataset.Parameters.TryGetValue(modelExpr.Name, out var value)){
+                        var newValue = $"\"{value}\"";
+                        Log.Information("Setting model expression [{Name}]\n\tOld value: {OldValue}\n\tNew value: {NewValue}", modelExpr.Name, modelExpr.Expression, newValue);
+                        modelExpr.Expression = newValue;
+                    }
+                }
+            }
+
             Log.Write(WhatIfLogLevel, "Checking for existing database with matching name...");
             if (!server.Databases.ContainsName(dataset.DisplayName))
             {
@@ -289,7 +301,7 @@ namespace PbiTools.Deployments
                 DisplayName = deploymentEnv.DisplayName.ExpandParameters(parameters) ?? Path.GetFileNameWithoutExtension(sourceFile.Name),
                 Options = manifest.Options,
                 Parameters = parameters.Aggregate(
-                    manifest.Parameters ?? new Dictionary<string, string>(), // TODO Support ENV expansion in manifest params
+                    manifest.Parameters.ExpandEnv(),
                     (dict, x) => { dict[x.Key] = x.Value; return dict; }     // File params overwrite Manifest params
                 )
             };
@@ -313,7 +325,7 @@ namespace PbiTools.Deployments
                 DisplayName = deploymentEnv.DisplayName.ExpandParameters(parameters) ?? sourceFolder.Name,
                 Options = manifest.Options,
                 Parameters = parameters.Aggregate(
-                    manifest.Parameters ?? new Dictionary<string, string>(), // TODO Support ENV expansion in manifest params
+                    manifest.Parameters.ExpandEnv(),
                     (dict, x) => { dict[x.Key] = x.Value; return dict; }     // File params overwrite Manifest params
                 )
             };
