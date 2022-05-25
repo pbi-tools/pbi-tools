@@ -133,6 +133,9 @@ namespace PbiTools.Deployments
         [JsonProperty("import")]
         public ImportOptions Import { get; set; }
 
+        [JsonProperty("refresh")]
+        public RefreshOptions Refresh { get; set; }
+
         public class ImportOptions
         {
             /// <summary>
@@ -159,6 +162,36 @@ namespace PbiTools.Deployments
             [JsonProperty("overrideModelLabel")]
             public bool? OverrideModelLabel { get; set; }
 
+        }
+
+        public class RefreshOptions
+        {
+            /// <summary>
+            /// Skip refresh when the deployment created a new dataset (instead of updating an existing one).
+            /// Default is <c>true</c>.
+            /// </summary>
+            [JsonProperty("skipNewDataset")]
+            public bool SkipNewDataset { get; set; } = true;
+
+            [JsonProperty("method")]
+            public RefreshMethod Method { get; set; } = RefreshMethod.API;
+
+            [JsonProperty("type")]
+            public Microsoft.PowerBI.Api.Models.DatasetRefreshType Type { get; set; } = Microsoft.PowerBI.Api.Models.DatasetRefreshType.Automatic;
+
+            // *** https://docs.microsoft.com/rest/api/power-bi/datasets/refresh-dataset-in-group
+            // applyRefreshPolicy
+            // commitMode
+            // effectiveDate
+            // maxParallelism
+            // objects
+            // retryCount
+
+            public enum RefreshMethod
+            { 
+                API = 1,
+                XMLA = 2
+            }
         }
     }
 
@@ -191,7 +224,13 @@ namespace PbiTools.Deployments
         /// </summary>
         [JsonProperty("xmlaDataSource")]
         public string XmlaDataSource { get; set; }
-        
+
+        /// <summary>
+        /// If <c>true</c>, refreshes the dataset after metadata deployment. Default is <c>false</c>.
+        /// </summary>
+        [JsonProperty("refresh")]
+        public bool Refresh { get; set; }
+
         // (Dataset) refresh settings
         // Workspace Members? [ User/Group/App, AccessLevel]
         // Capacity

@@ -200,7 +200,6 @@ namespace PbiTools.Deployments
                         Log.Information(result.Value);
                         foreach (var message in result.Messages.OfType<AMO.XmlaMessage>())
                             Log.Warning("- [{Severity}] {Description}\n\t{Location}\n--", message.GetType().Name, message.Description, message.Location.SourceObject);
-
                     }
                 }
 
@@ -220,7 +219,57 @@ namespace PbiTools.Deployments
             Log.Information("* IsOnPremGatewayRequired: {IsOnPremGatewayRequired}", pbiDataset.IsOnPremGatewayRequired);
             Log.Information("* TargetStorageMode      : {TargetStorageMode}", pbiDataset.TargetStorageMode);
 
+            // ***** Dataset Refresh *****
+            if (deploymentEnv.Refresh)
+            {
+                if (createdNewDb && dataset.Options.Refresh.SkipNewDataset) {
+                    Log.Information("Skipping refresh because of the 'skipNewDataset' refresh option. You will likely need to set credentials and/or dataset gateways via Power BI Service first.");
+                }
+                else
+                {
+                    Log.Information("Starting dataset refresh ({RefreshType}) ...", dataset.Options.Refresh.Type);
+                    switch (dataset.Options.Refresh.Method) {
+                        case PbiDeploymentOptions.RefreshOptions.RefreshMethod.API:
+                            throw new PbiToolsCliException(ExitCode.NotImplemented, "The 'API' refresh method is not implemented. Use 'XMLA' instead.");
+                        case PbiDeploymentOptions.RefreshOptions.RefreshMethod.XMLA:
+                            using (var db = server.Databases[datasetId]) {
+                                RefreshXmla(db, dataset.Options.Refresh);
+                            }
+                            break;
+                        default:
+                            throw new DeploymentException($"Invalid refresh method '{dataset.Options.Refresh.Method}'.");
+                    }
+                    Log.Information("Refresh completed.");
+                }
+            }
         }
+
+        internal static void RefreshXmla(TOM.Database database, PbiDeploymentOptions.RefreshOptions refreshOptions)
+        {
+            // Mapping API RefreshType -> TOM RefreshType
+            var refreshType = (TOM.RefreshType)Enum.Parse(typeof(TOM.RefreshType), $"{refreshOptions.Type}");
+
+            database.Model.RequestRefresh(refreshType);
+            try
+            {
+                var refreshResults = database.Model.SaveChanges();
+                if (refreshResults.XmlaResults != null && refreshResults.XmlaResults.Count > 0)
+                {
+                    Log.Information("Refresh Results:");
+
+                    foreach (var result in refreshResults.XmlaResults.OfType<AMO.XmlaResult>())
+                    {
+                        Log.Information(result.Value);
+                        foreach (var message in result.Messages.OfType<AMO.XmlaMessage>())
+                            Log.Warning("- [{Severity}] {Description}\n\t{Location}\n--", message.GetType().Name, message.Description, message.Location.SourceObject);
+                    }
+                }
+            }
+            catch (AMO.OperationException ex) when (ex.Message.Contains("DMTS_DatasourceHasNoCredentialError")) {
+                throw new DeploymentException("Refresh failed because of missing credentials. See https://docs.microsoft.com/power-bi/enterprise/service-premium-connect-tools#setting-data-source-credentials for further details.", ex);
+            }
+        }
+
 
         private DatasetDeploymentInfo GetDatasetFromFileSource(PbiDeploymentManifest manifest, PbiDeploymentEnvironment deploymentEnv, string basePath)
         {
