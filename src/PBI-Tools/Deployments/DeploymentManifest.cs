@@ -11,6 +11,10 @@ namespace PbiTools.Deployments
 {
     using ProjectSystem;
 
+    /// <summary>
+    /// Represents a single deployment profile, i.e. a source definition, one or more target environments,
+    /// as well as deployment options and authentication settings.
+    /// </summary>
     public class PbiDeploymentManifest
     {
         [JsonProperty("description")]
@@ -23,10 +27,10 @@ namespace PbiTools.Deployments
         public PbiDeploymentSource Source { get; set; }
 
         [JsonProperty("authentication")]
-        public PbiDeploymentAuthentication Authentication { get; set; }
+        public PbiDeploymentAuthentication Authentication { get; set; } = new();
 
         [JsonProperty("options")]
-        public PbiDeploymentOptions Options { get; set; }
+        public PbiDeploymentOptions Options { get; set; } = new();
 
         [JsonProperty("parameters")]
         public IDictionary<string, string> Parameters { get; set; }
@@ -53,7 +57,7 @@ namespace PbiTools.Deployments
     public enum PbiDeploymentMode
     {
         Report = 1,
-        // Dataset
+        Dataset = 2,
         // ProvisionWorkspace
         // AAS
     }
@@ -127,7 +131,13 @@ namespace PbiTools.Deployments
         public bool LoadFullReportInfo { get; set; }
 
         [JsonProperty("import")]
-        public ImportOptions Import { get; set; }
+        public ImportOptions Import { get; set; } = new();
+
+        [JsonProperty("refresh")]
+        public RefreshOptions Refresh { get; set; } = new();
+
+        [JsonProperty("dataset")]
+        public DatasetOptions Dataset { get; set; } = new();
 
         public class ImportOptions
         {
@@ -156,6 +166,42 @@ namespace PbiTools.Deployments
             public bool? OverrideModelLabel { get; set; }
 
         }
+
+        public class RefreshOptions
+        {
+            /// <summary>
+            /// Skip refresh when the deployment created a new dataset (instead of updating an existing one).
+            /// Default is <c>true</c>.
+            /// </summary>
+            [JsonProperty("skipNewDataset")]
+            public bool SkipNewDataset { get; set; } = true;
+
+            [JsonProperty("method")]
+            public RefreshMethod Method { get; set; } = RefreshMethod.API;
+
+            [JsonProperty("type")]
+            public Microsoft.PowerBI.Api.Models.DatasetRefreshType Type { get; set; } = Microsoft.PowerBI.Api.Models.DatasetRefreshType.Automatic;
+
+            // *** https://docs.microsoft.com/rest/api/power-bi/datasets/refresh-dataset-in-group
+            // applyRefreshPolicy
+            // commitMode
+            // effectiveDate
+            // maxParallelism
+            // objects
+            // retryCount
+
+            public enum RefreshMethod
+            { 
+                API = 1,
+                XMLA = 2
+            }
+        }
+
+        public class DatasetOptions
+        {
+            [JsonProperty("replaceParameters")]
+            public bool ReplaceParameters { get; set; }
+        }
     }
 
     public class PbiDeploymentEnvironment
@@ -172,10 +218,29 @@ namespace PbiTools.Deployments
         [JsonProperty("workspace")]
         public string Workspace { get; set; }
 
+        /// <summary>
+        /// For PBIX import deployments, corresponds to the <c>datasetDisplayName</c> API parameter. Must include a file extension.
+        /// For dataset deployments, sets the dataset name shown in Power BI Service.
+        /// Defaults to the source file/folder name if not specified in the manifest.
+        /// Supports parameter expansion.
+        /// </summary>
         [JsonProperty("displayName")]
         public string DisplayName { get; set; }
-        
-        
+
+        /// <summary>
+        /// The <c>Data Source</c> parameter in a XMLA connection string. Can be omitted if workspace name is provided and the default
+        /// Power BI connection string applies.
+        /// </summary>
+        [JsonProperty("xmlaDataSource")]
+        public string XmlaDataSource { get; set; }
+
+        /// <summary>
+        /// If <c>true</c>, refreshes the dataset after metadata deployment. Default is <c>false</c>.
+        /// </summary>
+        [JsonProperty("refresh")]
+        public bool Refresh { get; set; }
+
+        // (Dataset) refresh settings
         // Workspace Members? [ User/Group/App, AccessLevel]
         // Capacity
     }

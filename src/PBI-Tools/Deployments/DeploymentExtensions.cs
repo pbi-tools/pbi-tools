@@ -21,6 +21,14 @@ namespace PbiTools.Deployments
             ? null
             : Environment.ExpandEnvironmentVariables(input);
 
+        /// <summary>
+        /// Replaces the name of each environment variable embedded in any of the dictionary values
+        /// with the string equivalent of the value of the variable, then returns a new dictionary
+        /// with all expanded values.
+        /// </summary>
+        public static IDictionary<string, string> ExpandEnv(this IDictionary<string, string> input) => input == null
+            ? new Dictionary<string, string>()
+            : input.ToDictionary(x => x.Key, x => x.Value.ExpandEnv(), StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
         /// Replaces the name of each parameter embedded in the specified string with the parameter value.
@@ -51,14 +59,14 @@ namespace PbiTools.Deployments
         }
 
         /// <summary>
-        /// Looks up a Power BI workspace Id from its name, using a session cache first, then the Power BI API.
+        /// Looks up a Power BI workspace Id from its name, optionally using a session cache first, then the Power BI API.
         /// Only workspaces accessible to the authenticated user can be resolved.
         /// </summary>
-        public async static Task<Guid> ResolveWorkspaceIdAsync(this string name, IDictionary<string, Guid> cache, IPowerBIClient powerbi)
+        public async static Task<Guid> ResolveWorkspaceIdAsync(this string name, IPowerBIClient powerbi, IDictionary<string, Guid> cache = null)
         {
             DeploymentManager.Log.Debug("Resolving workspace ID for workspace: '{Workspace}'", name);
 
-            if (cache.ContainsKey(name))
+            if (cache != null && cache.ContainsKey(name))
                 return cache[name];
 
             var apiResult = await powerbi.Groups.GetGroupsAsync(filter: $"name eq '{name}'", top: 2);
@@ -67,7 +75,7 @@ namespace PbiTools.Deployments
             {
                 case 1:
                     var id = apiResult.Value[0].Id;
-                    cache[name] = id;
+                    if (cache != null) cache[name] = id;
                     DeploymentManager.Log.Information("Resolved workspace ID '{Id}' for workspace: '{Workspace}'", id, name);
                     return id;
                 case 0:

@@ -170,6 +170,7 @@ namespace PbiTools
     {
         UnexpectedError = -9,
         UnspecifiedError = -8,
+        NotImplemented = -3,
         InvalidArgs = -2,
         NoArgsProvided = -1,
         Success = 0,
