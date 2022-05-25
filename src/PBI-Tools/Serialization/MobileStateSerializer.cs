@@ -29,7 +29,7 @@ namespace PbiTools.Serialization
         {
             if (content == null) return false;
             
-            content.ExtractObject("explorationState", _mobileStateFolder);
+            content.ExtractAndParseAsObject("explorationState", _mobileStateFolder);
             _mobileStateFolder.Write(content, "mobileState.json");
 
             return true;
