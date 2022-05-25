@@ -3,29 +3,23 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Microsoft.Identity.Client;
 using Microsoft.PowerBI.Api;
-using Microsoft.PowerBI.Api.Models;
 using Microsoft.Rest;
-using Newtonsoft.Json.Linq;
 using Serilog;
 using Serilog.Events;
 
 namespace PbiTools.Deployments
 {
     using Configuration;
-    using Model;
-    using PowerBI;
     using ProjectSystem;
-    using Utils;
 
     public static class DeploymentParameters
     {
+        // TODO Document those params and their implementation for each deployment mode!
+
         public const string PBIXPROJ_FOLDER = nameof(PBIXPROJ_FOLDER);
         public const string PBIXPROJ_NAME = nameof(PBIXPROJ_NAME);
         public const string FILE_PATH = nameof(FILE_PATH);
@@ -98,7 +92,9 @@ namespace PbiTools.Deployments
                     case PbiDeploymentMode.Report:
                         await DeployReportAsync(manifest, profileName, environment);
                         break;
-                    // TODO Support other deployment modes
+                    case PbiDeploymentMode.Dataset:
+                        await DeployDatasetAsync(manifest, profileName, environment);
+                        break;
                     default:
                         throw new DeploymentException($"Unsupported deployment mode: '{manifest.Mode}'");
                 }
