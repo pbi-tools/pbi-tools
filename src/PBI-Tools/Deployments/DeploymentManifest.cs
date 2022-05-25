@@ -11,6 +11,10 @@ namespace PbiTools.Deployments
 {
     using ProjectSystem;
 
+    /// <summary>
+    /// Represents a single deployment profile, i.e. a source definition, one or more target environments,
+    /// as well as deployment options and authentication settings.
+    /// </summary>
     public class PbiDeploymentManifest
     {
         [JsonProperty("description")]
@@ -53,7 +57,7 @@ namespace PbiTools.Deployments
     public enum PbiDeploymentMode
     {
         Report = 1,
-        // Dataset
+        Dataset = 2,
         // ProvisionWorkspace
         // AAS
     }
@@ -172,10 +176,23 @@ namespace PbiTools.Deployments
         [JsonProperty("workspace")]
         public string Workspace { get; set; }
 
+        /// <summary>
+        /// For PBIX import deployments, corresponds to the <c>datasetDisplayName</c> API parameter. Must include a file extension.
+        /// For dataset deployments, sets the dataset name shown in Power BI Service.
+        /// Defaults to the source file/folder name if not specified in the manifest.
+        /// Supports parameter expansion.
+        /// </summary>
         [JsonProperty("displayName")]
         public string DisplayName { get; set; }
+
+        /// <summary>
+        /// The <c>Data Source</c> parameter in a XMLA connection string. Can be omitted if workspace name is provided and the default
+        /// Power BI connection string applies.
+        /// </summary>
+        [JsonProperty("xmlaDataSource")]
+        public string XmlaDataSource { get; set; }
         
-        
+        // (Dataset) refresh settings
         // Workspace Members? [ User/Group/App, AccessLevel]
         // Capacity
     }
