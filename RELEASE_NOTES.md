@@ -5,6 +5,7 @@
 <version:1.0.0-rc.2+20220525>
 
 - #97 Model Deployments
+- #26 Bookmarks (PbixProj v0.12 schema)
 - Fixed #109 'pbi-tools info' no longer fails when another instance of SSAS runs on the same machine
 
 ## 1.0.0-rc.1 - 2022-03-06

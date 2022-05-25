@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
+using Serilog;
 
 namespace PbiTools.Serialization
 {
@@ -13,7 +14,10 @@ namespace PbiTools.Serialization
 
     public class ReportSerializer : IPowerBIPartSerializer<JObject>
     {
+        private static readonly ILogger Log = Serilog.Log.ForContext<ReportSerializer>();
+
         public static string FolderName => "Report";
+        public static string BookmarksFolder => "bookmarks";
 
         private readonly IProjectFolder _reportFolder;
 
@@ -37,6 +41,16 @@ namespace PbiTools.Serialization
             // config.json
             // filters.json
             //
+            // /bookmarks
+            //        ../{name}
+            //             bookmark.json
+            //
+            //          ../{child-1}
+            //            ../sections
+            //              ../{name}
+            //                ../visualContainers
+            //                     {id}.json
+            //
             // /sections
             //        ../{name} ("ReportSection1")
             //             section.json
@@ -55,31 +69,36 @@ namespace PbiTools.Serialization
             // ReportDocument   [/Report/Layout]
             if (content == null) return false;
 
-            content.ExtractObject("config", _reportFolder);
+            var config = content.ExtractAndParseAsObject("config");
+
+            var bookmarks = config.RemoveArrayAs<JObject>("bookmarks");
+            SerializeBookmarks(bookmarks, _reportFolder.GetSubfolder("bookmarks"));
+
+            config.Save("config", _reportFolder);
             // modelExtensions
             // bookmarks
             // settings
-            content.ExtractArray("filters", _reportFolder);
+            content.ExtractAndParseAsArray("filters", _reportFolder);
 
             // sections:
             foreach (var jSection in content.RemoveArrayAs<JObject>("sections"))
             {
                 var sectionFolder = _reportFolder.GetSubfolder("sections", GenerateSectionFolderName(jSection));
 
-                jSection.ExtractObject("config", sectionFolder);
-                jSection.ExtractArray("filters", sectionFolder);
+                jSection.ExtractAndParseAsObject("config", sectionFolder);
+                jSection.ExtractAndParseAsArray("filters", sectionFolder);
 
                 var visualFolderNames = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase); // ensures visualContainer folder names are unique
 
                 // visualContainers:
                 foreach (var jVisual in jSection.RemoveArrayAs<JObject>("visualContainers"))
                 {
-                    var visualConfig = jVisual.ExtractObject("config", folder: null); // not saving yet as folder name still has to be determined
+                    var visualConfig = jVisual.ExtractAndParseAsObject("config", folder: null); // not saving yet as folder name still has to be determined
                     var visualFolder = sectionFolder.GetSubfolder("visualContainers", GenerateVisualFolderName(jVisual, visualConfig, visualFolderNames));
 
-                    jVisual.ExtractObject("query", visualFolder);
-                    jVisual.ExtractArray("filters", visualFolder);
-                    jVisual.ExtractObject("dataTransforms", visualFolder);
+                    jVisual.ExtractAndParseAsObject("query", visualFolder);
+                    jVisual.ExtractAndParseAsArray("filters", visualFolder);
+                    jVisual.ExtractAndParseAsObject("dataTransforms", visualFolder);
 
                     visualConfig.Save("config", visualFolder);
                     jVisual.Save("visualContainer", visualFolder
@@ -99,6 +118,58 @@ namespace PbiTools.Serialization
                 , JsonTransforms.RemoveProperties("objectId")); // resourcePackage ids tend to change when exporting from powerbi.com
 
             return true;
+        }
+
+        internal static void SerializeBookmarks(IEnumerable<JObject> jBookmarks, IProjectFolder baseFolder)
+        {
+            if (jBookmarks == null) return;
+
+            foreach (var jBookmark in jBookmarks)
+            {
+                var name = jBookmark.Value<string>("displayName");
+                var folder = baseFolder.GetSubfolder(name.SanitizeFilename());
+
+                var children = jBookmark.RemoveArrayAs<JObject>("children");
+
+                if (jBookmark.SelectToken("explorationState.sections") is JObject sections)
+                {
+                    sections.Parent.Remove();
+
+                    foreach (var sectionRef in sections.Properties()) // each property of the 'sections' object is assumed to be a page reference
+                    {
+                        var sectionName = sectionRef.Name;
+                        var sectionFolder = folder.GetSubfolder("sections", sectionName.SanitizeFilename());
+
+                        if (sectionRef.Value is not JObject section) {
+                            Log.Warning("The bookmarks/section token is not a Json object: {TokenType}", sectionRef.Value.Type);
+                            continue;
+                        }
+
+                        foreach (var sectionProperty in section.Properties())
+                        {
+                            if (sectionProperty.Name.Equals("visualContainers", StringComparison.OrdinalIgnoreCase))
+                                continue;
+
+                            sectionProperty.Value.Save(sectionProperty.Name, sectionFolder);
+                        }
+
+                        if (section["visualContainers"] is not JObject visualContainers)
+                            continue; // assumes the only possible property is 'visualContainers'
+
+                        var visualContainersFolder = sectionFolder.GetSubfolder("visualContainers");
+
+                        foreach (var visualProp in visualContainers.Properties())
+                        {
+                            var visualJson = visualProp.Value as JObject;
+                            visualJson.Save(visualProp.Name, visualContainersFolder);
+                        }
+                    }
+                }
+
+                jBookmark.Save("bookmark", folder);
+
+                SerializeBookmarks(children, folder);
+            }
         }
 
         internal static string GenerateSectionFolderName(JObject jSection)
@@ -138,18 +209,22 @@ namespace PbiTools.Serialization
                 "visualContainers", visualFolder => DeserializeReportElement(visualFolder, "visualContainer.json")
                     .InsertObjectFromFile(visualFolder, "query.json")
                     .InsertObjectFromFile(visualFolder, "dataTransforms.json")
-                )
+                ),
+                extendConfig: DeserializeBookmarks
             );
 
             part = reportJson;
             return true;
         }
 
-        internal static JObject DeserializeReportElement(IProjectFolder folder, string objectFileName, string childCollectionName = null, Func<IProjectFolder, JObject> childElementFactory = null)
+        internal static JObject DeserializeReportElement(IProjectFolder folder, string objectFileName
+            , string childCollectionName = null
+            , Func<IProjectFolder, JObject> childElementFactory = null
+            , Func<IProjectFolder, JObject, JObject> extendConfig = null)
         {
             var elementJson = folder.GetFile(objectFileName)
                 .ReadJson()
-                .InsertObjectFromFile(folder, "config.json")
+                .InsertObjectFromFile(folder, "config.json", extendConfig)
                 .InsertArrayFromFile(folder, "filters.json");
 
             if (!String.IsNullOrEmpty(childCollectionName))
@@ -163,6 +238,82 @@ namespace PbiTools.Serialization
             }
 
             return elementJson;
+        }
+
+        internal static JObject DeserializeBookmarks(IProjectFolder reportFolder, JObject configJson)
+        {
+            var bookmarksFolder = reportFolder.GetSubfolder(BookmarksFolder);
+            if (!bookmarksFolder.Exists())
+                return configJson;
+
+            // ./bookmarks/* subfolders:
+            //    ./bookmark.json
+            //    ./sections/
+            //      ./visualContainers/*.json
+            //      ./*.json
+            //    ./* -- nested bookmarks children[]
+
+            configJson["bookmarks"] = new JArray(bookmarksFolder
+                .GetSubfolders("*")
+                .Select(DeserializeSingleBookmark)
+                .Where(j => j != null)
+            );
+
+            return configJson;
+        }
+
+        private static JObject DeserializeSingleBookmark(IProjectFolder bookmarkFolder)
+        {
+            // get bookmark.json
+            var bookmarkFile = bookmarkFolder.GetFile("bookmark.json");
+            if (!bookmarkFile.Exists()) return default;
+
+            var bookmarkJson = bookmarkFile.ReadJson();
+
+            // iterate ./sections & ./visualContainers
+            // >> /explorationState/sections
+            var sectionsFolder = bookmarkFolder.GetSubfolder("sections");
+            if (sectionsFolder.Exists())
+            {
+                var explorationStateJson = bookmarkJson.EnsureObject("explorationState");
+                explorationStateJson["sections"] = new JObject(sectionsFolder
+                    .GetSubfolders("*")
+                    .Select(f => (f.Name, Json: DeserializeBookmarkSection(f)))
+                    .Where(x => x.Json != null)
+                    .Select(x => new JProperty(x.Name, x.Json))
+                );
+            }
+
+            // iterate ./* children
+            // >> /children
+            var childFolders = bookmarkFolder.GetSubfolders("*").Where(f => f.Name != "sections").ToArray();
+            if (childFolders.Length > 0) {
+                bookmarkJson["children"] = new JArray(childFolders.Select(DeserializeSingleBookmark).Where(x => x != null));
+            }
+
+            return bookmarkJson;
+        }
+
+        private static JObject DeserializeBookmarkSection(IProjectFolder sectionFolder)
+        {
+            // new JObject
+            // >> /visualContainers
+            // ./*.json
+
+            var sectionJson = new JObject(sectionFolder
+                .GetFiles("*.json")
+                .Select(f => new JProperty(f.Path.WithoutExtension(), f.ReadJson()))
+            );
+
+            var visualContainersFolder = sectionFolder.GetSubfolder("visualContainers");
+            if (visualContainersFolder.Exists()) {
+                sectionJson["visualContainers"] = new JObject(visualContainersFolder
+                    .GetFiles("*.json")
+                    .Select(f => new JProperty(f.Path.WithoutExtension(), f.ReadJsonToken()))
+                );
+            }
+
+            return sectionJson;
         }
 
     }

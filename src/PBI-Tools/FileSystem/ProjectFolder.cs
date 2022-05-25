@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Serilog;
@@ -65,6 +66,7 @@ namespace PbiTools.FileSystem
     }
 
 
+    [DebuggerDisplay("{BasePath}")]
     public class ProjectFolder : IProjectFolder
     {
         private static readonly ILogger Log = Serilog.Log.ForContext<ProjectFolder>();
