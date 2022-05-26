@@ -6,7 +6,7 @@ WORKDIR /app
 
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 
-RUN apt-get update && apt-get upgrade --no-install-recommends
+RUN apt-get update && apt-get -y upgrade --no-install-recommends
 RUN apt-get install --no-install-recommends wget unzip git git-lfs -y
 
 RUN wget -O pbi-tools.zip "https://github.com/pbi-tools/pbi-tools/releases/download/${PBI_TOOLS_VERSION}/pbi-tools.core.${PBI_TOOLS_VERSION}_linux-x64.zip"
