@@ -21,7 +21,10 @@ namespace PbiTools.Utils
         {
             foreach (var proc in Process.GetProcessesByName("msmdsrv")) // TODO Look for "pbidesktop" instead??
             {
+                var result = default(PowerBIProcess);
+
                 using (proc)
+                try
                 {
                     var cmdLine = proc.GetCommandLine().SplitCommandLine();
 
@@ -61,32 +64,26 @@ namespace PbiTools.Utils
 
                         pbixPathCandidates = pbixPathCandidates.Where(p => !IsTempSavePath(p.DosFilePath)).ToArray();
 
-                        var result = default(PowerBIProcess);
-                        try
-                        { 
-                            result = new PowerBIProcess
-                            {
-                                ProductName = parent.MainModule.FileVersionInfo.ProductName,
-                                ProductVersion = parent.MainModule.FileVersionInfo.ProductVersion,
-                                ExePath = parent.MainModule.FileVersionInfo.FileName,
-                                ProcessId = parent.Id,
-                                Port = port,
-                                WorkspaceName = args["-n"],
-                                WorkspaceDir = args["-s"],
-                                PbixPath = pbixPathCandidates.FirstOrDefault()?.DosFilePath
-                            };
-                        }
-                        catch (System.ComponentModel.Win32Exception ex)
+                        result = new PowerBIProcess
                         {
-                            Log.Verbose(ex, "Skipping process due to access violation. (PID: {ProcessID})", parent.Id);
-                        }
-
-                        if (result != default)
-                            yield return result;
+                            ProductName = parent.MainModule.FileVersionInfo.ProductName,
+                            ProductVersion = parent.MainModule.FileVersionInfo.ProductVersion,
+                            ExePath = parent.MainModule.FileVersionInfo.FileName,
+                            ProcessId = parent.Id,
+                            Port = port,
+                            WorkspaceName = args["-n"],
+                            WorkspaceDir = args["-s"],
+                            PbixPath = pbixPathCandidates.FirstOrDefault()?.DosFilePath
+                        };
                     }
                 }
-            }
+                catch (System.ComponentModel.Win32Exception ex)
+                {
+                    Log.Verbose(ex, "Skipping process due to access violation. (PID: {ProcessID})", proc.Id);
+                }
 
+                if (result != null) yield return result;
+            }
         }
 
         public static bool IsTempSavePath(string path) =>

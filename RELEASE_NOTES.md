@@ -1,8 +1,8 @@
 # Release Notes
 
-## 1.0.0-rc.2 - 2022-05-25
+## 1.0.0-rc.2 - 2022-06-10
 
-<version:1.0.0-rc.2+20220525>
+<version:1.0.0-rc.2+20220610>
 
 - #97 Model Deployments
 - #26 Bookmarks (PbixProj v0.12 schema)
