@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PowerBI.Api.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -145,7 +146,7 @@ namespace PbiTools.Deployments
             /// Determines the behavior in case a report/dataset with the same name already exists.
             /// </summary>
             [JsonProperty("nameConflict")]
-            public Microsoft.PowerBI.Api.Models.ImportConflictHandlerMode NameConflict { get; set; }
+            public ImportConflictHandlerMode NameConflict { get; set; } = ImportConflictHandlerMode.CreateOrOverwrite;
 
             /// <summary>
             /// Determines whether to skip report import, and import the dataset only.
