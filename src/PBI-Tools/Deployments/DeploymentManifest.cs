@@ -14,7 +14,7 @@ namespace PbiTools.Deployments
 
     /// <summary>
     /// Represents a single deployment profile, i.e. a source definition, one or more target environments,
-    /// as well as deployment options and authentication settings.
+    /// as well as deployment options, deployment parameters, and authentication settings.
     /// </summary>
     public class PbiDeploymentManifest
     {
@@ -34,7 +34,7 @@ namespace PbiTools.Deployments
         public PbiDeploymentOptions Options { get; set; } = new();
 
         [JsonProperty("parameters")]
-        public IDictionary<string, string> Parameters { get; set; }
+        public DeploymentParameters Parameters { get; set; }
 
         /// <summary>
         /// Reserved for future use.

@@ -140,24 +140,24 @@ namespace PbiTools.Deployments
                     Parameters = x.Match.Groups.OfType<System.Text.RegularExpressions.Group>()
                         .Aggregate(
                             new Dictionary<string, string> {
-                                    { DeploymentParameters.ENVIRONMENT, environment.Name },
-                                    { DeploymentParameters.PBIXPROJ_NAME, x.Directory.Name },
-                                    { DeploymentParameters.FILE_NAME_WITHOUT_EXT, x.Directory.Name }
+                                    { DeploymentParameters.Names.ENVIRONMENT, environment.Name },
+                                    { DeploymentParameters.Names.PBIXPROJ_NAME, x.Directory.Name },
+                                    { DeploymentParameters.Names.FILE_NAME_WITHOUT_EXT, x.Directory.Name }
                             },
                             (dict, group) => {
-                                dict[group.Name == "0" ? DeploymentParameters.PBIXPROJ_FOLDER : group.Name] = group.Value;
+                                dict[group.Name == "0" ? DeploymentParameters.Names.PBIXPROJ_FOLDER : group.Name] = group.Value;
                                 return dict;
                             }
                         )
 #elif NET
                     Parameters = x.Match.Groups.Keys.Aggregate(
                         new Dictionary<string, string> {
-                            { DeploymentParameters.ENVIRONMENT, environment.Name },
-                            { DeploymentParameters.PBIXPROJ_NAME, x.Directory.Name },
-                            { DeploymentParameters.FILE_NAME_WITHOUT_EXT, x.Directory.Name }
+                            { DeploymentParameters.Names.ENVIRONMENT, environment.Name },
+                            { DeploymentParameters.Names.PBIXPROJ_NAME, x.Directory.Name },
+                            { DeploymentParameters.Names.FILE_NAME_WITHOUT_EXT, x.Directory.Name }
                         },
                         (dict, key) => {
-                            dict[key == "0" ? DeploymentParameters.PBIXPROJ_FOLDER : key] = x.Match.Groups[key].Value;
+                            dict[key == "0" ? DeploymentParameters.Names.PBIXPROJ_FOLDER : key] = x.Match.Groups[key].Value;
                             return dict;
                         })
 #endif
@@ -189,8 +189,8 @@ namespace PbiTools.Deployments
                 folder.FullName,
                 tempDir,
                 folder.Parameters.Aggregate(
-                    manifest.Parameters ?? new Dictionary<string, string>(), // TODO Support ENV expansion in manifest params
-                    (dict, x) => { dict[x.Key] = x.Value; return dict; }     // Folder params overwrite Manifest params
+                    manifest.Parameters.ExpandEnv(),
+                    (dict, x) => { dict[x.Key] = DeploymentParameter.From(x.Value); return dict; }     // Folder params overwrite Manifest params
                 )
             )).ToArray();
 
@@ -235,24 +235,24 @@ namespace PbiTools.Deployments
                     Parameters = x.Match.Groups.OfType<System.Text.RegularExpressions.Group>()
                         .Aggregate(
                             new Dictionary<string, string> {
-                                    { DeploymentParameters.ENVIRONMENT, environment.Name },
-                                    { DeploymentParameters.FILE_NAME, x.File.Name },
-                                    { DeploymentParameters.FILE_NAME_WITHOUT_EXT, Path.GetFileNameWithoutExtension(x.File.Name) }
+                                    { DeploymentParameters.Names.ENVIRONMENT, environment.Name },
+                                    { DeploymentParameters.Names.FILE_NAME, x.File.Name },
+                                    { DeploymentParameters.Names.FILE_NAME_WITHOUT_EXT, Path.GetFileNameWithoutExtension(x.File.Name) }
                             },
                             (dict, group) => {
-                                dict[group.Name == "0" ? DeploymentParameters.FILE_PATH : group.Name] = group.Value;
+                                dict[group.Name == "0" ? DeploymentParameters.Names.FILE_PATH : group.Name] = group.Value;
                                 return dict;
                             }
                         )
 #elif NET
                     Parameters = x.Match.Groups.Keys.Aggregate(
                         new Dictionary<string, string> {
-                            { DeploymentParameters.ENVIRONMENT, environment.Name },
-                            { DeploymentParameters.FILE_NAME, x.File.Name },
-                            { DeploymentParameters.FILE_NAME_WITHOUT_EXT, Path.GetFileNameWithoutExtension(x.File.Name) }
+                            { DeploymentParameters.Names.ENVIRONMENT, environment.Name },
+                            { DeploymentParameters.Names.FILE_NAME, x.File.Name },
+                            { DeploymentParameters.Names.FILE_NAME_WITHOUT_EXT, Path.GetFileNameWithoutExtension(x.File.Name) }
                         },
                         (dict, key) => {
-                            dict[key == "0" ? DeploymentParameters.FILE_PATH : key] = x.Match.Groups[key].Value;
+                            dict[key == "0" ? DeploymentParameters.Names.FILE_PATH : key] = x.Match.Groups[key].Value;
                             return dict;
                         })
 #endif
@@ -279,21 +279,25 @@ namespace PbiTools.Deployments
             Log.Debug("Using TEMP dir: {TempDir}", tempDir);
 
 
-            return sourceFiles.Select(file => new ReportDeploymentInfo
+            return sourceFiles.Select(file =>
             {
-                SourcePath = file.FullName,
-                PbixPath = file.FullName,
-                DisplayName = environment.DisplayName.ExpandParameters(file.Parameters) ?? Path.GetFileName(file.FullName),
-                Options = manifest.Options,
-                Parameters = file.Parameters.Aggregate(
-                    manifest.Parameters ?? new Dictionary<string, string>(), // TODO Support ENV expansion in manifest params
-                    (dict, x) => { dict[x.Key] = x.Value; return dict; }     // File params overwrite Manifest params
-                )
+                var parameters = file.Parameters.Aggregate(
+                    manifest.Parameters.ExpandEnv(),
+                    (dict, x) => { dict[x.Key] = DeploymentParameter.From(x.Value); return dict; }     // Folder params overwrite Manifest params
+                );
+                return new ReportDeploymentInfo
+                {
+                    Options = manifest.Options,
+                    Parameters = parameters,
+                    SourcePath = file.FullName,
+                    PbixPath = file.FullName,
+                    DisplayName = environment.DisplayName.ExpandParameters(parameters) ?? Path.GetFileName(file.FullName),
+                };
             })
             .ToArray();
         }
 
-        internal ReportDeploymentInfo CompileReportForDeployment(PbiDeploymentOptions options, PbiDeploymentEnvironment environment, string pbixProjFolder, string tempDir, IDictionary<string, string> parameters)
+        internal ReportDeploymentInfo CompileReportForDeployment(PbiDeploymentOptions options, PbiDeploymentEnvironment environment, string pbixProjFolder, string tempDir, IDictionary<string, DeploymentParameter> parameters)
         {
             var reportPath = Path.Combine(tempDir, Guid.NewGuid().ToString(), $"{new DirectoryInfo(pbixProjFolder).Name}.pbix");
 
@@ -364,7 +368,7 @@ namespace PbiTools.Deployments
         public class ReportDeploymentInfo
         {
             public PbiDeploymentOptions Options { get; set; }
-            public IDictionary<string, string> Parameters { get; set; }
+            public IDictionary<string, DeploymentParameter> Parameters { get; set; }
             public string SourcePath { get; set; }
             public string DisplayName { get; set; }
             public string PbixPath { get; set; }

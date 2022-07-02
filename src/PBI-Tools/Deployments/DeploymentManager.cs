@@ -16,18 +16,6 @@ namespace PbiTools.Deployments
     using Configuration;
     using ProjectSystem;
 
-    public static class DeploymentParameters
-    {
-        // TODO Document those params and their implementation for each deployment mode!
-
-        public const string PBIXPROJ_FOLDER = nameof(PBIXPROJ_FOLDER);
-        public const string PBIXPROJ_NAME = nameof(PBIXPROJ_NAME);
-        public const string FILE_PATH = nameof(FILE_PATH);
-        public const string FILE_NAME = nameof(FILE_NAME);
-        public const string FILE_NAME_WITHOUT_EXT = nameof(FILE_NAME_WITHOUT_EXT);
-        public const string ENVIRONMENT = nameof(ENVIRONMENT);
-    }
-
     public partial class DeploymentManager
     {
         public const string DEFAULT_ENVIRONMENT_NAME = ".defaults";  // TODO Enable default environment

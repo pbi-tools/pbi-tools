@@ -21,6 +21,7 @@ namespace PbiTools.Deployments
 
         internal async Task DeployDatasetAsync(PbiDeploymentManifest manifest, string label, string environment)
         {
+            #region Verify args
             if (!manifest.Environments.ContainsKey(environment))
                 throw new DeploymentException($"The manifest does not contain the specified environment: {environment}.");
 
@@ -31,10 +32,11 @@ namespace PbiTools.Deployments
                 Log.Warning("Deployment environment '{Environment}' disabled. Aborting.", environment);
                 return;
             }
+            #endregion
 
             Log.Information("Starting deployment '{DeploymentLabel}' into environment: {Environment} ...", label, environment);
 
-            // Source: Folder | File
+            #region Resolve Deployment Sources
             var basePath = (BasePath == null)
                 ? new FileInfo(Project.OriginalPath).DirectoryName
                 : new DirectoryInfo(BasePath).FullName;
@@ -42,18 +44,16 @@ namespace PbiTools.Deployments
             Log.Write(WhatIfLogLevel, "Determining dataset from {SourceType} source: \"{SourcePath}\"", manifest.Source.Type, manifest.Source.Path);
             Log.Write(WhatIfLogLevel, "Base folder: {BasePath}", basePath);
 
+            // Source: Folder | File
             var dataset = manifest.Source.Type switch
             {
                 PbiDeploymentSourceType.Folder => GenerateDatasetFromFolderSource(manifest, deploymentEnv, basePath),
                 PbiDeploymentSourceType.File => GetDatasetFromFileSource(manifest, deploymentEnv, basePath),
                 _ => throw new DeploymentException($"Unsupported source type: '{manifest.Source.Type}'")
             };
+            #endregion
 
-            // TODO Possibly perform further transforms here
-            // Set/Replace model parameters
-            // Inject version information
-
-            // Get auth token
+            #region Get Auth Token
             if (manifest.Authentication.Type != PbiDeploymentAuthenticationType.ServicePrincipal)
                 throw new DeploymentException("Only ServicePrincipal authentication is supported.");
 
@@ -73,8 +73,11 @@ namespace PbiTools.Deployments
 
             var tokenCredentials = new TokenCredentials(authResult.AccessToken, authResult.TokenType);
             Log.Information("Access token received. Expires On: {ExpiresOn}", authResult.ExpiresOn);
+            #endregion
+
             if (WhatIf) Log.Information("---");
 
+            #region Connect to Destination Envionment
             using var powerbi = PowerBIClientFactory(manifest?.Options?.PbiBaseUri ?? DefaultPowerBIApiBaseUri, tokenCredentials);
             using var server = new TOM.Server();
 
@@ -115,14 +118,13 @@ namespace PbiTools.Deployments
                 Log.Write(WhatIfLogLevel, "* SupportedCompatibilityLevels: {SupportedCompatibilityLevels}", server.SupportedCompatibilityLevels);
                 Log.Write(WhatIfLogLevel, "* Version                     : {Version}", server.Version);
             }
+            #endregion
 
+            #region Build Sources
             Log.Write(WhatIfLogLevel, "Deserializing tabular model from sources...");
             var dbNew = TOM.JsonSerializer.DeserializeDatabase(dataset.Model.DataModel.ToString(), new TOM.DeserializeOptions { });
 
-            var datasetId = default(string);
-            var createdNewDb = false;
-
-            void LogDbInfo(TOM.Database db, string label, Serilog.Events.LogEventLevel level = Serilog.Events.LogEventLevel.Information) {
+            static void LogDbInfo(TOM.Database db, string label, Serilog.Events.LogEventLevel level = Serilog.Events.LogEventLevel.Information) {
                 Log.Write(level, label);
                 Log.Write(level, "TOM Database Properties:");
                 Log.Write(level, "* ID                    : {ID}", db.ID);
@@ -138,40 +140,45 @@ namespace PbiTools.Deployments
             {
                 foreach (var modelExpr in dbNew.Model.Expressions.Where(e => e.Kind == TOM.ExpressionKind.M))
                 {
-                    if (dataset.Parameters.TryGetValue(modelExpr.Name, out var value)){
-                        var newValue = $"\"{value}\"";
-                        Log.Information("Setting model expression [{Name}]\n\tOld value: {OldValue}\n\tNew value: {NewValue}", modelExpr.Name, modelExpr.Expression, newValue);
+                    if (dataset.Parameters.TryGetValue(modelExpr.Name, out var parameter)){
+                        var newValue = parameter.ToMString();
+                        Log.Information("Setting model expression [{Name}]\n\tOld value: {OldValue}\n\tNew value: {NewValue}"
+                            , modelExpr.Name
+                            , modelExpr.Expression
+                            , newValue);
                         modelExpr.Expression = newValue;
                     }
                 }
             }
+            #endregion
 
+            #region Ensure Remote Database
             Log.Write(WhatIfLogLevel, "Checking for existing database with matching name...");
+            var createdNewDb = false;
             if (!server.Databases.ContainsName(dataset.DisplayName))
             {
-                using (var newDb = new TOM.Database
+                using var newDb = new TOM.Database
                 {
                     Name = dataset.DisplayName,
                     CompatibilityLevel = dbNew.CompatibilityLevel,
                     StorageEngineUsed = AMO.StorageEngineUsed.TabularMetadata
-                })
+                };
+
+                if (WhatIf)
                 {
-                    if (WhatIf)
-                    {
-                        // Does NOT exist...
-                        Log.Information("Workspace '{Workspace}' does not have exiting dataset named '{DatasetName}'.", workspace, dataset.DisplayName);
-                        return;
-                    }
-                    else
-                    {
-                        server.Databases.Add(newDb);
-                        newDb.Update(AMO.UpdateOptions.ExpandFull);
-
-                        Log.Information("Created new Power BI dataset: {ID}", newDb.ID);
-                    }
-
-                    createdNewDb = true;
+                    // Does NOT exist...
+                    Log.Information("Workspace '{Workspace}' does not have exiting dataset named '{DatasetName}'.", workspace, dataset.DisplayName);
+                    return;
                 }
+                else
+                {
+                    server.Databases.Add(newDb);
+                    newDb.Update(AMO.UpdateOptions.ExpandFull);
+
+                    Log.Information("Created new Power BI dataset: {ID}", newDb.ID);
+                }
+
+                createdNewDb = true;
             }
             else if (WhatIf)
             {
@@ -180,8 +187,12 @@ namespace PbiTools.Deployments
                 LogDbInfo(db, "Matching dataset found.");
                 return;
             }
+            #endregion
 
-            using (var remoteDb = server.Databases.GetByName(dataset.DisplayName)) // Database with speified name is guaranteed to exist at this point
+            #region Update Remote Database
+            var datasetId = default(string);
+
+            using (var remoteDb = server.Databases.GetByName(dataset.DisplayName)) // Database with specified name is guaranteed to exist at this point
             {
                 if (!createdNewDb)
                 {
@@ -230,8 +241,9 @@ namespace PbiTools.Deployments
             Log.Information("* IsRefreshable          : {IsRefreshable}", pbiDataset.IsRefreshable);
             Log.Information("* IsOnPremGatewayRequired: {IsOnPremGatewayRequired}", pbiDataset.IsOnPremGatewayRequired);
             Log.Information("* TargetStorageMode      : {TargetStorageMode}", pbiDataset.TargetStorageMode);
+            #endregion
 
-            // ***** Dataset Refresh *****
+            #region Refresh
             if (deploymentEnv.Refresh)
             {
                 if (createdNewDb && dataset.Options.Refresh.SkipNewDataset) {
@@ -254,6 +266,7 @@ namespace PbiTools.Deployments
                     Log.Information("Refresh completed.");
                 }
             }
+            #endregion
         }
 
         internal static void RefreshXmla(TOM.Database database, PbiDeploymentOptions.RefreshOptions refreshOptions)
@@ -283,60 +296,86 @@ namespace PbiTools.Deployments
         }
 
 
-        private DatasetDeploymentInfo GetDatasetFromFileSource(PbiDeploymentManifest manifest, PbiDeploymentEnvironment deploymentEnv, string basePath)
+        internal DatasetDeploymentInfo GetDatasetFromFileSource(PbiDeploymentManifest manifest, PbiDeploymentEnvironment deploymentEnv, string basePath)
         {
             // Assuming we have a BIM file
             var sourceFile = new FileInfo(Path.Combine(basePath, manifest.Source.Path));
             var converter = PbixModelConverter.FromFile(sourceFile);
 
-            var parameters = new Dictionary<string, string> {
-                { DeploymentParameters.ENVIRONMENT, deploymentEnv.Name },
-                { DeploymentParameters.FILE_NAME, sourceFile.Name },
-                { DeploymentParameters.FILE_NAME_WITHOUT_EXT, Path.GetFileNameWithoutExtension(sourceFile.Name) }
+            var systemParameters = new Dictionary<string, string> {
+                { DeploymentParameters.Names.ENVIRONMENT, deploymentEnv.Name },
+                { DeploymentParameters.Names.FILE_NAME, sourceFile.Name },
+                { DeploymentParameters.Names.FILE_NAME_WITHOUT_EXT, Path.GetFileNameWithoutExtension(sourceFile.Name) }
             };
 
-            return new() {
-                Model = converter.Model,
-                SourcePath = sourceFile.FullName,
-                DisplayName = deploymentEnv.DisplayName.ExpandParameters(parameters) ?? Path.GetFileNameWithoutExtension(sourceFile.Name),
-                Options = manifest.Options,
-                Parameters = parameters.Aggregate(
-                    manifest.Parameters.ExpandEnv(),
-                    (dict, x) => { dict[x.Key] = x.Value; return dict; }     // File params overwrite Manifest params
-                )
-            };
+            return GetDatasetInfo(manifest, converter.Model, sourceFile.FullName, systemParameters, parameters => deploymentEnv.DisplayName.ExpandParameters(parameters) ?? Path.GetFileNameWithoutExtension(sourceFile.Name));
         }
 
-        private DatasetDeploymentInfo GenerateDatasetFromFolderSource(PbiDeploymentManifest manifest, PbiDeploymentEnvironment deploymentEnv, string basePath)
+        internal DatasetDeploymentInfo GenerateDatasetFromFolderSource(PbiDeploymentManifest manifest, PbiDeploymentEnvironment deploymentEnv, string basePath)
         {
             // Assuming PbixProj or Model folder
             var sourceFolder = new DirectoryInfo(Path.Combine(basePath, manifest.Source.Path));
             var converter = PbixModelConverter.FromFolder(sourceFolder);
 
-            var parameters = new Dictionary<string, string> {
-                { DeploymentParameters.ENVIRONMENT, deploymentEnv.Name },
-                { DeploymentParameters.PBIXPROJ_FOLDER, Path.GetFileName(converter.Model.SourcePath) },
-                { DeploymentParameters.FILE_NAME_WITHOUT_EXT, Path.GetFileName(converter.Model.SourcePath) }
+            var systemParameters = new Dictionary<string, string> {
+                { DeploymentParameters.Names.ENVIRONMENT, deploymentEnv.Name },
+                { DeploymentParameters.Names.PBIXPROJ_FOLDER, Path.GetFileName(converter.Model.SourcePath) },
+                { DeploymentParameters.Names.FILE_NAME_WITHOUT_EXT, Path.GetFileName(converter.Model.SourcePath) }
             };
 
-            return new() {
-                Model = converter.Model,
-                SourcePath = sourceFolder.FullName,
-                DisplayName = deploymentEnv.DisplayName.ExpandParameters(parameters) ?? sourceFolder.Name,
+            return GetDatasetInfo(manifest, converter.Model, sourceFolder.FullName, systemParameters, parameters => deploymentEnv.DisplayName.ExpandParameters(parameters) ?? sourceFolder.Name);
+        }
+
+        private DatasetDeploymentInfo GetDatasetInfo(
+            PbiDeploymentManifest manifest, 
+            IPbixModel model,
+            string sourcePath,
+            Dictionary<string, string> systemParameters, 
+            Func<IDictionary<string, DeploymentParameter>, string> resolveDisplayName)
+        {
+            var parameters = systemParameters.Aggregate(   // Dataset params overwrite Manifest params
+                manifest.Parameters.ExpandEnv(),
+                (dict, x) => {
+                    dict[x.Key] = DeploymentParameter.From(x.Value);
+                    return dict;
+                }
+            );
+
+            return new()
+            {
+                Model = model,
+                SourcePath = sourcePath,
+                DisplayName = resolveDisplayName(parameters),
                 Options = manifest.Options,
-                Parameters = parameters.Aggregate(
-                    manifest.Parameters.ExpandEnv(),
-                    (dict, x) => { dict[x.Key] = x.Value; return dict; }     // File params overwrite Manifest params
-                )
+                Parameters = parameters
             };
         }
 
         public class DatasetDeploymentInfo
         {
+            /// <summary>
+            /// The deployment options from the selected deployment profile.
+            /// </summary>
             public PbiDeploymentOptions Options { get; set; }
-            public IDictionary<string, string> Parameters { get; set; }
+            
+            /// <summary>
+            /// The effective deployment parameters for the target environment.
+            /// </summary>
+            public IDictionary<string, DeploymentParameter> Parameters { get; set; }
+
+            /// <summary>
+            /// The folder or file where dataset sources reside.
+            /// </summary>
             public string SourcePath { get; set; }
+
+            /// <summary>
+            /// The effective dataset name in the Power BI workspace.
+            /// </summary>
             public string DisplayName { get; set; }
+
+            /// <summary>
+            /// The <see cref="IPbixModel"/> containing the dataset sources.
+            /// </summary>
             public IPbixModel Model { get; set; }
         }
 

@@ -17,30 +17,41 @@ namespace PbiTools.Deployments
         /// with the string equivalent of the value of the variable, then returns the resulting
         /// string.
         /// </summary>
-        public static string ExpandEnv(this string input) => input == null
+        public static string ExpandEnv(this string input) =>
+            input == null
             ? null
             : Environment.ExpandEnvironmentVariables(input);
+
+        /// <summary>
+        /// Performs ENV expansion in all Text parameters, returns the original value for all other parameter types.
+        /// </summary>
+        public static DeploymentParameter ExpandEnv(this DeploymentParameter input) =>
+            input.Value is string s
+            ? input.CloneWithValue(Environment.ExpandEnvironmentVariables(s))
+            : input;
 
         /// <summary>
         /// Replaces the name of each environment variable embedded in any of the dictionary values
         /// with the string equivalent of the value of the variable, then returns a new dictionary
         /// with all expanded values.
         /// </summary>
-        public static IDictionary<string, string> ExpandEnv(this IDictionary<string, string> input) => input == null
-            ? new Dictionary<string, string>()
+        public static IDictionary<string, DeploymentParameter> ExpandEnv(this IDictionary<string, DeploymentParameter> input) =>
+            input == null
+            ? new Dictionary<string, DeploymentParameter>()
             : input.ToDictionary(x => x.Key, x => x.Value.ExpandEnv(), StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
         /// Replaces the name of each parameter embedded in the specified string with the parameter value.
         /// Parameters are marked with double curly braces.
         /// </summary>
-        public static string ExpandParameters(this string value, IDictionary<string, string> parameters) => value == null
+        public static string ExpandParameters(this string value, IDictionary<string, DeploymentParameter> parameters) =>
+            value == null
             ? null
-            : (parameters ?? new Dictionary<string, string>()).Aggregate(
+            : (parameters ?? new Dictionary<string, DeploymentParameter>()).Aggregate(
                 new StringBuilder(value), 
                 (sb, param) => 
                 {
-                    sb.Replace("{{" + param.Key + "}}", param.Value);
+                    sb.Replace("{{" + param.Key + "}}", $"{param.Value}");
                     return sb;
                 }
             ).ToString();
