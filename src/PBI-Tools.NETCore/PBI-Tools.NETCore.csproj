@@ -12,6 +12,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\PBI-Tools\**\*.cs" Exclude="..\PBI-Tools\obj\**\*.*;..\PBI-Tools\Properties\**\*.*;..\PBI-Tools\Win32\**\*.*" />
+    <EmbeddedResource Include="..\PBI-Tools\Templates\**\*.*" Exclude="..\PBI-Tools\Templates\AS\**\*.*" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

@@ -243,6 +243,39 @@ namespace PbiTools.Deployments
             Log.Information("* TargetStorageMode      : {TargetStorageMode}", pbiDataset.TargetStorageMode);
             #endregion
 
+            #region Deploy Report
+            if (manifest.Options.Dataset.DeployEmbeddedReport) {
+                var reportEnvironment = deploymentEnv.Report ?? new();
+                var pbixProjFolder = dataset.SourcePath;
+
+                if (reportEnvironment.Skip) {
+                    Log.Information("Report deployment is disabled for current environment. Skipping.");
+                }
+                else if (manifest.Source.Type != PbiDeploymentSourceType.Folder) {
+                    Log.Warning("Report deployment is only supported if the deployment source is 'Folder'. Skipping.");
+                }
+                else if (!ProjectSystem.PbixProject.IsPbixProjFolder(pbixProjFolder)) {
+                    Log.Warning("The deployment source is not a PbixProj folder: {Path}. Skipping report deployment.", pbixProjFolder);
+                }
+                else
+                {
+                    var reportConnection = manifest.Options.Report.CustomConnectionsTemplate == default
+                        ? PowerBI.ReportConnection.CreateDefault()
+                        : PowerBI.ReportConnection.Create(manifest.Options.Report.CustomConnectionsTemplate, basePath);
+
+                    var reportDeploymentInfo = CompileReportForDeployment(manifest.Options,
+                                                                          reportEnvironment.DisplayName.ExpandParameters(dataset.Parameters) ?? $"{dataset.DisplayName}.pbix",
+                                                                          pbixProjFolder,
+                                                                          manifest.ResolveTempDir(),
+                                                                          dataset.Parameters,
+                                                                          reportConnection.ToJson(datasetId));
+
+                    var reportWorkspace = reportEnvironment.Workspace.ExpandParameters(dataset.Parameters) ?? workspaceId.ToString();
+                    await ImportReportAsync(reportDeploymentInfo, powerbi, reportWorkspace);
+                }
+            }
+            #endregion
+
             #region Refresh
             if (deploymentEnv.Refresh)
             {

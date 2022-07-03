@@ -140,6 +140,9 @@ namespace PbiTools.Deployments
         [JsonProperty("dataset")]
         public DatasetOptions Dataset { get; set; } = new();
 
+        [JsonProperty("report")]
+        public ReportOptions Report { get; set; } = new();
+
         public class ImportOptions
         {
             /// <summary>
@@ -202,6 +205,15 @@ namespace PbiTools.Deployments
         {
             [JsonProperty("replaceParameters")]
             public bool ReplaceParameters { get; set; }
+
+            [JsonProperty("deployEmbeddedReport")]
+            public bool DeployEmbeddedReport { get; set; }
+        }
+
+        public class ReportOptions
+        { 
+            [JsonProperty("customConnectionsTemplate")]
+            public string CustomConnectionsTemplate { get; set; }
         }
     }
 
@@ -244,5 +256,36 @@ namespace PbiTools.Deployments
         // (Dataset) refresh settings
         // Workspace Members? [ User/Group/App, AccessLevel]
         // Capacity
+
+        /// <summary>
+        /// Allows customizing environment settings for embedded reports published as part of a dataset deployment.
+        /// </summary>
+        [JsonProperty("report")]
+        public ReportEnvironment Report { get; set; }
+
+        public class ReportEnvironment
+        { 
+            /// <summary>
+            /// Used to disable report deployment for specific environments only.
+            /// </summary>
+            [JsonProperty("skip")]
+            public bool Skip { get; set; }
+
+            /// <summary>
+            /// The optional workspace Name or Guid to deploy the dataset report to.
+            /// If omitted, the dataset workspace is used.
+            /// Supports parameter expansion.
+            /// </summary>
+            [JsonProperty("workspace")]
+            public string Workspace { get; set; }
+
+            /// <summary>
+            /// The optional DisplayName to use for the report deployment. Must include a file extension.
+            /// If omitted, the dataset display name is used.
+            /// Supports parameter expansion.
+            /// </summary>
+            [JsonProperty("displayName")]
+            public string DisplayName { get; set; }
+        }
     }
 }
