@@ -70,6 +70,8 @@ NUGET
     Serilog (2.11)
     Serilog.Sinks.Console (4.0.1)
       Serilog (>= 2.10)
+    Spectre.Console (0.44)
+      System.Memory (>= 4.5) - restriction: || (== net472) (&& (== net6.0) (< net5.0))
     System.Buffers (4.5.1)
     System.Collections (4.3) - restriction: || (&& (== net472) (< net45)) (== net6.0)
       Microsoft.NETCore.Platforms (>= 1.1) - restriction: || (&& (== net472) (< net45)) (== net6.0)

@@ -188,7 +188,7 @@ namespace PbiTools.Deployments
             public RefreshMethod Method { get; set; } = RefreshMethod.API;
 
             [JsonProperty("type")]
-            public Microsoft.PowerBI.Api.Models.DatasetRefreshType Type { get; set; } = Microsoft.PowerBI.Api.Models.DatasetRefreshType.Automatic;
+            public DatasetRefreshType Type { get; set; } = DatasetRefreshType.Automatic;
 
             // *** https://docs.microsoft.com/rest/api/power-bi/datasets/refresh-dataset-in-group
             // applyRefreshPolicy
@@ -197,11 +197,48 @@ namespace PbiTools.Deployments
             // maxParallelism
             // objects
             // retryCount
+            
+            [JsonProperty("tracing")]
+            public TraceOptions Tracing { get; set; } = new();
 
             public enum RefreshMethod
             { 
                 API = 1,
                 XMLA = 2
+            }
+
+            public class TraceOptions
+            {
+                [JsonProperty("enabled")]
+                public bool Enabled { get; set; }
+
+                [JsonProperty("logEvents")]
+                public TraceLogEvents LogEvents { get; set; }
+
+                [JsonProperty("summary")]
+                public TraceSummary Summary { get; set; }
+
+
+                public class TraceLogEvents
+                {
+                    [JsonProperty("filter")]
+                    public string[] Filter { get; set; }
+                }
+
+                public class TraceSummary
+                {
+                    [JsonProperty("events")]
+                    public string[] Events { get; set; }
+
+                    [JsonProperty("objectTypes")]
+                    public string[] ObjectTypes { get; set; }
+
+                    [JsonProperty("outPath")]
+                    public string OutPath { get; set; }
+
+                    [JsonProperty("console")]
+                    public bool Console { get; set; }
+                }
             }
         }
 

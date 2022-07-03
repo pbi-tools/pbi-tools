@@ -15,6 +15,7 @@ using TOM = Microsoft.AnalysisServices.Tabular;
 namespace PbiTools.Deployments
 {
     using Model;
+    using System.Data.Common;
 
     public partial class DeploymentManager
     {
@@ -98,13 +99,13 @@ namespace PbiTools.Deployments
             }
 
             var dataSource = deploymentEnv.XmlaDataSource ?? $"powerbi://api.powerbi.com/v1.0/myorg/{workspace}";
-            var connectionString = new System.Data.Common.DbConnectionStringBuilder {
+            var connectionStringBldr = new DbConnectionStringBuilder {
                 { "Data Source", dataSource },
                 { "Password", authResult.AccessToken }
-            }.ConnectionString;
+            };
 
             Log.Information("Connecting to XMLA endpoint: {XmlaDataSource}", dataSource);
-            server.Connect(connectionString);
+            server.Connect(connectionStringBldr.ConnectionString);
 
             if (Log.IsEnabled(Serilog.Events.LogEventLevel.Debug) || WhatIf)
             {
@@ -279,6 +280,8 @@ namespace PbiTools.Deployments
             #region Refresh
             if (deploymentEnv.Refresh)
             {
+                var stopWatch = System.Diagnostics.Stopwatch.StartNew();
+
                 if (createdNewDb && dataset.Options.Refresh.SkipNewDataset) {
                     Log.Information("Skipping refresh because of the 'skipNewDataset' refresh option. You will likely need to set credentials and/or dataset gateways via Power BI Service first.");
                 }
@@ -289,25 +292,39 @@ namespace PbiTools.Deployments
                         case PbiDeploymentOptions.RefreshOptions.RefreshMethod.API:
                             throw new PbiToolsCliException(ExitCode.NotImplemented, "The 'API' refresh method is not implemented. Use 'XMLA' instead.");
                         case PbiDeploymentOptions.RefreshOptions.RefreshMethod.XMLA:
+
+                            // The PBI server won't allow creating a Server trace unless the 'Initial Catalog' property is set
+                            // Since the dataset might not exist at the start of the deployment, we're taking the safe route here
+                            // and always reconnect with a new connection string at this point
+                            Log.Debug("Reconnecting to server with 'Initial Catalog' connection string setting.");
+                            connectionStringBldr.Add("Initial Catalog", dataset.DisplayName);
+                            
+                            server.Disconnect(endSession: false);
+                            server.Connect(connectionStringBldr.ConnectionString, server.SessionID);
+
                             using (var db = server.Databases[datasetId]) {
-                                RefreshXmla(db, dataset.Options.Refresh);
+                                RefreshXmla(db, dataset.Options.Refresh, basePath);
                             }
                             break;
                         default:
                             throw new DeploymentException($"Invalid refresh method '{dataset.Options.Refresh.Method}'.");
                     }
-                    Log.Information("Refresh completed.");
+                    Log.Information("Refresh completed in {Elapsed}", stopWatch.Elapsed);
                 }
             }
             #endregion
         }
 
-        internal static void RefreshXmla(TOM.Database database, PbiDeploymentOptions.RefreshOptions refreshOptions)
+        internal static void RefreshXmla(TOM.Database database, PbiDeploymentOptions.RefreshOptions refreshOptions, string basePath)
         {
+            using var trace = new XmlaRefreshTrace(database.Server, refreshOptions.Tracing ?? new(), basePath);
+
             // Mapping API RefreshType -> TOM RefreshType
             var refreshType = (TOM.RefreshType)Enum.Parse(typeof(TOM.RefreshType), $"{refreshOptions.Type}");
 
             database.Model.RequestRefresh(refreshType);
+            trace.Start();
+
             try
             {
                 var refreshResults = database.Model.SaveChanges();
@@ -323,7 +340,8 @@ namespace PbiTools.Deployments
                     }
                 }
             }
-            catch (AMO.OperationException ex) when (ex.Message.Contains("DMTS_DatasourceHasNoCredentialError")) {
+            catch (AMO.OperationException ex) when (ex.Message.Contains("DMTS_DatasourceHasNoCredentialError"))
+            {
                 throw new DeploymentException("Refresh failed because of missing credentials. See https://docs.microsoft.com/power-bi/enterprise/service-premium-connect-tools#setting-data-source-credentials for further details.", ex);
             }
         }
