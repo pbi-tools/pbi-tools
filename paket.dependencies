@@ -33,6 +33,7 @@ group Main
   nuget Microsoft.NETCore.Platforms
   nuget Microsoft.NETCore.Targets
   nuget LibGit2Sharp
+  nuget Spectre.Console
 
 group Tests
   source https://api.nuget.org/v3/index.json

@@ -4,15 +4,16 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-#if NET
-using System.IO.Packaging;
-#endif
 using System.Linq;
+using Newtonsoft.Json.Linq;
+using Serilog;
 #if NETFRAMEWORK
 using Castle.DynamicProxy;
 using Microsoft.PowerBI.Packaging;
 #endif
-using Serilog;
+#if NET
+using System.IO.Packaging;
+#endif
 
 namespace PbiTools.PowerBI
 {
@@ -36,17 +37,27 @@ namespace PbiTools.PowerBI
             this._format = format;
         }
 
+        public JObject ConnectionsOverwrite { get; set; }
+
         public IStreamablePowerBIPackagePartContent Connections
-            => ConvertContent(_converters.Connections, _pbixModel.Connections); 
+            => ConnectionsOverwrite == null
+                ? ConvertContent(_converters.Connections, _pbixModel.Connections)
+                : ConvertContent(_converters.Connections, ConnectionsOverwrite);
 
         public IStreamablePowerBIPackagePartContent DataMashup
-            => ConvertContent(new MashupConverter(), _pbixModel.DataMashup);
+            => ConnectionsOverwrite == null
+                ? ConvertContent(new MashupConverter(), _pbixModel.DataMashup)
+                : default;
 
         public IStreamablePowerBIPackagePartContent DataModel
-            => _format == PbiFileFormat.PBIX ? ConvertContent(_converters.DataModel, _pbixModel.DataModel) : EmptyContent;
+            => ConnectionsOverwrite == null
+                ? _format == PbiFileFormat.PBIX ? ConvertContent(_converters.DataModel, _pbixModel.DataModel) : EmptyContent
+                : default;
 
         public IStreamablePowerBIPackagePartContent DataModelSchema
-            => _format == PbiFileFormat.PBIT ? ConvertContent(_converters.DataModelSchema, _pbixModel.DataModel) : EmptyContent;
+            => ConnectionsOverwrite == null
+                ? _format == PbiFileFormat.PBIT ? ConvertContent(_converters.DataModelSchema, _pbixModel.DataModel) : EmptyContent
+                : default;
 
         public IStreamablePowerBIPackagePartContent DiagramViewState
             => ConvertContent(_converters.DiagramViewState, _pbixModel.DiagramViewState); 
@@ -185,64 +196,72 @@ namespace PbiTools.PowerBI
 #endif
 
 #if NET
-        public void WriteTo(string path)
+        public void WriteTo(string path, JObject connections = default)
         {
-            if (_format == PbiFileFormat.PBIX && _pbixModel.DataModel != null)
+            if (_format == PbiFileFormat.PBIX && _pbixModel.DataModel != null && connections == null)
                 throw new NotSupportedException("The pbi-tools Core version does not support compiling a PBIX with an embedded data model. Target a PBIT output instead.");
 
             Directory.CreateDirectory(Path.GetDirectoryName(path));
 
-            using (var package = Package.Open(path, FileMode.OpenOrCreate, FileAccess.ReadWrite)) // TODO Check overwrite?
+            using var package = Package.Open(path, FileMode.OpenOrCreate, FileAccess.ReadWrite); // TODO Check overwrite?
+            
+            var existingParts = package.GetParts().Select(p => p.Uri).ToList();
+            var partsWritten = new List<Uri>();
+
+            // Version
+            ProcessPart(package, _converters.Version, _pbixModel.Version, partsWritten.Add);
+            // Settings
+            ProcessPart(package, _converters.ReportSettingsV3, _pbixModel.ReportSettings, partsWritten.Add);
+            // Metadata
+            ProcessPart(package, _converters.ReportMetadataV3, _pbixModel.ReportMetadata, partsWritten.Add);
+            // LinguisticSchema
+            if (_pbixModel.LinguisticSchema != null)
+                ProcessPart(package, _converters.LinguisticSchemaV3, _pbixModel.LinguisticSchema, partsWritten.Add);
+            else
+                ProcessPart(package, _converters.LinguisticSchema, _pbixModel.LinguisticSchemaXml, partsWritten.Add);
+            // DiagramViewState
+            ProcessPart(package, _converters.DiagramViewState, _pbixModel.DiagramViewState, partsWritten.Add);
+            // DiagramLayout
+            ProcessPart(package, _converters.DiagramLayout, _pbixModel.DiagramLayout, partsWritten.Add);
+            // Report
+            ProcessPart(package, _converters.ReportDocument, _pbixModel.Report, partsWritten.Add);
+            // MobileState
+            ProcessPart(package, _converters.ReportMobileState, _pbixModel.ReportMobileState, partsWritten.Add);
+
+            if (connections == default)
             {
-                var existingParts = package.GetParts().Select(p => p.Uri).ToList();
-                var partsWritten = new List<Uri>();
-
-                // Version
-                ProcessPart(package, _converters.Version, _pbixModel.Version, partsWritten);
-                // Settings
-                ProcessPart(package, _converters.ReportSettingsV3, _pbixModel.ReportSettings, partsWritten);
-                // Metadata
-                ProcessPart(package, _converters.ReportMetadataV3, _pbixModel.ReportMetadata, partsWritten);
-                // LinguisticSchema
-                if (_pbixModel.LinguisticSchema != null)
-                    ProcessPart(package, _converters.LinguisticSchemaV3, _pbixModel.LinguisticSchema, partsWritten);
-                else
-                    ProcessPart(package, _converters.LinguisticSchema, _pbixModel.LinguisticSchemaXml, partsWritten);
-                // DiagramViewState
-                ProcessPart(package, _converters.DiagramViewState, _pbixModel.DiagramViewState, partsWritten);
-                // DiagramLayout
-                ProcessPart(package, _converters.DiagramLayout, _pbixModel.DiagramLayout, partsWritten);
-                // Report
-                ProcessPart(package, _converters.ReportDocument, _pbixModel.Report, partsWritten);
-                // MobileState
-                ProcessPart(package, _converters.ReportMobileState, _pbixModel.ReportMobileState, partsWritten);
                 // DataModelSchema
-                ProcessPart(package, _converters.DataModelSchema, _pbixModel.DataModel, partsWritten);
+                ProcessPart(package, _converters.DataModelSchema, _pbixModel.DataModel, partsWritten.Add);
                 // Connection
-                ProcessPart(package, _converters.Connections, _pbixModel.Connections, partsWritten);
+                ProcessPart(package, _converters.Connections, _pbixModel.Connections, partsWritten.Add);
+            }
+            else
+            {
+                // Connection
+                ProcessPart(package, _converters.Connections, connections, partsWritten.Add);
+            }
 
-                // CustomVisuals
-                foreach (var item in _pbixModel.CustomVisuals ?? new Dictionary<string, byte[]>())
-                {
-                    ProcessPart(package, _converters.CustomVisuals, item.Value, partsWritten, item.Key);
-                }
-                // StaticResources
-                foreach (var item in _pbixModel.StaticResources ?? new Dictionary<string, byte[]>())
-                {
-                    ProcessPart(package, _converters.StaticResources, item.Value, partsWritten, item.Key);
-                }
+            // CustomVisuals
+            foreach (var item in _pbixModel.CustomVisuals ?? new Dictionary<string, byte[]>())
+            {
+                ProcessPart(package, _converters.CustomVisuals, item.Value, partsWritten.Add, item.Key);
+            }
+            // StaticResources
+            foreach (var item in _pbixModel.StaticResources ?? new Dictionary<string, byte[]>())
+            {
+                ProcessPart(package, _converters.StaticResources, item.Value, partsWritten.Add, item.Key);
+            }
 
-                // Remove obsolete parts
-                foreach (var partToRemove in existingParts.Except(partsWritten).ToArray())
-                {
-                    Log.Debug("Removing obsolete part: {Uri}", partToRemove);
-                    if (package.PartExists(partToRemove))
-                        package.DeletePart(partToRemove);
-                }
+            // Remove obsolete parts
+            foreach (var partToRemove in existingParts.Except(partsWritten).ToArray())
+            {
+                Log.Debug("Removing obsolete part: {Uri}", partToRemove);
+                if (package.PartExists(partToRemove))
+                    package.DeletePart(partToRemove);
             }
         }
 
-        internal static void ProcessPart<T>(Package package, IPowerBIPartConverter<T> converter, T content, IList<Uri> partsWritten, string subPartPath = null)
+        internal static void ProcessPart<T>(Package package, IPowerBIPartConverter<T> converter, T content, Action<Uri> markPartWritten, string subPartPath = null)
             where T : class
         {
             var uri = subPartPath == null
@@ -265,7 +284,7 @@ namespace PbiTools.PowerBI
                 }
 
                 Log.Information("Package part written: {Uri}", uri);
-                partsWritten.Add(uri);
+                markPartWritten(uri);
             }
         }
 

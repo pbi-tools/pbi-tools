@@ -8,8 +8,8 @@
     <RuntimeIdentifier>win7-x64</RuntimeIdentifier>
   </PropertyGroup>
   <ItemGroup>
-    <None Remove="PowerBI\msmdsrv.ini.xml" />
-    <EmbeddedResource Include="PowerBI\msmdsrv.ini.xml" />
+    <None Remove="Templates\**\*.*" />
+    <EmbeddedResource Include="Templates\**\*.*" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.IO.Compression" />

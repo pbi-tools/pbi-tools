@@ -14,7 +14,7 @@ namespace PbiTools.Deployments
 
     /// <summary>
     /// Represents a single deployment profile, i.e. a source definition, one or more target environments,
-    /// as well as deployment options and authentication settings.
+    /// as well as deployment options, deployment parameters, and authentication settings.
     /// </summary>
     public class PbiDeploymentManifest
     {
@@ -34,7 +34,7 @@ namespace PbiTools.Deployments
         public PbiDeploymentOptions Options { get; set; } = new();
 
         [JsonProperty("parameters")]
-        public IDictionary<string, string> Parameters { get; set; }
+        public DeploymentParameters Parameters { get; set; }
 
         /// <summary>
         /// Reserved for future use.
@@ -53,6 +53,10 @@ namespace PbiTools.Deployments
         public JObject AsJson() =>
             JObject.FromObject(this, JsonSerializer.Create(PbixProject.DefaultJsonSerializerSettings));
 
+        public string ResolveTempDir() =>
+            String.IsNullOrEmpty(Options?.TempDir)
+            ? System.IO.Path.GetTempPath()
+            : Environment.ExpandEnvironmentVariables(Options.TempDir);
     }
 
     public enum PbiDeploymentMode
@@ -117,7 +121,7 @@ namespace PbiTools.Deployments
         public Uri PbiBaseUri { get; set; }
         
         /// <summary>
-        /// Allows setting an alternative temp folder into which .pbix files are compiled. Supports variable expansion (default: '%TEMP%').
+        /// Allows setting an alternative temp folder into which .pbix files are compiled. Supports variable expansion (default: <see cref="System.IO.Path.GetTempPath"/>).
         /// </summary>
         [JsonProperty("tempDir")]
         public string TempDir { get; set; }
@@ -139,6 +143,9 @@ namespace PbiTools.Deployments
 
         [JsonProperty("dataset")]
         public DatasetOptions Dataset { get; set; } = new();
+
+        [JsonProperty("report")]
+        public ReportOptions Report { get; set; } = new();
 
         public class ImportOptions
         {
@@ -181,7 +188,7 @@ namespace PbiTools.Deployments
             public RefreshMethod Method { get; set; } = RefreshMethod.API;
 
             [JsonProperty("type")]
-            public Microsoft.PowerBI.Api.Models.DatasetRefreshType Type { get; set; } = Microsoft.PowerBI.Api.Models.DatasetRefreshType.Automatic;
+            public DatasetRefreshType Type { get; set; } = DatasetRefreshType.Automatic;
 
             // *** https://docs.microsoft.com/rest/api/power-bi/datasets/refresh-dataset-in-group
             // applyRefreshPolicy
@@ -190,11 +197,48 @@ namespace PbiTools.Deployments
             // maxParallelism
             // objects
             // retryCount
+            
+            [JsonProperty("tracing")]
+            public TraceOptions Tracing { get; set; } = new();
 
             public enum RefreshMethod
             { 
                 API = 1,
                 XMLA = 2
+            }
+
+            public class TraceOptions
+            {
+                [JsonProperty("enabled")]
+                public bool Enabled { get; set; }
+
+                [JsonProperty("logEvents")]
+                public TraceLogEvents LogEvents { get; set; }
+
+                [JsonProperty("summary")]
+                public TraceSummary Summary { get; set; }
+
+
+                public class TraceLogEvents
+                {
+                    [JsonProperty("filter")]
+                    public string[] Filter { get; set; }
+                }
+
+                public class TraceSummary
+                {
+                    [JsonProperty("events")]
+                    public string[] Events { get; set; }
+
+                    [JsonProperty("objectTypes")]
+                    public string[] ObjectTypes { get; set; }
+
+                    [JsonProperty("outPath")]
+                    public string OutPath { get; set; }
+
+                    [JsonProperty("console")]
+                    public bool Console { get; set; }
+                }
             }
         }
 
@@ -202,6 +246,15 @@ namespace PbiTools.Deployments
         {
             [JsonProperty("replaceParameters")]
             public bool ReplaceParameters { get; set; }
+
+            [JsonProperty("deployEmbeddedReport")]
+            public bool DeployEmbeddedReport { get; set; }
+        }
+
+        public class ReportOptions
+        { 
+            [JsonProperty("customConnectionsTemplate")]
+            public string CustomConnectionsTemplate { get; set; }
         }
     }
 
@@ -244,5 +297,36 @@ namespace PbiTools.Deployments
         // (Dataset) refresh settings
         // Workspace Members? [ User/Group/App, AccessLevel]
         // Capacity
+
+        /// <summary>
+        /// Allows customizing environment settings for embedded reports published as part of a dataset deployment.
+        /// </summary>
+        [JsonProperty("report")]
+        public ReportEnvironment Report { get; set; }
+
+        public class ReportEnvironment
+        { 
+            /// <summary>
+            /// Used to disable report deployment for specific environments only.
+            /// </summary>
+            [JsonProperty("skip")]
+            public bool Skip { get; set; }
+
+            /// <summary>
+            /// The optional workspace Name or Guid to deploy the dataset report to.
+            /// If omitted, the dataset workspace is used.
+            /// Supports parameter expansion.
+            /// </summary>
+            [JsonProperty("workspace")]
+            public string Workspace { get; set; }
+
+            /// <summary>
+            /// The optional DisplayName to use for the report deployment. Must include a file extension.
+            /// If omitted, the dataset display name is used.
+            /// Supports parameter expansion.
+            /// </summary>
+            [JsonProperty("displayName")]
+            public string DisplayName { get; set; }
+        }
     }
 }

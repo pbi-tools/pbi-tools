@@ -12,3 +12,4 @@ System.IO.Packaging
 Microsoft.Identity.Client
 Microsoft.PowerBI.Api
 LibGit2Sharp
+Spectre.Console

@@ -90,7 +90,7 @@ namespace PbiTools.Model
         }
 
 
-        private static readonly Version V3ModelVersion = new Version(1, 19);
+        private static readonly Version V3ModelVersion = new(1, 19);
 
         public static bool IsV3Version(string versionString)
         {
@@ -327,14 +327,11 @@ namespace PbiTools.Model
         /// <summary>
         /// Generates a PBIX/PBIT file from the model.
         /// </summary>
-        /// <param name="path"></param>
-        /// <param name="format"></param>
-        /// <param name="dependenciesResolver"></param>
-        public void ToFile(string path, PbiFileFormat format, IDependenciesResolver dependenciesResolver = null)
+        public void ToFile(string path, PbiFileFormat format, JObject connectionsOverwrite = default, IDependenciesResolver dependenciesResolver = default)
         {
             Log.Information("Generating {Format} file at '{Path}'...", format, path);
 
-            if (format == PbiFileFormat.PBIX && this.DataModel != null)
+            if (format == PbiFileFormat.PBIX && this.DataModel != null && connectionsOverwrite == default)
                 throw new PbiToolsCliException(ExitCode.InvalidArgs,
                     "Compiling a project containing a data model into a PBIX file is not supported. Please compile into a PBIT file instead."
                 );
@@ -342,12 +339,15 @@ namespace PbiTools.Model
 #if NETFRAMEWORK
             var modelName = PowerBIPartConverters.ConvertToValidModelName(Path.GetFileNameWithoutExtension(path));
             var converters = new PowerBIPartConverters(modelName, dependenciesResolver ?? DependenciesResolver.Default);
-            var pbiPackage = new PbiPackage(this, converters, format); // TODO Handle missing Report part
+            var pbiPackage = new PbiPackage(this, converters, format)  // TODO Handle missing Report part
+            {
+                ConnectionsOverwrite = connectionsOverwrite
+            };
 
             pbiPackage.Save(path);
 #elif NET
             var writer = new PbixWriter(this, new PowerBIPartConverters(), format);
-            writer.WriteTo(path);
+            writer.WriteTo(path, connectionsOverwrite);
 #endif
         }
 
@@ -377,20 +377,12 @@ namespace PbiTools.Model
         /// <summary>
         /// Returns the default folder location for this instance.
         /// </summary>
-        public string GetProjectFolder()
+        public string GetProjectFolder() => this.Type switch
         {
-            switch (this.Type) 
-            {
-                case PbixModelSource.PbixProjFolder:
-                case PbixModelSource.TabularModel:
-                    return this.SourcePath;
-                case PbixModelSource.PowerBIPackage:
-                case PbixModelSource.LiveSession:
-                    return PbixProject.GetDefaultProjectFolderForFile(this.SourcePath);
-                default:
-                        throw new NotSupportedException($"Unsupported PbixModelSource: {this.Type}.");
-            }
-        }
+            PbixModelSource.PbixProjFolder or PbixModelSource.TabularModel => this.SourcePath,
+            PbixModelSource.PowerBIPackage or PbixModelSource.LiveSession => PbixProject.GetDefaultProjectFolderForFile(this.SourcePath),
+            _ => throw new NotSupportedException($"Unsupported PbixModelSource: {this.Type}."),
+        };
 
         public void Dispose()
         {
