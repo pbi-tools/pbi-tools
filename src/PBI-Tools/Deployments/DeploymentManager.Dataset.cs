@@ -92,7 +92,7 @@ namespace PbiTools.Deployments
                 Log.Information("  DisplayName: {DisplayName}", dataset.DisplayName);
                 Log.Information("  Parameters:");
                 foreach (var parameter in dataset.Parameters)
-                    Log.Information("  * {ParamKey} = \"{ParamValue}\"", parameter.Key, parameter.Value);
+                    Log.Information("  * {ParamKey} = {ParamValue}", parameter.Key, parameter.Value.Value ?? "null");
                 Log.Information("  Workspace: {Workspace} ({WorkspaceId})", workspace, workspaceId);
                 Log.Information("---");
             }
@@ -142,7 +142,7 @@ namespace PbiTools.Deployments
                 {
                     if (dataset.Parameters.TryGetValue(modelExpr.Name, out var parameter)){
                         var newValue = parameter.ToMString();
-                        Log.Information("Setting model expression [{Name}]\n\tOld value: {OldValue}\n\tNew value: {NewValue}"
+                        Log.Information("Setting model expression '{Name}'\n\tOld value: {OldValue}\n\tNew value: {NewValue}"
                             , modelExpr.Name
                             , modelExpr.Expression
                             , newValue);

@@ -89,6 +89,7 @@ namespace PbiTools.Deployments
             }
 
             Log.Information("Deployment completed successfully.");
+            if (WhatIf) Log.Information("=== Deployment WhatIf mode enabled ===");
         }
 
         /// <summary>
