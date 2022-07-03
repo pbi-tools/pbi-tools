@@ -335,11 +335,9 @@ namespace PbiTools.Deployments
             var sourceFile = new FileInfo(Path.Combine(basePath, manifest.Source.Path));
             var converter = PbixModelConverter.FromFile(sourceFile);
 
-            var systemParameters = new Dictionary<string, string> {
-                { DeploymentParameters.Names.ENVIRONMENT, deploymentEnv.Name },
-                { DeploymentParameters.Names.FILE_NAME, sourceFile.Name },
-                { DeploymentParameters.Names.FILE_NAME_WITHOUT_EXT, Path.GetFileNameWithoutExtension(sourceFile.Name) }
-            };
+            var systemParameters = DeploymentParameters.GetSystemParameters(deploymentEnv.Name)
+                .With(DeploymentParameters.Names.FILE_NAME, sourceFile.Name)
+                .With(DeploymentParameters.Names.FILE_NAME_WITHOUT_EXT, Path.GetFileNameWithoutExtension(sourceFile.Name));
 
             return GetDatasetInfo(manifest, converter.Model, sourceFile.FullName, systemParameters, parameters => deploymentEnv.DisplayName.ExpandParameters(parameters) ?? Path.GetFileNameWithoutExtension(sourceFile.Name));
         }
@@ -350,11 +348,9 @@ namespace PbiTools.Deployments
             var sourceFolder = new DirectoryInfo(Path.Combine(basePath, manifest.Source.Path));
             var converter = PbixModelConverter.FromFolder(sourceFolder);
 
-            var systemParameters = new Dictionary<string, string> {
-                { DeploymentParameters.Names.ENVIRONMENT, deploymentEnv.Name },
-                { DeploymentParameters.Names.PBIXPROJ_FOLDER, Path.GetFileName(converter.Model.SourcePath) },
-                { DeploymentParameters.Names.FILE_NAME_WITHOUT_EXT, Path.GetFileName(converter.Model.SourcePath) }
-            };
+            var systemParameters = DeploymentParameters.GetSystemParameters(deploymentEnv.Name)
+                .With(DeploymentParameters.Names.PBIXPROJ_FOLDER, Path.GetFileName(converter.Model.SourcePath))
+                .With(DeploymentParameters.Names.FILE_NAME_WITHOUT_EXT, Path.GetFileName(converter.Model.SourcePath));
 
             return GetDatasetInfo(manifest, converter.Model, sourceFolder.FullName, systemParameters, parameters => deploymentEnv.DisplayName.ExpandParameters(parameters) ?? sourceFolder.Name);
         }
@@ -363,11 +359,11 @@ namespace PbiTools.Deployments
             PbiDeploymentManifest manifest, 
             IPbixModel model,
             string sourcePath,
-            Dictionary<string, string> systemParameters, 
+            IDictionary<string, string> systemParameters, 
             Func<IDictionary<string, DeploymentParameter>, string> resolveDisplayName)
         {
             var parameters = systemParameters.Aggregate(   // Dataset params overwrite Manifest params
-                manifest.Parameters.ExpandEnv(),
+                manifest.Parameters.ExpandEnv().ExpandParameters(systemParameters),
                 (dict, x) => {
                     dict[x.Key] = DeploymentParameter.From(x.Value);
                     return dict;

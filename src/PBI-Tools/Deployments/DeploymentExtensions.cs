@@ -41,8 +41,32 @@ namespace PbiTools.Deployments
             : input.ToDictionary(x => x.Key, x => x.Value.ExpandEnv(), StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
+        /// Performs parameter replacement in all dictionary values, using the <c>externalParameters</c> dictionary as a source.
+        /// Only <see cref="DeploymentParameter"/>s of type string are modified.
+        /// </summary>
+        public static IDictionary<string, DeploymentParameter> ExpandParameters(this IDictionary<string, DeploymentParameter> target,
+            IDictionary<string, string> externalParameters)
+        {
+            foreach (var key in target.Keys.ToArray()) {
+                var item = target[key];
+                if (item.Value is string s && s.Contains("{{") && s.Contains("}}")) {
+                    target[key] = item.CloneWithValue(s.ExpandParameters(externalParameters));
+                }
+            }
+            return target;
+        }
+
+        /// <summary>
+        /// Adds or sets the specified dictionary value.
+        /// </summary>
+        public static IDictionary<string, string> With(this IDictionary<string, string> dictionary, string key, string value) {
+            dictionary[key] = value;
+            return dictionary;
+        }
+
+        /// <summary>
         /// Replaces the name of each parameter embedded in the specified string with the parameter value.
-        /// Parameters are marked with double curly braces.
+        /// Parameters are marked with double curly braces: <c>{{PARAMETER}}</c>.
         /// </summary>
         public static string ExpandParameters(this string value, IDictionary<string, DeploymentParameter> parameters) =>
             value == null
@@ -50,6 +74,22 @@ namespace PbiTools.Deployments
             : (parameters ?? new Dictionary<string, DeploymentParameter>()).Aggregate(
                 new StringBuilder(value), 
                 (sb, param) => 
+                {
+                    sb.Replace("{{" + param.Key + "}}", $"{param.Value}");
+                    return sb;
+                }
+            ).ToString();
+
+        /// <summary>
+        /// Replaces the name of each parameter embedded in the specified string with the parameter value.
+        /// Parameters are marked with double curly braces: <c>{{PARAMETER}}</c>.
+        /// </summary>
+        public static string ExpandParameters(this string value, IDictionary<string, string> parameters) =>
+            value == null
+            ? null
+            : (parameters ?? new Dictionary<string, string>()).Aggregate(
+                new StringBuilder(value),
+                (sb, param) =>
                 {
                     sb.Replace("{{" + param.Key + "}}", $"{param.Value}");
                     return sb;

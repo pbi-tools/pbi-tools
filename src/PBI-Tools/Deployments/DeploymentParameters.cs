@@ -23,6 +23,7 @@ namespace PbiTools.Deployments
 
             /* Common */
             public const string ENVIRONMENT = nameof(ENVIRONMENT);
+            public const string PBITOOLS_VERSION = nameof(PBITOOLS_VERSION);
             public const string PBIXPROJ_FOLDER = nameof(PBIXPROJ_FOLDER);
             public const string FILE_NAME = nameof(FILE_NAME);
             public const string FILE_NAME_WITHOUT_EXT = nameof(FILE_NAME_WITHOUT_EXT);
@@ -31,6 +32,14 @@ namespace PbiTools.Deployments
             public const string PBIXPROJ_NAME = nameof(PBIXPROJ_NAME);
             public const string FILE_PATH = nameof(FILE_PATH);
         }
+
+        /// <summary>
+        /// Generates common system parameters for the specified environment.
+        /// </summary>
+        public static IDictionary<string, string> GetSystemParameters(string environment) => new Dictionary<string, string> {
+            { Names.ENVIRONMENT, environment },
+            { Names.PBITOOLS_VERSION, AssemblyVersionInformation.AssemblyInformationalVersion },
+        };
 
         private DeploymentParameters(IDictionary<string, DeploymentParameter> parameters) : base(parameters) { }
 
