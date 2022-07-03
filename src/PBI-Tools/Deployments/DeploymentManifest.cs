@@ -53,6 +53,10 @@ namespace PbiTools.Deployments
         public JObject AsJson() =>
             JObject.FromObject(this, JsonSerializer.Create(PbixProject.DefaultJsonSerializerSettings));
 
+        public string ResolveTempDir() =>
+            String.IsNullOrEmpty(Options?.TempDir)
+            ? System.IO.Path.GetTempPath()
+            : Environment.ExpandEnvironmentVariables(Options.TempDir);
     }
 
     public enum PbiDeploymentMode
@@ -117,7 +121,7 @@ namespace PbiTools.Deployments
         public Uri PbiBaseUri { get; set; }
         
         /// <summary>
-        /// Allows setting an alternative temp folder into which .pbix files are compiled. Supports variable expansion (default: '%TEMP%').
+        /// Allows setting an alternative temp folder into which .pbix files are compiled. Supports variable expansion (default: <see cref="System.IO.Path.GetTempPath"/>).
         /// </summary>
         [JsonProperty("tempDir")]
         public string TempDir { get; set; }

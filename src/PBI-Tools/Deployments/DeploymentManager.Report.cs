@@ -98,7 +98,7 @@ namespace PbiTools.Deployments
                 try { 
                     await ImportReportAsync(report, powerbi, workspace, workspaceIdCache);
                 }
-                catch (Microsoft.Rest.HttpOperationException ex) {
+                catch (HttpOperationException ex) {
                     if (ex.Response.Content.TryParseJson<JObject>(out var json)) {
                         throw new DeploymentException($"HTTP Error: {ex.Response.StatusCode}\n{json.ToString(Newtonsoft.Json.Formatting.Indented)}", ex);
                     }
@@ -108,100 +108,67 @@ namespace PbiTools.Deployments
 
         }
 
-        internal ReportDeploymentInfo[] GenerateReportsFromFolderSource(PbiDeploymentManifest manifest, PbiDeploymentEnvironment environment, string baseFolder = null)
-        {
-            var sourceFolderRegex = ConvertSearchPatternToRegex(manifest.Source.Path);
+        internal static string MakeRelativePath(string baseDir, string fullPath) =>
+#if NETFRAMEWORK
+            new Uri(baseDir + "/").MakeRelativeUri(new Uri(fullPath)).OriginalString.Replace("%20", " ");
+#elif NET
+            Path.GetRelativePath(baseDir, fullPath);
+#endif
 
-            var currentDir = baseFolder ?? Environment.CurrentDirectory;
+        internal static DeploymentSourceInfo[] ResolveSourceFolders(string path, string baseFolder, IDictionary<string, string> systemParameters)
+        {
+            var sourceFolderRegex = ConvertSearchPatternToRegex(path ?? throw new ArgumentNullException(nameof(path)));
+            var currentDir = baseFolder ?? throw new ArgumentNullException(nameof(baseFolder));
+
             var sourceFolders = Directory.EnumerateDirectories(
-                    currentDir,
-                    "*",
-                    SearchOption.AllDirectories
-                )
-                .Select(d =>
+                currentDir,
+                "*",
+                SearchOption.AllDirectories
+            )
+            .Select(d =>
+            {
+                var dir = new DirectoryInfo(d);
+                var relPath = MakeRelativePath(currentDir, dir.FullName);
+                var match = sourceFolderRegex.Match(relPath.Replace('\\', '/'));
+                return new
                 {
-                    var dir = new DirectoryInfo(d);
-#if NETFRAMEWORK
-                    var relPath = new Uri(currentDir + "/").MakeRelativeUri(new Uri(dir.FullName)).OriginalString;
-#elif NET
-                    var relPath = Path.GetRelativePath(currentDir, dir.FullName);
-#endif
-                    var match = sourceFolderRegex.Match(relPath.Replace('\\', '/'));
-                    return new
-                    {
-                        Directory = dir,
-                        Match = match
-                    };
-                })
-                .Where(x => x.Match.Success && PbixProject.IsPbixProjFolder(x.Directory.FullName))
-                .Select(x => new {
-                    x.Directory.FullName,
-#if NETFRAMEWORK
-                    Parameters = x.Match.Groups.OfType<System.Text.RegularExpressions.Group>()
-                        .Aggregate(
-                            new Dictionary<string, string> {
-                                    { DeploymentParameters.Names.ENVIRONMENT, environment.Name },
-                                    { DeploymentParameters.Names.PBIXPROJ_NAME, x.Directory.Name },
-                                    { DeploymentParameters.Names.FILE_NAME_WITHOUT_EXT, x.Directory.Name }
-                            },
-                            (dict, group) => {
-                                dict[group.Name == "0" ? DeploymentParameters.Names.PBIXPROJ_FOLDER : group.Name] = group.Value;
-                                return dict;
-                            }
-                        )
-#elif NET
-                    Parameters = x.Match.Groups.Keys.Aggregate(
-                        new Dictionary<string, string> {
-                            { DeploymentParameters.Names.ENVIRONMENT, environment.Name },
-                            { DeploymentParameters.Names.PBIXPROJ_NAME, x.Directory.Name },
-                            { DeploymentParameters.Names.FILE_NAME_WITHOUT_EXT, x.Directory.Name }
-                        },
-                        (dict, key) => {
-                            dict[key == "0" ? DeploymentParameters.Names.PBIXPROJ_FOLDER : key] = x.Match.Groups[key].Value;
+                    Directory = dir,
+                    Match = match
+                };
+            })
+            .Where(x => x.Match.Success && PbixProject.IsPbixProjFolder(x.Directory.FullName))
+            .Select(x => new DeploymentSourceInfo {
+                FullPath = x.Directory.FullName,
+                Parameters = x.Match.Groups.OfType<System.Text.RegularExpressions.Group>()
+                    .Aggregate(
+                        systemParameters
+                            .With(DeploymentParameters.Names.PBIXPROJ_NAME, x.Directory.Name)
+                            .With(DeploymentParameters.Names.FILE_NAME_WITHOUT_EXT, x.Directory.Name),
+                        (dict, group) => {
+                            dict[group.Name == "0" ? DeploymentParameters.Names.PBIXPROJ_FOLDER : group.Name] = group.Value;
                             return dict;
-                        })
-#endif
-                })
-                .ToArray();
+                        }
+                    )
+            })
+            .ToArray();
 
             if (sourceFolders.Length == 0)
             {
-                Log.Warning("Found no matching source folders for path: '{SourcePath}'. Exiting...", manifest.Source.Path);
-                return new ReportDeploymentInfo[0];
+                Log.Warning("Found no matching source folders for path: '{SourcePath}'. Exiting...", path);
             }
             else
             {
                 Log.Information("Found {Count} source folders to deploy.", sourceFolders.Length);
             }
 
-            // Compile PBIX files *****************************************
-
-            var tempDir = Environment.ExpandEnvironmentVariables(
-                String.IsNullOrEmpty(manifest.Options.TempDir)
-                ? "%TEMP%"
-                : manifest.Options.TempDir
-            );
-            Log.Debug("Using TEMP dir: {TempDir}", tempDir);
-
-            var reports = sourceFolders.Select(folder => CompileReportForDeployment(  // TODO Perform transforms here (connection swap, for instance)
-                manifest.Options,
-                environment,
-                folder.FullName,
-                tempDir,
-                folder.Parameters.Aggregate(
-                    manifest.Parameters.ExpandEnv(),
-                    (dict, x) => { dict[x.Key] = DeploymentParameter.From(x.Value); return dict; }     // Folder params overwrite Manifest params
-                )
-            )).ToArray();
-
-            return reports;
+            return sourceFolders;
         }
 
-        internal ReportDeploymentInfo[] GetReportsFromFileSource(PbiDeploymentManifest manifest, PbiDeploymentEnvironment environment, string baseFolder = null)
+        internal static DeploymentSourceInfo[] ResolveSourceFiles(string path, string baseFolder, IDictionary<string, string> systemParameters)
         {
-            var sourceFileRegex = ConvertSearchPatternToRegex(manifest.Source.Path);
+            var sourceFileRegex = ConvertSearchPatternToRegex(path);
+            var currentDir = baseFolder ?? throw new ArgumentNullException(nameof(baseFolder));
 
-            var currentDir = baseFolder ?? Environment.CurrentDirectory;
             var sourceFiles = Directory.EnumerateFiles(
                     currentDir,
                     "*.*",
@@ -210,11 +177,7 @@ namespace PbiTools.Deployments
                 .Select(path =>
                 {
                     var file = new FileInfo(path);
-#if NETFRAMEWORK
-                    var relPath = new Uri(currentDir + "/").MakeRelativeUri(new Uri(file.FullName)).OriginalString;
-#elif NET
-                    var relPath = Path.GetRelativePath(currentDir, file.FullName);
-#endif
+                    var relPath = MakeRelativePath(currentDir, file.FullName);
                     var match = sourceFileRegex.Match(relPath.Replace('\\', '/'));
                     return new
                     {
@@ -229,77 +192,79 @@ namespace PbiTools.Deployments
                         Log.Warning("This file matched by the source expression does not have a .pbix extension and will likely fail to deploy: {FullPath}", x.File.FullName);
                     return true;
                 })
-                .Select(x => new {
-                    x.File.FullName,
-#if NETFRAMEWORK
+                .Select(x => new DeploymentSourceInfo {
+                    FullPath = x.File.FullName,
                     Parameters = x.Match.Groups.OfType<System.Text.RegularExpressions.Group>()
                         .Aggregate(
-                            new Dictionary<string, string> {
-                                    { DeploymentParameters.Names.ENVIRONMENT, environment.Name },
-                                    { DeploymentParameters.Names.FILE_NAME, x.File.Name },
-                                    { DeploymentParameters.Names.FILE_NAME_WITHOUT_EXT, Path.GetFileNameWithoutExtension(x.File.Name) }
-                            },
+                            systemParameters
+                                .With(DeploymentParameters.Names.FILE_NAME, x.File.Name)
+                                .With(DeploymentParameters.Names.FILE_NAME_WITHOUT_EXT, Path.GetFileNameWithoutExtension(x.File.Name)),
                             (dict, group) => {
                                 dict[group.Name == "0" ? DeploymentParameters.Names.FILE_PATH : group.Name] = group.Value;
                                 return dict;
                             }
                         )
-#elif NET
-                    Parameters = x.Match.Groups.Keys.Aggregate(
-                        new Dictionary<string, string> {
-                            { DeploymentParameters.Names.ENVIRONMENT, environment.Name },
-                            { DeploymentParameters.Names.FILE_NAME, x.File.Name },
-                            { DeploymentParameters.Names.FILE_NAME_WITHOUT_EXT, Path.GetFileNameWithoutExtension(x.File.Name) }
-                        },
-                        (dict, key) => {
-                            dict[key == "0" ? DeploymentParameters.Names.FILE_PATH : key] = x.Match.Groups[key].Value;
-                            return dict;
-                        })
-#endif
+
                 })
                 .ToArray();
 
             if (sourceFiles.Length == 0)
             {
-                Log.Warning("Found no matching source files for path: '{SourcePath}'. Exiting...", manifest.Source.Path);
-                return new ReportDeploymentInfo[0];
+                Log.Warning("Found no matching source files for path: '{SourcePath}'. Exiting...", path);
             }
             else
             {
                 Log.Information("Found {Count} source files to deploy.", sourceFiles.Length);
             }
 
-            // Compile PBIX files *****************************************
+            return sourceFiles;
+        }
 
-            var tempDir = Environment.ExpandEnvironmentVariables(
-                String.IsNullOrEmpty(manifest.Options.TempDir)
-                ? "%TEMP%"
-                : manifest.Options.TempDir
-            );
+        internal ReportDeploymentInfo[] GenerateReportsFromFolderSource(PbiDeploymentManifest manifest, PbiDeploymentEnvironment environment, string baseFolder = null)
+        {
+            var sourceFolders = ResolveSourceFolders(manifest.Source.Path, baseFolder ?? Environment.CurrentDirectory, DeploymentParameters.GetSystemParameters(environment.Name));
+
+            var tempDir = manifest.ResolveTempDir();
             Log.Debug("Using TEMP dir: {TempDir}", tempDir);
 
+            // Compile PBIX files *****************************************
+
+            return sourceFolders.Select(folder => CompileReportForDeployment(  // TODO Perform transforms here (connection swap, for instance)
+                manifest.Options,
+                environment.DisplayName,
+                folder.FullPath,
+                tempDir,
+                folder.Parameters.Aggregate(
+                    manifest.Parameters.ExpandEnv().ExpandParameters(folder.Parameters),
+                    (dict, x) => { dict[x.Key] = DeploymentParameter.From(x.Value); return dict; }     // Folder params overwrite Manifest params
+                )
+            )).ToArray();
+        }
+
+        internal ReportDeploymentInfo[] GetReportsFromFileSource(PbiDeploymentManifest manifest, PbiDeploymentEnvironment environment, string baseFolder = null)
+        {
+            var sourceFiles = ResolveSourceFiles(manifest.Source.Path, baseFolder ?? Environment.CurrentDirectory, DeploymentParameters.GetSystemParameters(environment.Name));
 
             return sourceFiles.Select(file =>
             {
                 var parameters = file.Parameters.Aggregate(
-                    manifest.Parameters.ExpandEnv(),
+                    manifest.Parameters.ExpandEnv().ExpandParameters(file.Parameters),
                     (dict, x) => { dict[x.Key] = DeploymentParameter.From(x.Value); return dict; }     // Folder params overwrite Manifest params
                 );
                 return new ReportDeploymentInfo
                 {
                     Options = manifest.Options,
                     Parameters = parameters,
-                    SourcePath = file.FullName,
-                    PbixPath = file.FullName,
-                    DisplayName = environment.DisplayName.ExpandParameters(parameters) ?? Path.GetFileName(file.FullName),
+                    SourcePath = file.FullPath,
+                    PbixPath = file.FullPath,
+                    DisplayName = environment.DisplayName.ExpandParameters(parameters) ?? Path.GetFileName(file.FullPath),
                 };
-            })
-            .ToArray();
+            }).ToArray();
         }
 
-        internal ReportDeploymentInfo CompileReportForDeployment(PbiDeploymentOptions options, PbiDeploymentEnvironment environment, string pbixProjFolder, string tempDir, IDictionary<string, DeploymentParameter> parameters)
+        internal ReportDeploymentInfo CompileReportForDeployment(PbiDeploymentOptions options, string displayName, string pbixProjFolder, string tempDir, IDictionary<string, DeploymentParameter> parameters, JObject connectionsOverwrite = default)
         {
-            var reportPath = Path.Combine(tempDir, Guid.NewGuid().ToString(), $"{new DirectoryInfo(pbixProjFolder).Name}.pbix");
+            var reportPath = Path.Combine(tempDir, $"{Guid.NewGuid()}", $"{new DirectoryInfo(pbixProjFolder).Name}.pbix");
 
             var reportInfo = new ReportDeploymentInfo
             {
@@ -307,14 +272,14 @@ namespace PbiTools.Deployments
                 Parameters = parameters,
                 SourcePath = pbixProjFolder,
                 PbixPath = reportPath,
-                DisplayName = environment.DisplayName.ExpandParameters(parameters) ?? Path.GetFileName(reportPath),
+                DisplayName = displayName.ExpandParameters(parameters) ?? Path.GetFileName(reportPath),
             };
 
             if (!WhatIf) { 
                 Log.Information("Creating PBIX from report source at: '{Path}'...", reportPath);
 
                 var model = PbixModel.FromFolder(pbixProjFolder);
-                model.ToFile(reportPath, PbiFileFormat.PBIX);
+                model.ToFile(reportPath, PbiFileFormat.PBIX, connectionsOverwrite);
 
                 reportInfo.Model = model;
             }
@@ -322,7 +287,7 @@ namespace PbiTools.Deployments
             return reportInfo;
         }
 
-        internal static async Task ImportReportAsync(ReportDeploymentInfo args, IPowerBIClient powerbi, string workspace, IDictionary<string, Guid> workspaceIdCache)
+        internal static async Task ImportReportAsync(ReportDeploymentInfo args, IPowerBIClient powerbi, string workspace, IDictionary<string, Guid> workspaceIdCache = null)
         {
             // Determine Workspace
             var workspaceId = Guid.TryParse(workspace, out var id)
@@ -354,15 +319,25 @@ namespace PbiTools.Deployments
                 import = await powerbi.Imports.GetImportInGroupAsync(workspaceId, import.Id);
             }
 
-            Log.Information("Import succeeded: {Id} ({Name})\n\tReport: {ReportId} \"{ReportName}\"\n\tUrl: {WebUrl}"
-                , import.Id
-                , import.Name
-                , import.Reports[0].Id
-                , import.Reports[0].Name
-                , import.Reports[0].WebUrl
-            );
+            Log.Information("Import succeeded: {Id} ({Name})", import.Id, import.Name);
+            if (import.Reports.TryGetFirst(out var report))
+                Log.Information("\tReport: {ReportId} \"{ReportName}\"\n\tUrl: {WebUrl}"
+                    , report.Id
+                    , report.Name
+                    , report.WebUrl);
+            if (import.Datasets.TryGetFirst(out var dataset))
+                Log.Information("\tDataset: {DatasetId} \"{DatasetName}\"\n\tUrl: {WebUrl}"
+                    , dataset.Id
+                    , dataset.Name
+                    , dataset.WebUrl);
             Log.Information("Report Created: {Created}", import.CreatedDateTime);
             Log.Information("Report Updated: {Updated}", import.UpdatedDateTime);
+        }
+
+        public class DeploymentSourceInfo
+        {
+            public string FullPath { get; set; }
+            public IDictionary<string, string> Parameters { get; set; }
         }
 
         public class ReportDeploymentInfo

@@ -167,5 +167,15 @@ namespace PbiTools.Deployments
 
             return authentication;
         }
+
+        /// <summary>
+        /// Gets the first item in a collection, or the default value if there is none.
+        /// Allows the collection reference to be <c>null</c>.
+        /// </summary>
+        public static bool TryGetFirst<T>(this IEnumerable<T> collection, out T value) where T : class
+        {
+            value = collection?.FirstOrDefault();
+            return value != default;
+        }
     }
 }
