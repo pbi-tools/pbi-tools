@@ -223,7 +223,7 @@ namespace PbiTools.Deployments
 					{
 						if (_options.Summary.Console)
 						{
-							var table = new Table();
+							var table = new Table { Width = Environment.UserInteractive ? null : 80 };
 
 							var properties = typeof(RefreshSummaryRecord).GetProperties();
 							Array.ForEach(properties, p => table.AddColumn(p.Name));
