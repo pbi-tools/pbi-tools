@@ -294,9 +294,11 @@ namespace PbiTools.Deployments
         [JsonProperty("refresh")]
         public bool Refresh { get; set; }
 
-        // (Dataset) refresh settings
-        // Workspace Members? [ User/Group/App, AccessLevel]
-        // Capacity
+        /// <summary>
+        /// Contains environment-scoped parameters.
+        /// </summary>
+        [JsonProperty("parameters")]
+        public DeploymentParameters Parameters { get; set; }
 
         /// <summary>
         /// Allows customizing environment settings for embedded reports published as part of a dataset deployment.

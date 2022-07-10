@@ -37,7 +37,7 @@ namespace PbiTools.Deployments
         /// </summary>
         public static IDictionary<string, DeploymentParameter> ExpandEnv(this IDictionary<string, DeploymentParameter> input) =>
             input == null
-            ? new Dictionary<string, DeploymentParameter>()
+            ? new Dictionary<string, DeploymentParameter>(StringComparer.InvariantCultureIgnoreCase)
             : input.ToDictionary(x => x.Key, x => x.Value.ExpandEnv(), StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
@@ -50,6 +50,24 @@ namespace PbiTools.Deployments
             foreach (var key in target.Keys.ToArray()) {
                 var item = target[key];
                 if (item.Value is string s && s.Contains("{{") && s.Contains("}}")) {
+                    target[key] = item.CloneWithValue(s.ExpandParameters(externalParameters));
+                }
+            }
+            return target;
+        }
+
+        /// <summary>
+        /// Performs parameter replacement in all dictionary values, using the <c>externalParameters</c> dictionary as a source.
+        /// Only <see cref="DeploymentParameter"/>s of type string are modified.
+        /// </summary>
+        public static IDictionary<string, DeploymentParameter> ExpandParameters(this IDictionary<string, DeploymentParameter> target,
+            IDictionary<string, DeploymentParameter> externalParameters)
+        {
+            foreach (var key in target.Keys.ToArray())
+            {
+                var item = target[key];
+                if (item.Value is string s && s.Contains("{{") && s.Contains("}}"))
+                {
                     target[key] = item.CloneWithValue(s.ExpandParameters(externalParameters));
                 }
             }
@@ -91,7 +109,7 @@ namespace PbiTools.Deployments
                 new StringBuilder(value),
                 (sb, param) =>
                 {
-                    sb.Replace("{{" + param.Key + "}}", $"{param.Value}");
+                    sb.Replace("{{" + param.Key + "}}", param.Value);
                     return sb;
                 }
             ).ToString();

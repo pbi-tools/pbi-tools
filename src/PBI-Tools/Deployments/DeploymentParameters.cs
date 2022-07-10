@@ -27,7 +27,7 @@ namespace PbiTools.Deployments
             public const string PBIXPROJ_FOLDER = nameof(PBIXPROJ_FOLDER);
             public const string FILE_NAME = nameof(FILE_NAME);
             public const string FILE_NAME_WITHOUT_EXT = nameof(FILE_NAME_WITHOUT_EXT);
-            
+
             /* Report */
             public const string PBIXPROJ_NAME = nameof(PBIXPROJ_NAME);
             public const string FILE_PATH = nameof(FILE_PATH);
@@ -50,6 +50,62 @@ namespace PbiTools.Deployments
                 x => x.Key,
                 x => DeploymentParameter.FromJson(x.Value)
             ));
+
+        /// <summary>
+        /// Calculates effective environment parameters taking into account
+        /// declared manifest parameters, declared environment parameters, as well as system parameters.
+        /// ENV expansion is performed on both manifest and environment parameters.
+        /// Furthermore, manifest and environment parameters can reference system parameters,
+        /// and environment parameters can reference manifest parameters.
+        /// </summary>
+        public static IDictionary<string, DeploymentParameter> CalculateForEnvironment(
+            PbiDeploymentManifest manifest,
+            PbiDeploymentEnvironment environment,
+            params (string Key, string Value)[] additionalSystemParams)
+        {
+            var systemParams = additionalSystemParams.Aggregate(
+                GetSystemParameters(environment.Name),
+                (dict, x) => dict.With(x.Key, x.Value)
+            );
+
+            var manifestParams = systemParams.Aggregate(   // System params overwrite Manifest params
+                manifest.Parameters
+                    .ExpandEnv()
+                    .ExpandParameters(systemParams),
+                (dict, x) =>
+                {
+                    dict[x.Key] = DeploymentParameter.From(x.Value);
+                    return dict;
+                }
+            );
+
+            return environment.Parameters
+                .ExpandEnv()
+                .ExpandParameters(systemParams)
+                .ExpandParameters(manifestParams)
+                .Aggregate(    // ENV params overwrite Manifest params
+                    manifestParams,
+                    (dict, x) =>
+                    {
+                        dict[x.Key] = x.Value;
+                        return dict;
+                    }
+                );
+        }
+
+        /// <summary>
+        /// Calculates effective environment parameters taking into account
+        /// declared manifest parameters, declared environment parameters, as well as system parameters.
+        /// ENV expansion is performed on both manifest and environment parameters.
+        /// Furthermore, manifest and environment parameters can reference system parameters,
+        /// and environment parameters can reference manifest parameters.
+        /// </summary>
+        public static IDictionary<string, DeploymentParameter> CalculateForEnvironment(
+            PbiDeploymentManifest manifest,
+            PbiDeploymentEnvironment environment,
+            IDictionary<string, string> additionalSystemParams)
+        =>
+            CalculateForEnvironment(manifest, environment, additionalSystemParams.Select(x => (x.Key, x.Value)).ToArray());
     }
 
     public enum DeploymentParameterValueType
@@ -72,6 +128,8 @@ namespace PbiTools.Deployments
             this.ValueType = type;
             this.Value = value;
         }
+
+        public static implicit operator DeploymentParameter(JToken json) => FromJson(json);
 
         public static DeploymentParameter FromJson(JToken token)
         {
@@ -123,6 +181,13 @@ namespace PbiTools.Deployments
         };
 
         public override string ToString() => $"{Value}";
+
+        public override bool Equals(object obj) =>
+            obj is DeploymentParameter other
+            ? this.ValueType == other.ValueType && this.Value.Equals(other.Value)
+            : base.Equals(obj);
+
+        public override int GetHashCode() => (this.ValueType, this.ValueType).GetHashCode();
 
     }
 
