@@ -11,6 +11,7 @@ using Newtonsoft.Json.Linq;
 namespace PbiTools.Deployments
 {
     using ProjectSystem;
+    using System.ComponentModel;
 
     /// <summary>
     /// Represents a single deployment profile, i.e. a source definition, one or more target environments,
@@ -178,17 +179,31 @@ namespace PbiTools.Deployments
         public class RefreshOptions
         {
             /// <summary>
+            /// Globally enables or disables dataset refresh.
+            /// If enabled, refresh can be skipped in specific environments. If disabled, environment refresh settings are ignored.
+            /// </summary>
+            [JsonProperty("enabled")]
+            [DefaultValue(false)]
+            public bool Enabled { get; set; }
+
+            /// <summary>
             /// Skip refresh when the deployment created a new dataset (instead of updating an existing one).
             /// Default is <c>true</c>.
             /// </summary>
             [JsonProperty("skipNewDataset")]
+            [DefaultValue(true)]
             public bool SkipNewDataset { get; set; } = true;
 
             [JsonProperty("method")]
-            public RefreshMethod Method { get; set; } = RefreshMethod.API;
+            [DefaultValue(RefreshMethod.XMLA)]
+            public RefreshMethod Method { get; set; } = RefreshMethod.XMLA;
 
             [JsonProperty("type")]
+            [DefaultValue(nameof(DatasetRefreshType.Automatic))]
             public DatasetRefreshType Type { get; set; } = DatasetRefreshType.Automatic;
+
+            [JsonProperty("objects")]
+            public RefreshObjects Objects { get; set; }
 
             // *** https://docs.microsoft.com/rest/api/power-bi/datasets/refresh-dataset-in-group
             // applyRefreshPolicy
@@ -197,7 +212,7 @@ namespace PbiTools.Deployments
             // maxParallelism
             // objects
             // retryCount
-            
+
             [JsonProperty("tracing")]
             public TraceOptions Tracing { get; set; } = new();
 
@@ -210,6 +225,7 @@ namespace PbiTools.Deployments
             public class TraceOptions
             {
                 [JsonProperty("enabled")]
+                [DefaultValue(false)]
                 public bool Enabled { get; set; }
 
                 [JsonProperty("logEvents")]
@@ -289,12 +305,6 @@ namespace PbiTools.Deployments
         public string XmlaDataSource { get; set; }
 
         /// <summary>
-        /// If <c>true</c>, refreshes the dataset after metadata deployment. Default is <c>false</c>.
-        /// </summary>
-        [JsonProperty("refresh")]
-        public bool Refresh { get; set; }
-
-        /// <summary>
         /// Contains environment-scoped parameters.
         /// </summary>
         [JsonProperty("parameters")]
@@ -304,9 +314,9 @@ namespace PbiTools.Deployments
         /// Allows customizing environment settings for embedded reports published as part of a dataset deployment.
         /// </summary>
         [JsonProperty("report")]
-        public ReportEnvironment Report { get; set; }
+        public ReportOptions Report { get; set; }
 
-        public class ReportEnvironment
+        public class ReportOptions
         { 
             /// <summary>
             /// Used to disable report deployment for specific environments only.
@@ -329,6 +339,21 @@ namespace PbiTools.Deployments
             /// </summary>
             [JsonProperty("displayName")]
             public string DisplayName { get; set; }
+        }
+
+        [JsonProperty("refresh")]
+        public RefreshOptions Refresh { get; set; }
+
+        public class RefreshOptions
+        {
+            /// <summary>
+            /// Used to disable dataset refresh for specific environments only.
+            /// </summary>
+            [JsonProperty("skip")]
+            public bool Skip { get; set; }
+
+            [JsonProperty("objects")]
+            public RefreshObjects Objects { get; set; }
         }
     }
 }

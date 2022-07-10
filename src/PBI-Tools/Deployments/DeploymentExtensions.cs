@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.PowerBI.Api;
+using Microsoft.PowerBI.Api.Models;
+using TOM = Microsoft.AnalysisServices.Tabular;
 
 namespace PbiTools.Deployments
 {
@@ -195,5 +197,11 @@ namespace PbiTools.Deployments
             value = collection?.FirstOrDefault();
             return value != default;
         }
+
+        /// <summary>
+        /// Converts a <see cref="DatasetRefreshType"/> value to the corresponding <see cref="TOM.RefreshType"/>.
+        /// </summary>
+        public static TOM.RefreshType ConvertToTOM(this DatasetRefreshType apiRefreshType) =>
+            (TOM.RefreshType)Enum.Parse(typeof(TOM.RefreshType), $"{apiRefreshType}");
     }
 }

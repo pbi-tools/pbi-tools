@@ -7,6 +7,7 @@ using System.IO;
 using Newtonsoft.Json.Linq;
 using PowerArgs;
 using static Microsoft.PowerBI.Api.Models.ImportConflictHandlerMode;
+using static Microsoft.PowerBI.Api.Models.DatasetRefreshType;
 
 namespace PbiTools.Cli
 {
@@ -56,12 +57,30 @@ namespace PbiTools.Cli
                             Options = new() {
                                 PbiBaseUri = DeploymentManager.DefaultPowerBIApiBaseUri,
                                 Dataset = new() {
-                                    ReplaceParameters = true
+                                    ReplaceParameters = true,
+                                    DeployEmbeddedReport = true
                                 }, 
                                 Refresh = new() {
+                                    Enabled = true,
                                     Method = PbiDeploymentOptions.RefreshOptions.RefreshMethod.XMLA,
-                                    Type = Microsoft.PowerBI.Api.Models.DatasetRefreshType.Full, 
-                                    SkipNewDataset = true
+                                    Type = Automatic,
+                                    Objects = RefreshObjects.FromJson(new JObject {
+                                        { "Info", (string)Full },
+                                        { "HistoricTransactions", "None" }
+                                    }),
+                                    SkipNewDataset = true,
+                                    Tracing = new() {
+                                        Enabled = true,
+                                        LogEvents = new() { Filter = new[] { 
+                                            "*|ReadData|*" 
+                                        } },
+                                        Summary = new() {
+                                            Events = new[] { "TabularRefresh" },
+                                            ObjectTypes = new[] { "Partition" },
+                                            Console = true,
+                                            OutPath = "./artifacts/refresh-summary.csv"
+                                        }
+                                    },
                                 }
                             },
                             Authentication = new() {
@@ -76,17 +95,22 @@ namespace PbiTools.Cli
                                 { "Development", new() {
                                     Workspace = "{{WORKSPACE_PREFIX}} - {{WORKSPACE}}",
                                     Disabled = false,
-                                    Refresh = true
+                                    Refresh = new() {
+                                        Objects = RefreshObjects.FromJson(new JObject {
+                                        })
+                                    }
                                 }},
                                 { "UAT", new() {
                                     Workspace = "Workspace-Name",
                                     Disabled = false,
-                                    DisplayName = "{{PBIXPROJ_FOLDER}} [UAT]"
+                                    DisplayName = "{{PBIXPROJ_FOLDER}} [UAT]",
+                                    Refresh = new() { 
+                                        Skip = true
+                                    }
                                 }},
                                 { "Production", new() {
                                     Workspace = "00000000-0000-0000-0000-000000000000",
-                                    Disabled = true,
-                                    Refresh = true
+                                    Disabled = true
                                 }}
                             }
                         }.AsJson() },

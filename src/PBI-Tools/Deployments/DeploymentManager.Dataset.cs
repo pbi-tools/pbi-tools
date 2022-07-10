@@ -278,7 +278,7 @@ namespace PbiTools.Deployments
             #endregion
 
             #region Refresh
-            if (deploymentEnv.Refresh)
+            if (manifest.Options.Refresh.Enabled && deploymentEnv.Refresh?.Skip == false)
             {
                 var stopWatch = System.Diagnostics.Stopwatch.StartNew();
 
@@ -303,7 +303,13 @@ namespace PbiTools.Deployments
                             server.Connect(connectionStringBldr.ConnectionString, server.SessionID);
 
                             using (var db = server.Databases[datasetId]) {
-                                RefreshXmla(db, dataset.Options.Refresh, basePath);
+                                new XmlaRefreshManager(db)
+                                {
+                                    BasePath = basePath,
+                                    ManifestOptions = dataset.Options.Refresh,
+                                    EnvironmentOptions = deploymentEnv.Refresh
+                                }
+                                .RunRefresh();
                             }
                             break;
                         default:
@@ -313,37 +319,6 @@ namespace PbiTools.Deployments
                 }
             }
             #endregion
-        }
-
-        internal static void RefreshXmla(TOM.Database database, PbiDeploymentOptions.RefreshOptions refreshOptions, string basePath)
-        {
-            using var trace = new XmlaRefreshTrace(database.Server, refreshOptions.Tracing ?? new(), basePath);
-
-            // Mapping API RefreshType -> TOM RefreshType
-            var refreshType = (TOM.RefreshType)Enum.Parse(typeof(TOM.RefreshType), $"{refreshOptions.Type}");
-
-            database.Model.RequestRefresh(refreshType);
-            trace.Start();
-
-            try
-            {
-                var refreshResults = database.Model.SaveChanges();
-                if (refreshResults.XmlaResults != null && refreshResults.XmlaResults.Count > 0)
-                {
-                    Log.Information("Refresh Results:");
-
-                    foreach (var result in refreshResults.XmlaResults.OfType<AMO.XmlaResult>())
-                    {
-                        Log.Information(result.Value);
-                        foreach (var message in result.Messages.OfType<AMO.XmlaMessage>())
-                            Log.Warning("- [{Severity}] {Description}\n\t{Location}\n--", message.GetType().Name, message.Description, message.Location.SourceObject);
-                    }
-                }
-            }
-            catch (AMO.OperationException ex) when (ex.Message.Contains("DMTS_DatasourceHasNoCredentialError"))
-            {
-                throw new DeploymentException("Refresh failed because of missing credentials. See https://docs.microsoft.com/power-bi/enterprise/service-premium-connect-tools#setting-data-source-credentials for further details.", ex);
-            }
         }
 
 
