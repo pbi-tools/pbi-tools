@@ -243,6 +243,9 @@ namespace PbiTools.Deployments
                             string csvPath = Path.Combine(_basePath, _options.Summary.OutPath);
 							Log.Debug("Writing summary to file: {Path}", csvPath);
 
+							Log.Debug("Ensuring file directory exists...");
+							Directory.CreateDirectory(Path.GetDirectoryName(csvPath));
+
                             using var file = new StreamWriter(csvPath);
 							using var csv = new CsvWriter(file, new CsvConfiguration(CultureInfo.InvariantCulture));
 
