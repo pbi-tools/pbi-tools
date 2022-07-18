@@ -65,7 +65,7 @@ namespace PbiTools.Deployments
                     {
                         Log.Information(result.Value);
                         foreach (var message in result.Messages.OfType<AMO.XmlaMessage>())
-                            Log.Warning("- [{Severity}] {Description}\n\t{Location}\n--", message.GetType().Name, message.Description, message.Location.SourceObject);
+                            Log.Warning("- [{Severity}] {Description}\n\t{Location}\n--", message.GetType().Name, message.Description, message.Location?.SourceObject);
                     }
                 }
             }
