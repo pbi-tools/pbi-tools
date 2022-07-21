@@ -195,8 +195,8 @@ namespace PbiTools.Deployments
             /// Default is <c>true</c>.
             /// </summary>
             [JsonProperty("skipNewDataset")]
-            [DefaultValue(true)]
-            public bool SkipNewDataset { get; set; } = true;
+            [DefaultValue(false)]
+            public bool SkipNewDataset { get; set; }
 
             [JsonProperty("method")]
             [DefaultValue(RefreshMethod.XMLA)]
@@ -264,11 +264,26 @@ namespace PbiTools.Deployments
 
         public class DatasetOptions
         {
+            /// <summary>
+            /// If <c>true</c>, replaces the values of dataset shared expressions with respective values
+            /// from manifest/environment parameters.
+            /// Default is <c>false</c>.
+            /// </summary>
             [JsonProperty("replaceParameters")]
             public bool ReplaceParameters { get; set; }
 
+            /// <summary>
+            /// TODO
+            /// </summary>
             [JsonProperty("deployEmbeddedReport")]
             public bool DeployEmbeddedReport { get; set; }
+
+            /// <summary>
+            /// If <c>true</>, makes the deployment principal the dataset owner. Only applies to existing datasets; new datasets
+            /// created during the deployment are always owned by the deployment principal.
+            /// </summary>
+            [JsonProperty("takeOver")]
+            public bool TakeOver { get; set; }
 
             [JsonProperty("gateway")]
             public GatewayOptions Gateway { get; set; }

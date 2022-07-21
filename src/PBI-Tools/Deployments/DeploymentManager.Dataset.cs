@@ -233,12 +233,16 @@ namespace PbiTools.Deployments
 
                 dbNew.Name = dataset.DisplayName; // avoid name clash
 
+                // TODO Modify partitions, roles, role members if required
+                // TODO Allow saving BIM as deployment artifact
+
                 // Transfer new model schema...
                 dbNew.Model.CopyTo(remoteDb.Model);
 
                 Log.Debug("Updating model metadata...");
                 var updateResults = remoteDb.Model.SaveChanges();
                 // TODO Report updateResults.Impact?
+
                 if (updateResults.XmlaResults != null && updateResults.XmlaResults.Count > 0)
                 {
                     Log.Information("Update Results:");
@@ -247,7 +251,7 @@ namespace PbiTools.Deployments
                     {
                         Log.Information(result.Value);
                         foreach (var message in result.Messages.OfType<AMO.XmlaMessage>())
-                            Log.Warning("- [{Severity}] {Description}\n\t{Location}\n--", message.GetType().Name, message.Description, message.Location.SourceObject);
+                            Log.Warning("- [{Severity}] {Description}\n\t{Location}\n--", message.GetType().Name, message.Description, message.Location?.SourceObject);
                     }
                 }
 
@@ -315,6 +319,11 @@ namespace PbiTools.Deployments
 
             #endregion
 
+            #region TODO: Set Dataset Permissions
+            #endregion
+
+            #region TODO: Set Role Members
+            #endregion
 
             if (WhatIf) return; // TODO Determine further WhatIf stages...
 
