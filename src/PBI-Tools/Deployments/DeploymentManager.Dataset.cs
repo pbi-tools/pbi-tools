@@ -367,7 +367,7 @@ namespace PbiTools.Deployments
                 SourcePath = sourcePath,
                 DisplayName = resolveDisplayName(parameters),
                 Options = manifest.Options,
-                Parameters = parameters
+                Parameters = new DeploymentParameters(parameters)
             };
 
         public class DatasetDeploymentInfo
@@ -380,7 +380,7 @@ namespace PbiTools.Deployments
             /// <summary>
             /// The effective deployment parameters for the target environment.
             /// </summary>
-            public IDictionary<string, DeploymentParameter> Parameters { get; set; }
+            public DeploymentParameters Parameters { get; set; }
 
             /// <summary>
             /// The folder or file where dataset sources reside.

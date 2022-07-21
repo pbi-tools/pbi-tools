@@ -41,7 +41,7 @@ namespace PbiTools.Deployments
             { Names.PBITOOLS_VERSION, AssemblyVersionInformation.AssemblyInformationalVersion },
         };
 
-        private DeploymentParameters(IDictionary<string, DeploymentParameter> parameters) : base(parameters) { }
+        internal DeploymentParameters(IDictionary<string, DeploymentParameter> parameters) : base(parameters) { }
 
         internal new IDictionary<string, DeploymentParameter> Dictionary => base.Dictionary;
 
