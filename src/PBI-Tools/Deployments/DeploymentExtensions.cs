@@ -117,6 +117,12 @@ namespace PbiTools.Deployments
             ).ToString();
 
         /// <summary>
+        /// Expands parameters within the string first, then environment variables.
+        /// </summary>
+        public static string ExpandParamsAndEnv(this string value, IDictionary<string, DeploymentParameter> parameters) =>
+            value.ExpandParameters(parameters).ExpandEnv();
+
+        /// <summary>
         /// Assigns each deployment environment its name from the environments dictionary.
         /// </summary>
         public static PbiDeploymentManifest ExpandEnvironments(this PbiDeploymentManifest manifest)
