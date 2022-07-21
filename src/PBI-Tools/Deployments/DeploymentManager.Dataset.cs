@@ -156,6 +156,8 @@ namespace PbiTools.Deployments
             #region Ensure Remote Database
             Log.Write(WhatIfLogLevel, "Checking for existing database with matching name...");
             var createdNewDb = false;
+            var datasetId = default(string);
+
             if (!server.Databases.ContainsName(dataset.DisplayName))
             {
                 using var newDb = new TOM.Database
@@ -185,13 +187,13 @@ namespace PbiTools.Deployments
             {
                 // Database exists...
                 using var db = server.Databases.GetByName(dataset.DisplayName);
+                datasetId = db.ID;
                 LogDbInfo(db, "Matching dataset found.");
                 return;
             }
             #endregion
 
             #region Update Remote Database
-            var datasetId = default(string);
 
             using (var remoteDb = server.Databases.GetByName(dataset.DisplayName)) // Database with specified name is guaranteed to exist at this point
             {
@@ -242,6 +244,17 @@ namespace PbiTools.Deployments
             Log.Information("* IsRefreshable          : {IsRefreshable}", pbiDataset.IsRefreshable);
             Log.Information("* IsOnPremGatewayRequired: {IsOnPremGatewayRequired}", pbiDataset.IsOnPremGatewayRequired);
             Log.Information("* TargetStorageMode      : {TargetStorageMode}", pbiDataset.TargetStorageMode);
+            #endregion
+
+            #region Bind to Gateway (New dataset only)
+
+            var gatewayManager = new DatasetGatewayManager(dataset.Options.Dataset.Gateway, powerbi) { WhatIf = WhatIf };
+
+            await gatewayManager.DiscoverGatewaysAsync(workspaceId, datasetId);
+
+            if (createdNewDb)
+                await gatewayManager.BindToGatewayAsync(workspaceId, datasetId, dataset.Parameters);
+
             #endregion
 
             #region Deploy Report

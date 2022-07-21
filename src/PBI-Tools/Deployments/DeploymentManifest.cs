@@ -265,6 +265,34 @@ namespace PbiTools.Deployments
 
             [JsonProperty("deployEmbeddedReport")]
             public bool DeployEmbeddedReport { get; set; }
+
+            [JsonProperty("gateway")]
+            public GatewayOptions Gateway { get; set; }
+
+            public class GatewayOptions
+            { 
+                /// <summary>
+                /// If true, discovers gateways applicable to the dataset and lists them in the logs.
+                /// </summary>
+                [JsonProperty("discoverGateways")]
+                public bool DiscoverGateways { get; set; }
+
+                /// <summary>
+                /// If specified, binds a newly created dataset to the corresponding gateway.
+                /// Must be a valid Guid.
+                /// Parameter expansion supported.
+                /// </summary>
+                [JsonProperty("gatewayId")]
+                public string GatewayId { get; set; }
+
+                /// <summary>
+                /// An optional list of specific gateway datasources to bind to.
+                /// Can be the datasource guid or name.
+                /// </summary>
+                [JsonProperty("dataSources")]
+                public string[] DataSources { get; set; }
+            }
+
         }
 
         public class ReportOptions
