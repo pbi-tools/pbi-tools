@@ -240,7 +240,7 @@ namespace PbiTools.Deployments
 
 						if (!String.IsNullOrEmpty(_options.Summary.OutPath))
 						{
-                            string csvPath = Path.Combine(_basePath, _options.Summary.OutPath);
+                            string csvPath = new FileInfo(Path.Combine(_basePath, _options.Summary.OutPath)).FullName;
 							Log.Debug("Writing summary to file: {Path}", csvPath);
 
 							Log.Debug("Ensuring file directory exists...");
