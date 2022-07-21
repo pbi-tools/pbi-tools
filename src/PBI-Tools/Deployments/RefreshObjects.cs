@@ -63,7 +63,7 @@ namespace PbiTools.Deployments
 
         public bool SkipRefresh => !RefreshType.HasValue;
 
-        public JProperty ToJson() => new (OriginalString, RefreshType);
+        public JProperty ToJson() => new (OriginalString, RefreshType?.ToString() ?? NoneRefreshType);
 
         public static RefreshObject FromJson(JProperty property)
         {
@@ -110,7 +110,7 @@ namespace PbiTools.Deployments
 
     public class RefreshObjectsConverter : JsonConverter<RefreshObjects>
     {
-        public override RefreshObjects ReadJson(JsonReader reader, Type objectType, RefreshObjects existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public override RefreshObjects ReadJson(JsonReader reader, System.Type objectType, RefreshObjects existingValue, bool hasExistingValue, JsonSerializer serializer)
             => RefreshObjects.FromJson(JObject.Load(reader));
 
         public override void WriteJson(JsonWriter writer, RefreshObjects value, JsonSerializer serializer)
