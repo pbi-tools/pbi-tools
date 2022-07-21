@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using Microsoft.PowerBI.Api.Models;
 using Newtonsoft.Json;
@@ -11,7 +12,6 @@ using Newtonsoft.Json.Linq;
 namespace PbiTools.Deployments
 {
     using ProjectSystem;
-    using System.ComponentModel;
 
     /// <summary>
     /// Represents a single deployment profile, i.e. a source definition, one or more target environments,
@@ -147,6 +147,10 @@ namespace PbiTools.Deployments
 
         [JsonProperty("report")]
         public ReportOptions Report { get; set; } = new();
+
+        [JsonProperty("sqlScripts")]
+        public SqlScriptsOptions SqlScripts { get; set; } = new();
+
 
         public class ImportOptions
         {
@@ -300,6 +304,83 @@ namespace PbiTools.Deployments
             [JsonProperty("customConnectionsTemplate")]
             public string CustomConnectionsTemplate { get; set; }
         }
+
+        public class SqlScriptsOptions
+        {
+            /// <summary>
+            /// TODO
+            /// </summary>
+            [JsonProperty("enabled")]
+            [DefaultValue(false)]
+            public bool Enabled { get; set; }
+
+            /// <summary>
+            /// TODO
+            /// </summary>
+            [JsonProperty("ensureDatabase")]
+            [DefaultValue(false)]
+            public bool EnsureDatabase { get; set; }
+
+
+            /// <summary>
+            /// TODO
+            /// </summary>
+            [JsonProperty("schema")]
+            public string Schema { get; set; }
+
+            /// <summary>
+            /// TODO
+            /// </summary>
+            [JsonProperty("connection")]
+            public IDictionary<string, string> Connection { get; set; }
+
+            /// <summary>
+            /// TODO
+            /// </summary>
+            [JsonProperty("path")]
+            public string Path { get; set; }
+
+            /// <summary>
+            /// TODO
+            /// </summary>
+            [JsonProperty("htmlReportPath")]
+            public string HtmlReportPath { get; set; }
+
+            /// <summary>
+            /// TODO
+            /// </summary>
+            [JsonProperty("logScriptOutput")]
+            [DefaultValue(true)]
+            public bool LogScriptOutput { get; set; } = true;
+
+            /// <summary>
+            /// TODO
+            /// </summary>
+            [JsonProperty("journal")]
+            public SqlScriptsJournalOptions Journal { get; set; }
+
+            public class SqlScriptsJournalOptions
+            {
+
+                /// <summary>
+                /// </summary>
+                [JsonProperty("schema")]
+                public string Schema { get; set; }
+
+                /// <summary>
+                /// </summary>
+                [JsonProperty("table")]
+                public string Table { get; set; }
+            }
+
+            public enum SqlScriptsTransactionType
+            { 
+                None = 0,
+                SingleTransaction,
+                PerScript
+            }
+        }
+
     }
 
     public class PbiDeploymentEnvironment

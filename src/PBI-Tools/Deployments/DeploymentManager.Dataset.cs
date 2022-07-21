@@ -155,6 +155,24 @@ namespace PbiTools.Deployments
             }
             #endregion
 
+            #region Init SqlScriptDeployer
+            var artifactsFolder = new DeploymentArtifactsFolder(basePath, label);
+
+            var sqlScripts = new SqlScriptsDeployer(
+                dataset.Options.SqlScripts,
+                dataset.Parameters,
+                artifactsFolder,
+                environment,
+                basePath
+            )
+            { WhatIf = WhatIf };
+
+            sqlScripts.TestConnection();
+
+            sqlScripts.EnsureDatabase();
+
+            #endregion
+
             #region Ensure Remote Database
             Log.Write(WhatIfLogLevel, "Checking for existing database with matching name...");
             var createdNewDb = false;
@@ -172,8 +190,7 @@ namespace PbiTools.Deployments
                 if (WhatIf)
                 {
                     // Does NOT exist...
-                    Log.Information("Workspace '{Workspace}' does not have exiting dataset named '{DatasetName}'.", workspace, dataset.DisplayName);
-                    return;
+                    Log.Information("Workspace '{Workspace}' does not have existing dataset named '{DatasetName}'.", workspace, dataset.DisplayName);
                 }
                 else
                 {
@@ -191,14 +208,17 @@ namespace PbiTools.Deployments
                 using var db = server.Databases.GetByName(dataset.DisplayName);
                 datasetId = db.ID;
                 LogDbInfo(db, "Matching dataset found.");
-                return;
             }
             #endregion
 
+            sqlScripts.RunBeforeUpdate();
+
             #region Update Remote Database
 
-            using (var remoteDb = server.Databases.GetByName(dataset.DisplayName)) // Database with specified name is guaranteed to exist at this point
+            if (!WhatIf)
             {
+                using var remoteDb = server.Databases.GetByName(dataset.DisplayName); // Database with specified name is guaranteed to exist at this point
+                
                 if (!createdNewDb)
                 {
                     LogDbInfo(remoteDb, "Found existing dataset.");
@@ -238,17 +258,23 @@ namespace PbiTools.Deployments
                 ReportPartitionStatus(remoteDb.Model);
             }
 
-            var pbiDataset = await powerbi.Datasets.GetDatasetInGroupAsync(workspaceId, datasetId);
-            Log.Information("Power BI Dataset Details:");
-            Log.Information("* ID                     : {ID}", pbiDataset.Id);
-            Log.Information("* Name                   : {Name}", pbiDataset.Name);
-            Log.Information("* WebUrl                 : {WebUrl}", pbiDataset.WebUrl);
-            Log.Information("* ConfiguredBy           : {ConfiguredBy}", pbiDataset.ConfiguredBy);
-            Log.Information("* CreatedDate            : {CreatedDate}", pbiDataset.CreatedDate);
-            Log.Information("* IsRefreshable          : {IsRefreshable}", pbiDataset.IsRefreshable);
-            Log.Information("* IsOnPremGatewayRequired: {IsOnPremGatewayRequired}", pbiDataset.IsOnPremGatewayRequired);
-            Log.Information("* TargetStorageMode      : {TargetStorageMode}", pbiDataset.TargetStorageMode);
+            if (!WhatIf || !createdNewDb)
+            {
+                var pbiDataset = await powerbi.Datasets.GetDatasetInGroupAsync(workspaceId, datasetId);
+                Log.Information("Power BI Dataset Details:");
+                Log.Information("* ID                     : {ID}", pbiDataset.Id);
+                Log.Information("* Name                   : {Name}", pbiDataset.Name);
+                Log.Information("* WebUrl                 : {WebUrl}", pbiDataset.WebUrl);
+                Log.Information("* ConfiguredBy           : {ConfiguredBy}", pbiDataset.ConfiguredBy);
+                Log.Information("* CreatedDate            : {CreatedDate}", pbiDataset.CreatedDate);
+                Log.Information("* IsRefreshable          : {IsRefreshable}", pbiDataset.IsRefreshable);
+                Log.Information("* IsOnPremGatewayRequired: {IsOnPremGatewayRequired}", pbiDataset.IsOnPremGatewayRequired);
+                Log.Information("* TargetStorageMode      : {TargetStorageMode}", pbiDataset.TargetStorageMode);
+            }
             #endregion
+
+
+            sqlScripts.RunAfterUpdate();
 
             #region Bind to Gateway (New dataset only)
 
@@ -260,6 +286,9 @@ namespace PbiTools.Deployments
                 await gatewayManager.BindToGatewayAsync(workspaceId, datasetId, dataset.Parameters);
 
             #endregion
+
+
+            if (WhatIf) return; // TODO Determine further WhatIf stages...
 
             #region Deploy Report
             if (manifest.Options.Dataset.DeployEmbeddedReport) {
@@ -293,6 +322,8 @@ namespace PbiTools.Deployments
                 }
             }
             #endregion
+
+            sqlScripts.RunSqlScripts();
 
             #region Refresh
             if (manifest.Options.Refresh.Enabled && deploymentEnv.Refresh?.Skip == false)
@@ -338,6 +369,9 @@ namespace PbiTools.Deployments
                 }
             }
             #endregion
+
+            sqlScripts.RunAfterRefresh();
+
         }
 
         private static void ReportPartitionStatus(TOM.Model model)

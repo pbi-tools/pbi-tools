@@ -34,6 +34,7 @@ group Main
   nuget Microsoft.NETCore.Targets
   nuget LibGit2Sharp
   nuget Spectre.Console
+  nuget dbup-sqlserver
 
 group Tests
   source https://api.nuget.org/v3/index.json
