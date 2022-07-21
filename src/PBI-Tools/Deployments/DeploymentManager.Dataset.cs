@@ -273,6 +273,34 @@ namespace PbiTools.Deployments
             }
             #endregion
 
+            #region Report Datasources
+            if (!WhatIf || !createdNewDb) {
+                var dataSources = await powerbi.Datasets.GetDatasourcesInGroupAsync(workspaceId, datasetId);
+
+                var table = new Spectre.Console.Table { Width = Environment.UserInteractive ? null : 80 };
+
+                table.AddColumns(
+                    nameof(Microsoft.PowerBI.Api.Models.Datasource.DatasourceType),
+                    nameof(Microsoft.PowerBI.Api.Models.Datasource.ConnectionDetails),
+                    nameof(Microsoft.PowerBI.Api.Models.Datasource.DatasourceId),
+                    nameof(Microsoft.PowerBI.Api.Models.Datasource.GatewayId)
+                );
+
+                foreach (var item in dataSources.Value)
+                {
+                    table.AddRow(
+                        $"{item.DatasourceType}",
+                        $"{item.ConnectionDetails.ToJsonString(Newtonsoft.Json.Formatting.None)}",
+                        $"{item.DatasourceId}",
+                        $"{item.GatewayId}"
+                    );
+                }
+
+                Log.Information("Datasources:");
+
+                AnsiConsole.Write(table);
+            }
+            #endregion
 
             sqlScripts.RunAfterUpdate();
 
