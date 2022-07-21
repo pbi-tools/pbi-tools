@@ -3,19 +3,21 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Identity.Client;
 using Microsoft.PowerBI.Api;
 using Microsoft.Rest;
+using Spectre.Console;
 using AMO = Microsoft.AnalysisServices;
 using TOM = Microsoft.AnalysisServices.Tabular;
 
 namespace PbiTools.Deployments
 {
     using Model;
-    using System.Data.Common;
+    using Utils;
 
     public partial class DeploymentManager
     {
@@ -232,6 +234,8 @@ namespace PbiTools.Deployments
                 datasetId = remoteDb.ID;
 
                 Log.Information("Model deployment succeeded.");
+
+                ReportPartitionStatus(remoteDb.Model);
             }
 
             var pbiDataset = await powerbi.Datasets.GetDatasetInGroupAsync(workspaceId, datasetId);
@@ -323,6 +327,8 @@ namespace PbiTools.Deployments
                                     EnvironmentOptions = deploymentEnv.Refresh
                                 }
                                 .RunRefresh();
+
+                                ReportPartitionStatus(db.Model);
                             }
                             break;
                         default:
@@ -334,6 +340,48 @@ namespace PbiTools.Deployments
             #endregion
         }
 
+        private static void ReportPartitionStatus(TOM.Model model)
+        {
+            var partitions = model.Tables
+                .SelectMany(t => t.Partitions)
+                .Select(p => new 
+                {
+                    Table = p.Table.Name,
+                    Partition = p.Name,
+                    p.Mode,
+                    p.SourceType,
+                    p.State,
+                    p.ModifiedTime
+                })
+                .ToArray();
+
+            var table = new Spectre.Console.Table { Width = Environment.UserInteractive ? null : 80 };
+
+            table.AddColumns(
+                nameof(TOM.Table),
+                nameof(TOM.Partition),
+                nameof(TOM.Partition.State),
+                nameof(TOM.Partition.SourceType),
+                nameof(TOM.Partition.Mode),
+                nameof(TOM.Partition.ModifiedTime)
+            );
+
+            foreach (var item in partitions)
+            {
+                table.AddRow(
+                    $"{item.Table}",
+                    $"{item.Partition}",
+                    $"{item.State}",
+                    $"{item.SourceType}",
+                    $"{item.Mode}",
+                    $"{item.ModifiedTime}"
+                );
+            }
+
+            Log.Information("Partitions:");
+
+            AnsiConsole.Write(table);
+        }
 
         internal DatasetDeploymentInfo GetDatasetFromFileSource(PbiDeploymentManifest manifest, PbiDeploymentEnvironment deploymentEnv, string basePath)
         {
