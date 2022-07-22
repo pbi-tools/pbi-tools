@@ -182,10 +182,14 @@ namespace PbiTools.Deployments
             });
 
             if (_options.HtmlReportPath.HasValue()) {
-                var htmlPath = new FileInfo(Path.Combine(_basePath, _options.HtmlReportPath));
-                Log.Debug("Generating SqlScripts HTML report at: {Path}", htmlPath.FullName);
-                engine.GenerateUpgradeHtmlReport(htmlPath.FullName);
-                Log.Information("Generated SqlScripts HTML report at: {Path}", htmlPath.FullName);
+                var htmlPath = new FileInfo(Path.Combine(_basePath, _options.HtmlReportPath)).FullName;
+                Directory.CreateDirectory(Path.GetDirectoryName(htmlPath));
+
+                Log.Debug("Generating SqlScripts HTML report at: {Path}", htmlPath);
+
+                engine.GenerateUpgradeHtmlReport(htmlPath);
+                
+                Log.Information("Generated SqlScripts HTML report at: {Path}", htmlPath);
             }
 
             if (WhatIf) {
