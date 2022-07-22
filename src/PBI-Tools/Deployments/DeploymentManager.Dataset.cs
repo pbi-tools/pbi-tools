@@ -363,7 +363,7 @@ namespace PbiTools.Deployments
             sqlScripts.RunSqlScripts();
 
             #region Refresh
-            if (manifest.Options.Refresh.Enabled && deploymentEnv.Refresh?.Skip == false)
+            if (manifest.Options.Refresh.Enabled && deploymentEnv.Refresh?.Skip != true)
             {
                 var stopWatch = System.Diagnostics.Stopwatch.StartNew();
 

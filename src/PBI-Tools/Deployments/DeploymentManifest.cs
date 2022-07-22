@@ -472,8 +472,10 @@ namespace PbiTools.Deployments
         {
             /// <summary>
             /// Used to disable dataset refresh for specific environments only.
+            /// Default is <c>false</c>.
             /// </summary>
             [JsonProperty("skip")]
+            [DefaultValue(false)]
             public bool Skip { get; set; }
 
             [JsonProperty("objects")]
