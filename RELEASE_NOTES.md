@@ -1,18 +1,28 @@
 # Release Notes
 
-## 1.0.0-rc.2 - 2022-07-03
+## 1.0.0-rc.2 - 2022-07-26
 
-<version:1.0.0-rc.2+20220703>
+<version:1.0.0-rc.2+preview.3>
 
-- #97 Model Deployments
-- #26 Bookmarks (PbixProj v0.12 schema)
-- Fixed #109 'pbi-tools info' no longer fails when another instance of SSAS runs on the same machine
+- **#97 Model Deployments**
+- #147 Refresh Tracing
+- #141 Deploying "thick" reports
+- #145 Non-string deployment parameters
+- #146 Environment-scoped parameters
+- #168 SqlScripts Deployments
+- #129 Object-specific refresh
+- #135 Bind to Gateway
+- #167 Report partition status after update/refresh
+- #169 Report datasources
+- **#26 Bookmarks** (PbixProj v0.12 schema)
+- #91 Serialize/Deserialize _MobileState_
 - #153 Make "CreateOrOverwrite" default import mode
+- Fixed #109 'pbi-tools info' no longer fails when another instance of SSAS runs on the same machine
 - Fixed #127 Folder or File sources containing spaces aren't matched (Desktop edition only)
 - Fixed #102 (x-plat conform resolution of TEMP path)
 - Fixed #111 Deployment fails in model-only mode (due to logging)
-- Libraries updated: TOM 19.42.0.4, MSAL 4.45
-- Tested with PBI Desktop 2.106 (June '22)
+- Libraries updated: TOM 19.46, Power BI API 4.9, MSAL 4.45
+- Tested with PBI Desktop 2.107 (July '22)
 
 **System params expansion (#157)**
 
