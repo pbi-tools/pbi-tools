@@ -3,19 +3,21 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Identity.Client;
 using Microsoft.PowerBI.Api;
 using Microsoft.Rest;
+using Spectre.Console;
 using AMO = Microsoft.AnalysisServices;
 using TOM = Microsoft.AnalysisServices.Tabular;
 
 namespace PbiTools.Deployments
 {
     using Model;
-    using System.Data.Common;
+    using Utils;
 
     public partial class DeploymentManager
     {
@@ -153,9 +155,29 @@ namespace PbiTools.Deployments
             }
             #endregion
 
+            #region Init SqlScriptDeployer
+            var artifactsFolder = new DeploymentArtifactsFolder(basePath, label);
+
+            var sqlScripts = new SqlScriptsDeployer(
+                dataset.Options.SqlScripts,
+                dataset.Parameters,
+                artifactsFolder,
+                environment,
+                basePath
+            )
+            { WhatIf = WhatIf };
+
+            sqlScripts.TestConnection();
+
+            sqlScripts.EnsureDatabase();
+
+            #endregion
+
             #region Ensure Remote Database
             Log.Write(WhatIfLogLevel, "Checking for existing database with matching name...");
             var createdNewDb = false;
+            var datasetId = default(string);
+
             if (!server.Databases.ContainsName(dataset.DisplayName))
             {
                 using var newDb = new TOM.Database
@@ -168,8 +190,7 @@ namespace PbiTools.Deployments
                 if (WhatIf)
                 {
                     // Does NOT exist...
-                    Log.Information("Workspace '{Workspace}' does not have exiting dataset named '{DatasetName}'.", workspace, dataset.DisplayName);
-                    return;
+                    Log.Information("Workspace '{Workspace}' does not have existing dataset named '{DatasetName}'.", workspace, dataset.DisplayName);
                 }
                 else
                 {
@@ -185,16 +206,19 @@ namespace PbiTools.Deployments
             {
                 // Database exists...
                 using var db = server.Databases.GetByName(dataset.DisplayName);
+                datasetId = db.ID;
                 LogDbInfo(db, "Matching dataset found.");
-                return;
             }
             #endregion
 
-            #region Update Remote Database
-            var datasetId = default(string);
+            sqlScripts.RunBeforeUpdate();
 
-            using (var remoteDb = server.Databases.GetByName(dataset.DisplayName)) // Database with specified name is guaranteed to exist at this point
+            #region Update Remote Database
+
+            if (!WhatIf)
             {
+                using var remoteDb = server.Databases.GetByName(dataset.DisplayName); // Database with specified name is guaranteed to exist at this point
+                
                 if (!createdNewDb)
                 {
                     LogDbInfo(remoteDb, "Found existing dataset.");
@@ -209,12 +233,16 @@ namespace PbiTools.Deployments
 
                 dbNew.Name = dataset.DisplayName; // avoid name clash
 
+                // TODO Modify partitions, roles, role members if required
+                // TODO Allow saving BIM as deployment artifact
+
                 // Transfer new model schema...
                 dbNew.Model.CopyTo(remoteDb.Model);
 
                 Log.Debug("Updating model metadata...");
                 var updateResults = remoteDb.Model.SaveChanges();
                 // TODO Report updateResults.Impact?
+
                 if (updateResults.XmlaResults != null && updateResults.XmlaResults.Count > 0)
                 {
                     Log.Information("Update Results:");
@@ -223,26 +251,81 @@ namespace PbiTools.Deployments
                     {
                         Log.Information(result.Value);
                         foreach (var message in result.Messages.OfType<AMO.XmlaMessage>())
-                            Log.Warning("- [{Severity}] {Description}\n\t{Location}\n--", message.GetType().Name, message.Description, message.Location.SourceObject);
+                            Log.Warning("- [{Severity}] {Description}\n\t{Location}\n--", message.GetType().Name, message.Description, message.Location?.SourceObject);
                     }
                 }
 
                 datasetId = remoteDb.ID;
 
                 Log.Information("Model deployment succeeded.");
+
+                ReportPartitionStatus(remoteDb.Model);
             }
 
-            var pbiDataset = await powerbi.Datasets.GetDatasetInGroupAsync(workspaceId, datasetId);
-            Log.Information("Power BI Dataset Details:");
-            Log.Information("* ID                     : {ID}", pbiDataset.Id);
-            Log.Information("* Name                   : {Name}", pbiDataset.Name);
-            Log.Information("* WebUrl                 : {WebUrl}", pbiDataset.WebUrl);
-            Log.Information("* ConfiguredBy           : {ConfiguredBy}", pbiDataset.ConfiguredBy);
-            Log.Information("* CreatedDate            : {CreatedDate}", pbiDataset.CreatedDate);
-            Log.Information("* IsRefreshable          : {IsRefreshable}", pbiDataset.IsRefreshable);
-            Log.Information("* IsOnPremGatewayRequired: {IsOnPremGatewayRequired}", pbiDataset.IsOnPremGatewayRequired);
-            Log.Information("* TargetStorageMode      : {TargetStorageMode}", pbiDataset.TargetStorageMode);
+            if (!WhatIf || !createdNewDb)
+            {
+                var pbiDataset = await powerbi.Datasets.GetDatasetInGroupAsync(workspaceId, datasetId);
+                Log.Information("Power BI Dataset Details:");
+                Log.Information("* ID                     : {ID}", pbiDataset.Id);
+                Log.Information("* Name                   : {Name}", pbiDataset.Name);
+                Log.Information("* WebUrl                 : {WebUrl}", pbiDataset.WebUrl);
+                Log.Information("* ConfiguredBy           : {ConfiguredBy}", pbiDataset.ConfiguredBy);
+                Log.Information("* CreatedDate            : {CreatedDate}", pbiDataset.CreatedDate);
+                Log.Information("* IsRefreshable          : {IsRefreshable}", pbiDataset.IsRefreshable);
+                Log.Information("* IsOnPremGatewayRequired: {IsOnPremGatewayRequired}", pbiDataset.IsOnPremGatewayRequired);
+                Log.Information("* TargetStorageMode      : {TargetStorageMode}", pbiDataset.TargetStorageMode);
+            }
             #endregion
+
+            #region Report Datasources
+            if (!WhatIf || !createdNewDb) {
+                var dataSources = await powerbi.Datasets.GetDatasourcesInGroupAsync(workspaceId, datasetId);
+
+                var table = new Spectre.Console.Table { Width = Environment.UserInteractive ? null : 80 };
+
+                table.AddColumns(
+                    nameof(Microsoft.PowerBI.Api.Models.Datasource.DatasourceType),
+                    nameof(Microsoft.PowerBI.Api.Models.Datasource.ConnectionDetails),
+                    nameof(Microsoft.PowerBI.Api.Models.Datasource.DatasourceId),
+                    nameof(Microsoft.PowerBI.Api.Models.Datasource.GatewayId)
+                );
+
+                foreach (var item in dataSources.Value)
+                {
+                    table.AddRow(
+                        $"{item.DatasourceType}",
+                        $"{item.ConnectionDetails.ToJsonString(Newtonsoft.Json.Formatting.None)}",
+                        $"{item.DatasourceId}",
+                        $"{item.GatewayId}"
+                    );
+                }
+
+                Log.Information("Datasources:");
+
+                AnsiConsole.Write(table);
+            }
+            #endregion
+
+            sqlScripts.RunAfterUpdate();
+
+            #region Bind to Gateway (New dataset only)
+
+            var gatewayManager = new DatasetGatewayManager(dataset.Options.Dataset.Gateway, powerbi) { WhatIf = WhatIf };
+
+            await gatewayManager.DiscoverGatewaysAsync(workspaceId, datasetId);
+
+            if (createdNewDb)
+                await gatewayManager.BindToGatewayAsync(workspaceId, datasetId, dataset.Parameters);
+
+            #endregion
+
+            #region TODO: Set Dataset Permissions
+            #endregion
+
+            #region TODO: Set Role Members
+            #endregion
+
+            if (WhatIf) return; // TODO Determine further WhatIf stages...
 
             #region Deploy Report
             if (manifest.Options.Dataset.DeployEmbeddedReport) {
@@ -277,8 +360,10 @@ namespace PbiTools.Deployments
             }
             #endregion
 
+            sqlScripts.RunSqlScripts();
+
             #region Refresh
-            if (deploymentEnv.Refresh)
+            if (manifest.Options.Refresh.Enabled && deploymentEnv.Refresh?.Skip != true)
             {
                 var stopWatch = System.Diagnostics.Stopwatch.StartNew();
 
@@ -303,7 +388,15 @@ namespace PbiTools.Deployments
                             server.Connect(connectionStringBldr.ConnectionString, server.SessionID);
 
                             using (var db = server.Databases[datasetId]) {
-                                RefreshXmla(db, dataset.Options.Refresh, basePath);
+                                new XmlaRefreshManager(db)
+                                {
+                                    BasePath = basePath,
+                                    ManifestOptions = dataset.Options.Refresh,
+                                    EnvironmentOptions = deploymentEnv.Refresh
+                                }
+                                .RunRefresh();
+
+                                ReportPartitionStatus(db.Model);
                             }
                             break;
                         default:
@@ -313,39 +406,53 @@ namespace PbiTools.Deployments
                 }
             }
             #endregion
+
+            sqlScripts.RunAfterRefresh();
+
         }
 
-        internal static void RefreshXmla(TOM.Database database, PbiDeploymentOptions.RefreshOptions refreshOptions, string basePath)
+        private static void ReportPartitionStatus(TOM.Model model)
         {
-            using var trace = new XmlaRefreshTrace(database.Server, refreshOptions.Tracing ?? new(), basePath);
-
-            // Mapping API RefreshType -> TOM RefreshType
-            var refreshType = (TOM.RefreshType)Enum.Parse(typeof(TOM.RefreshType), $"{refreshOptions.Type}");
-
-            database.Model.RequestRefresh(refreshType);
-            trace.Start();
-
-            try
-            {
-                var refreshResults = database.Model.SaveChanges();
-                if (refreshResults.XmlaResults != null && refreshResults.XmlaResults.Count > 0)
+            var partitions = model.Tables
+                .SelectMany(t => t.Partitions)
+                .Select(p => new 
                 {
-                    Log.Information("Refresh Results:");
+                    Table = p.Table.Name,
+                    Partition = p.Name,
+                    p.Mode,
+                    p.SourceType,
+                    p.State,
+                    p.ModifiedTime
+                })
+                .ToArray();
 
-                    foreach (var result in refreshResults.XmlaResults.OfType<AMO.XmlaResult>())
-                    {
-                        Log.Information(result.Value);
-                        foreach (var message in result.Messages.OfType<AMO.XmlaMessage>())
-                            Log.Warning("- [{Severity}] {Description}\n\t{Location}\n--", message.GetType().Name, message.Description, message.Location.SourceObject);
-                    }
-                }
-            }
-            catch (AMO.OperationException ex) when (ex.Message.Contains("DMTS_DatasourceHasNoCredentialError"))
+            var table = new Spectre.Console.Table { Width = Environment.UserInteractive ? null : 80 };
+
+            table.AddColumns(
+                nameof(TOM.Table),
+                nameof(TOM.Partition),
+                nameof(TOM.Partition.State),
+                nameof(TOM.Partition.SourceType),
+                nameof(TOM.Partition.Mode),
+                nameof(TOM.Partition.ModifiedTime)
+            );
+
+            foreach (var item in partitions)
             {
-                throw new DeploymentException("Refresh failed because of missing credentials. See https://docs.microsoft.com/power-bi/enterprise/service-premium-connect-tools#setting-data-source-credentials for further details.", ex);
+                table.AddRow(
+                    $"{item.Table}",
+                    $"{item.Partition}",
+                    $"{item.State}",
+                    $"{item.SourceType}",
+                    $"{item.Mode}",
+                    $"{item.ModifiedTime}"
+                );
             }
-        }
 
+            Log.Information("Partitions:");
+
+            AnsiConsole.Write(table);
+        }
 
         internal DatasetDeploymentInfo GetDatasetFromFileSource(PbiDeploymentManifest manifest, PbiDeploymentEnvironment deploymentEnv, string basePath)
         {
@@ -353,11 +460,14 @@ namespace PbiTools.Deployments
             var sourceFile = new FileInfo(Path.Combine(basePath, manifest.Source.Path));
             var converter = PbixModelConverter.FromFile(sourceFile);
 
-            var systemParameters = DeploymentParameters.GetSystemParameters(deploymentEnv.Name)
-                .With(DeploymentParameters.Names.FILE_NAME, sourceFile.Name)
-                .With(DeploymentParameters.Names.FILE_NAME_WITHOUT_EXT, Path.GetFileNameWithoutExtension(sourceFile.Name));
+            var parameters = DeploymentParameters.CalculateForEnvironment(
+                manifest,
+                deploymentEnv,
+                (DeploymentParameters.Names.FILE_NAME, sourceFile.Name),
+                (DeploymentParameters.Names.FILE_NAME_WITHOUT_EXT, Path.GetFileNameWithoutExtension(sourceFile.Name))
+            );
 
-            return GetDatasetInfo(manifest, converter.Model, sourceFile.FullName, systemParameters, parameters => deploymentEnv.DisplayName.ExpandParameters(parameters) ?? Path.GetFileNameWithoutExtension(sourceFile.Name));
+            return GetDatasetInfo(manifest, converter.Model, sourceFile.FullName, parameters, parameters => deploymentEnv.DisplayName.ExpandParameters(parameters) ?? Path.GetFileNameWithoutExtension(sourceFile.Name));
         }
 
         internal DatasetDeploymentInfo GenerateDatasetFromFolderSource(PbiDeploymentManifest manifest, PbiDeploymentEnvironment deploymentEnv, string basePath)
@@ -366,37 +476,31 @@ namespace PbiTools.Deployments
             var sourceFolder = new DirectoryInfo(Path.Combine(basePath, manifest.Source.Path));
             var converter = PbixModelConverter.FromFolder(sourceFolder);
 
-            var systemParameters = DeploymentParameters.GetSystemParameters(deploymentEnv.Name)
-                .With(DeploymentParameters.Names.PBIXPROJ_FOLDER, Path.GetFileName(converter.Model.SourcePath))
-                .With(DeploymentParameters.Names.FILE_NAME_WITHOUT_EXT, Path.GetFileName(converter.Model.SourcePath));
+            var parameters = DeploymentParameters.CalculateForEnvironment(
+                manifest, 
+                deploymentEnv, 
+                (DeploymentParameters.Names.PBIXPROJ_FOLDER, Path.GetFileName(converter.Model.SourcePath)),
+                (DeploymentParameters.Names.FILE_NAME_WITHOUT_EXT, Path.GetFileName(converter.Model.SourcePath))
+            );
 
-            return GetDatasetInfo(manifest, converter.Model, sourceFolder.FullName, systemParameters, parameters => deploymentEnv.DisplayName.ExpandParameters(parameters) ?? sourceFolder.Name);
+            return GetDatasetInfo(manifest, converter.Model, sourceFolder.FullName, parameters, parameters => deploymentEnv.DisplayName.ExpandParameters(parameters) ?? sourceFolder.Name);
         }
 
         private DatasetDeploymentInfo GetDatasetInfo(
             PbiDeploymentManifest manifest, 
             IPbixModel model,
             string sourcePath,
-            IDictionary<string, string> systemParameters, 
-            Func<IDictionary<string, DeploymentParameter>, string> resolveDisplayName)
-        {
-            var parameters = systemParameters.Aggregate(   // Dataset params overwrite Manifest params
-                manifest.Parameters.ExpandEnv().ExpandParameters(systemParameters),
-                (dict, x) => {
-                    dict[x.Key] = DeploymentParameter.From(x.Value);
-                    return dict;
-                }
-            );
-
-            return new()
+            IDictionary<string, DeploymentParameter> parameters, 
+            Func<IDictionary<string, DeploymentParameter>, string> resolveDisplayName
+        ) =>
+            new()
             {
                 Model = model,
                 SourcePath = sourcePath,
                 DisplayName = resolveDisplayName(parameters),
                 Options = manifest.Options,
-                Parameters = parameters
+                Parameters = new DeploymentParameters(parameters)
             };
-        }
 
         public class DatasetDeploymentInfo
         {
@@ -408,7 +512,7 @@ namespace PbiTools.Deployments
             /// <summary>
             /// The effective deployment parameters for the target environment.
             /// </summary>
-            public IDictionary<string, DeploymentParameter> Parameters { get; set; }
+            public DeploymentParameters Parameters { get; set; }
 
             /// <summary>
             /// The folder or file where dataset sources reside.

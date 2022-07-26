@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using Microsoft.PowerBI.Api.Models;
 using Newtonsoft.Json;
@@ -147,6 +148,10 @@ namespace PbiTools.Deployments
         [JsonProperty("report")]
         public ReportOptions Report { get; set; } = new();
 
+        [JsonProperty("sqlScripts")]
+        public SqlScriptsOptions SqlScripts { get; set; } = new();
+
+
         public class ImportOptions
         {
             /// <summary>
@@ -178,17 +183,31 @@ namespace PbiTools.Deployments
         public class RefreshOptions
         {
             /// <summary>
+            /// Globally enables or disables dataset refresh.
+            /// If enabled, refresh can be skipped in specific environments. If disabled, environment refresh settings are ignored.
+            /// </summary>
+            [JsonProperty("enabled")]
+            [DefaultValue(false)]
+            public bool Enabled { get; set; }
+
+            /// <summary>
             /// Skip refresh when the deployment created a new dataset (instead of updating an existing one).
             /// Default is <c>true</c>.
             /// </summary>
             [JsonProperty("skipNewDataset")]
-            public bool SkipNewDataset { get; set; } = true;
+            [DefaultValue(false)]
+            public bool SkipNewDataset { get; set; }
 
             [JsonProperty("method")]
-            public RefreshMethod Method { get; set; } = RefreshMethod.API;
+            [DefaultValue(RefreshMethod.XMLA)]
+            public RefreshMethod Method { get; set; } = RefreshMethod.XMLA;
 
             [JsonProperty("type")]
+            [DefaultValue(nameof(DatasetRefreshType.Automatic))]
             public DatasetRefreshType Type { get; set; } = DatasetRefreshType.Automatic;
+
+            [JsonProperty("objects")]
+            public RefreshObjects Objects { get; set; }
 
             // *** https://docs.microsoft.com/rest/api/power-bi/datasets/refresh-dataset-in-group
             // applyRefreshPolicy
@@ -197,7 +216,7 @@ namespace PbiTools.Deployments
             // maxParallelism
             // objects
             // retryCount
-            
+
             [JsonProperty("tracing")]
             public TraceOptions Tracing { get; set; } = new();
 
@@ -210,6 +229,7 @@ namespace PbiTools.Deployments
             public class TraceOptions
             {
                 [JsonProperty("enabled")]
+                [DefaultValue(false)]
                 public bool Enabled { get; set; }
 
                 [JsonProperty("logEvents")]
@@ -244,11 +264,54 @@ namespace PbiTools.Deployments
 
         public class DatasetOptions
         {
+            /// <summary>
+            /// If <c>true</c>, replaces the values of dataset shared expressions with respective values
+            /// from manifest/environment parameters.
+            /// Default is <c>false</c>.
+            /// </summary>
             [JsonProperty("replaceParameters")]
             public bool ReplaceParameters { get; set; }
 
+            /// <summary>
+            /// TODO
+            /// </summary>
             [JsonProperty("deployEmbeddedReport")]
             public bool DeployEmbeddedReport { get; set; }
+
+            /// <summary>
+            /// If <c>true</>, makes the deployment principal the dataset owner. Only applies to existing datasets; new datasets
+            /// created during the deployment are always owned by the deployment principal.
+            /// </summary>
+            [JsonProperty("takeOver")]
+            public bool TakeOver { get; set; }
+
+            [JsonProperty("gateway")]
+            public GatewayOptions Gateway { get; set; }
+
+            public class GatewayOptions
+            { 
+                /// <summary>
+                /// If true, discovers gateways applicable to the dataset and lists them in the logs.
+                /// </summary>
+                [JsonProperty("discoverGateways")]
+                public bool DiscoverGateways { get; set; }
+
+                /// <summary>
+                /// If specified, binds a newly created dataset to the corresponding gateway.
+                /// Must be a valid Guid.
+                /// Parameter expansion supported.
+                /// </summary>
+                [JsonProperty("gatewayId")]
+                public string GatewayId { get; set; }
+
+                /// <summary>
+                /// An optional list of specific gateway datasources to bind to.
+                /// Can be the datasource guid or name.
+                /// </summary>
+                [JsonProperty("dataSources")]
+                public string[] DataSources { get; set; }
+            }
+
         }
 
         public class ReportOptions
@@ -256,6 +319,83 @@ namespace PbiTools.Deployments
             [JsonProperty("customConnectionsTemplate")]
             public string CustomConnectionsTemplate { get; set; }
         }
+
+        public class SqlScriptsOptions
+        {
+            /// <summary>
+            /// TODO
+            /// </summary>
+            [JsonProperty("enabled")]
+            [DefaultValue(false)]
+            public bool Enabled { get; set; }
+
+            /// <summary>
+            /// TODO
+            /// </summary>
+            [JsonProperty("ensureDatabase")]
+            [DefaultValue(false)]
+            public bool EnsureDatabase { get; set; }
+
+
+            /// <summary>
+            /// TODO
+            /// </summary>
+            [JsonProperty("schema")]
+            public string Schema { get; set; }
+
+            /// <summary>
+            /// TODO
+            /// </summary>
+            [JsonProperty("connection")]
+            public IDictionary<string, string> Connection { get; set; }
+
+            /// <summary>
+            /// TODO
+            /// </summary>
+            [JsonProperty("path")]
+            public string Path { get; set; }
+
+            /// <summary>
+            /// TODO
+            /// </summary>
+            [JsonProperty("htmlReportPath")]
+            public string HtmlReportPath { get; set; }
+
+            /// <summary>
+            /// TODO
+            /// </summary>
+            [JsonProperty("logScriptOutput")]
+            [DefaultValue(true)]
+            public bool LogScriptOutput { get; set; } = true;
+
+            /// <summary>
+            /// TODO
+            /// </summary>
+            [JsonProperty("journal")]
+            public SqlScriptsJournalOptions Journal { get; set; }
+
+            public class SqlScriptsJournalOptions
+            {
+
+                /// <summary>
+                /// </summary>
+                [JsonProperty("schema")]
+                public string Schema { get; set; }
+
+                /// <summary>
+                /// </summary>
+                [JsonProperty("table")]
+                public string Table { get; set; }
+            }
+
+            public enum SqlScriptsTransactionType
+            { 
+                None = 0,
+                SingleTransaction,
+                PerScript
+            }
+        }
+
     }
 
     public class PbiDeploymentEnvironment
@@ -289,22 +429,18 @@ namespace PbiTools.Deployments
         public string XmlaDataSource { get; set; }
 
         /// <summary>
-        /// If <c>true</c>, refreshes the dataset after metadata deployment. Default is <c>false</c>.
+        /// Contains environment-scoped parameters.
         /// </summary>
-        [JsonProperty("refresh")]
-        public bool Refresh { get; set; }
-
-        // (Dataset) refresh settings
-        // Workspace Members? [ User/Group/App, AccessLevel]
-        // Capacity
+        [JsonProperty("parameters")]
+        public DeploymentParameters Parameters { get; set; }
 
         /// <summary>
         /// Allows customizing environment settings for embedded reports published as part of a dataset deployment.
         /// </summary>
         [JsonProperty("report")]
-        public ReportEnvironment Report { get; set; }
+        public ReportOptions Report { get; set; }
 
-        public class ReportEnvironment
+        public class ReportOptions
         { 
             /// <summary>
             /// Used to disable report deployment for specific environments only.
@@ -327,6 +463,23 @@ namespace PbiTools.Deployments
             /// </summary>
             [JsonProperty("displayName")]
             public string DisplayName { get; set; }
+        }
+
+        [JsonProperty("refresh")]
+        public RefreshOptions Refresh { get; set; }
+
+        public class RefreshOptions
+        {
+            /// <summary>
+            /// Used to disable dataset refresh for specific environments only.
+            /// Default is <c>false</c>.
+            /// </summary>
+            [JsonProperty("skip")]
+            [DefaultValue(false)]
+            public bool Skip { get; set; }
+
+            [JsonProperty("objects")]
+            public RefreshObjects Objects { get; set; }
         }
     }
 }

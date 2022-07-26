@@ -217,5 +217,10 @@ namespace PbiTools.Utils
             }
         }
 
+        public static string ToJsonString<T>(this T value, Newtonsoft.Json.Formatting format = Newtonsoft.Json.Formatting.Indented) where T : class =>
+            value == default
+            ? ""
+            : JsonConvert.SerializeObject(value, new JsonSerializerSettings { Formatting = format, NullValueHandling = NullValueHandling.Ignore });
+
     }
 }

@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.PowerBI.Api;
+using Microsoft.PowerBI.Api.Models;
+using TOM = Microsoft.AnalysisServices.Tabular;
 
 namespace PbiTools.Deployments
 {
@@ -37,7 +39,7 @@ namespace PbiTools.Deployments
         /// </summary>
         public static IDictionary<string, DeploymentParameter> ExpandEnv(this IDictionary<string, DeploymentParameter> input) =>
             input == null
-            ? new Dictionary<string, DeploymentParameter>()
+            ? new Dictionary<string, DeploymentParameter>(StringComparer.InvariantCultureIgnoreCase)
             : input.ToDictionary(x => x.Key, x => x.Value.ExpandEnv(), StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
@@ -50,6 +52,24 @@ namespace PbiTools.Deployments
             foreach (var key in target.Keys.ToArray()) {
                 var item = target[key];
                 if (item.Value is string s && s.Contains("{{") && s.Contains("}}")) {
+                    target[key] = item.CloneWithValue(s.ExpandParameters(externalParameters));
+                }
+            }
+            return target;
+        }
+
+        /// <summary>
+        /// Performs parameter replacement in all dictionary values, using the <c>externalParameters</c> dictionary as a source.
+        /// Only <see cref="DeploymentParameter"/>s of type string are modified.
+        /// </summary>
+        public static IDictionary<string, DeploymentParameter> ExpandParameters(this IDictionary<string, DeploymentParameter> target,
+            IDictionary<string, DeploymentParameter> externalParameters)
+        {
+            foreach (var key in target.Keys.ToArray())
+            {
+                var item = target[key];
+                if (item.Value is string s && s.Contains("{{") && s.Contains("}}"))
+                {
                     target[key] = item.CloneWithValue(s.ExpandParameters(externalParameters));
                 }
             }
@@ -91,10 +111,16 @@ namespace PbiTools.Deployments
                 new StringBuilder(value),
                 (sb, param) =>
                 {
-                    sb.Replace("{{" + param.Key + "}}", $"{param.Value}");
+                    sb.Replace("{{" + param.Key + "}}", param.Value);
                     return sb;
                 }
             ).ToString();
+
+        /// <summary>
+        /// Expands parameters within the string first, then environment variables.
+        /// </summary>
+        public static string ExpandParamsAndEnv(this string value, IDictionary<string, DeploymentParameter> parameters) =>
+            value.ExpandParameters(parameters).ExpandEnv();
 
         /// <summary>
         /// Assigns each deployment environment its name from the environments dictionary.
@@ -177,5 +203,11 @@ namespace PbiTools.Deployments
             value = collection?.FirstOrDefault();
             return value != default;
         }
+
+        /// <summary>
+        /// Converts a <see cref="DatasetRefreshType"/> value to the corresponding <see cref="TOM.RefreshType"/>.
+        /// </summary>
+        public static TOM.RefreshType ConvertToTOM(this DatasetRefreshType apiRefreshType) =>
+            (TOM.RefreshType)Enum.Parse(typeof(TOM.RefreshType), $"{apiRefreshType}");
     }
 }

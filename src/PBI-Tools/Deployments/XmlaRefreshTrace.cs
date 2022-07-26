@@ -223,7 +223,7 @@ namespace PbiTools.Deployments
 					{
 						if (_options.Summary.Console)
 						{
-							var table = new Table();
+							var table = new Table { Width = Environment.UserInteractive ? null : 80 };
 
 							var properties = typeof(RefreshSummaryRecord).GetProperties();
 							Array.ForEach(properties, p => table.AddColumn(p.Name));
@@ -240,8 +240,11 @@ namespace PbiTools.Deployments
 
 						if (!String.IsNullOrEmpty(_options.Summary.OutPath))
 						{
-                            string csvPath = Path.Combine(_basePath, _options.Summary.OutPath);
+                            string csvPath = new FileInfo(Path.Combine(_basePath, _options.Summary.OutPath)).FullName;
 							Log.Debug("Writing summary to file: {Path}", csvPath);
+
+							Log.Debug("Ensuring file directory exists...");
+							Directory.CreateDirectory(Path.GetDirectoryName(csvPath));
 
                             using var file = new StreamWriter(csvPath);
 							using var csv = new CsvWriter(file, new CsvConfiguration(CultureInfo.InvariantCulture));

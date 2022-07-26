@@ -234,9 +234,10 @@ namespace PbiTools.Deployments
                 environment.DisplayName,
                 folder.FullPath,
                 tempDir,
-                folder.Parameters.Aggregate(
-                    manifest.Parameters.ExpandEnv().ExpandParameters(folder.Parameters),
-                    (dict, x) => { dict[x.Key] = DeploymentParameter.From(x.Value); return dict; }     // Folder params overwrite Manifest params
+                DeploymentParameters.CalculateForEnvironment(
+                    manifest,
+                    environment,
+                    folder.Parameters
                 )
             )).ToArray();
         }
@@ -247,10 +248,11 @@ namespace PbiTools.Deployments
 
             return sourceFiles.Select(file =>
             {
-                var parameters = file.Parameters.Aggregate(
-                    manifest.Parameters.ExpandEnv().ExpandParameters(file.Parameters),
-                    (dict, x) => { dict[x.Key] = DeploymentParameter.From(x.Value); return dict; }     // Folder params overwrite Manifest params
-                );
+                var parameters = DeploymentParameters.CalculateForEnvironment(
+                    manifest,
+                    environment,
+                    file.Parameters);
+
                 return new ReportDeploymentInfo
                 {
                     Options = manifest.Options,
