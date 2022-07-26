@@ -61,9 +61,9 @@ NUGET
       System.Xml.XmlDocument (>= 4.3) - restriction: || (&& (== net472) (< net45)) (== net6.0)
     Microsoft.NETCore.Platforms (6.0.5)
     Microsoft.NETCore.Targets (5.0)
-    Microsoft.PowerBI.Api (4.8)
+    Microsoft.PowerBI.Api (4.9)
       Microsoft.Rest.ClientRuntime (>= 2.3.21)
-      Newtonsoft.Json (>= 11.0.2)
+      Newtonsoft.Json (>= 13.0.1)
       System.Security.Cryptography.Cng (>= 4.7)
     Microsoft.Rest.ClientRuntime (2.3.24)
       Newtonsoft.Json (>= 10.0.3)
@@ -629,7 +629,7 @@ STORAGE: NONE
 CONTENT: NONE
 NUGET
   remote: https://api.nuget.org/v3/index.json
-    fake-cli (5.23.0-alpha001)
+    fake-cli (5.23.0-alpha002)
     Paket (7.1.5)
 
 GROUP Fake-Build
