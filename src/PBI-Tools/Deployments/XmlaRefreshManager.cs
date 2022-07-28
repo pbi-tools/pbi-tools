@@ -91,11 +91,14 @@ namespace PbiTools.Deployments
                 && environmentOptions.Objects != null
                 && !environmentOptions.Objects.IsEmpty;
 
+            var defaultRefreshType = (environmentOptions.Type ?? manifestOptions.Type).ConvertToTOM();
+            Log.Information("Using default refresh type: {RefreshType}", defaultRefreshType);
+
             if ((manifestOptions.Objects == null || manifestOptions.Objects.IsEmpty)
                 && !hasEnvObjects)
             {
                 Log.Debug("No refresh objects specified. Entire model will be refreshed.");
-                return new[] { new ModelRefreshable(RefreshObjectType.Model, manifestOptions.Type.ConvertToTOM()) };
+                return new[] { new ModelRefreshable(RefreshObjectType.Model, defaultRefreshType) };
             }
 
             var allPartitions = new List<ModelPartition>(partitions);
@@ -104,7 +107,7 @@ namespace PbiTools.Deployments
             if (hasEnvObjects)
                 Log.Debug("Processing {ExpressionCount} refresh object expressions from current environment.", environmentOptions.Objects.Count());
             else
-                Log.Debug("Processing {ExpressionCount} refresh object expressions from current environment.", manifestOptions.Objects.Count());
+                Log.Debug("Processing {ExpressionCount} refresh object expressions from manifest.", manifestOptions.Objects.Count());
 
             foreach (var refreshObj in (hasEnvObjects ? environmentOptions.Objects : manifestOptions.Objects))
             {
@@ -115,7 +118,7 @@ namespace PbiTools.Deployments
                     // Identify remaining tables matching current expression
                     var selectedTables = allPartitions
                         .GroupBy(p => p.Table)
-                        .Where(g => g.Key.WildcardMatch(refreshObj.TableExpression))
+                        .Where(g => refreshObj.TableExpression.WildcardMatch(g.Key))
                         .Select(g => g.Key)
                         .ToArray();
 
@@ -123,25 +126,25 @@ namespace PbiTools.Deployments
                     if (refreshObj.RefreshType.HasValue)
                         Array.ForEach(selectedTables, t =>
                         {
-                            Log.Verbose("Requesting {RefreshType} for table {Table}.", refreshObj.RefreshType.Value, t);
+                            Log.Debug("Requesting {RefreshType} for table {Table}.", refreshObj.RefreshType.Value, t);
                             results.Add(new ModelRefreshable(RefreshObjectType.Table, refreshObj.RefreshType.Value.ConvertToTOM(), t));
                         });
 
                     // Remove all partitions belonging to matching tables from initial list
-                    allPartitions.RemoveAll(p => p.Table.WildcardMatch(refreshObj.TableExpression));
+                    allPartitions.RemoveAll(p => refreshObj.TableExpression.WildcardMatch(p.Table));
                 }
                 else if (refreshObj.ObjectType == RefreshObjectType.Partition)
                 {
                     // Identify remaining tables matching current expression
                     var selectedPartitions = allPartitions
-                        .Where(p => p.ToString().WildcardMatch(refreshObj.OriginalString))
+                        .Where(p => refreshObj.OriginalString.WildcardMatch(p.ToString()))
                         .ToArray();
 
                     // Add partitions to refreshables, unless 'None' selected
                     if (refreshObj.RefreshType.HasValue)
                         Array.ForEach(selectedPartitions, p =>
                         {
-                            Log.Verbose("Requesting {RefreshType} for partition {Table}|{Partition}.", refreshObj.RefreshType.Value, p.Table, p.Partition); 
+                            Log.Debug("Requesting {RefreshType} for partition {Table}|{Partition}.", refreshObj.RefreshType.Value, p.Table, p.Partition); 
                             results.Add(new ModelRefreshable(RefreshObjectType.Partition, refreshObj.RefreshType.Value.ConvertToTOM(), p.Table, p.Partition));
                         });
 
@@ -153,10 +156,12 @@ namespace PbiTools.Deployments
             // Handle remaining partitions (using manifest type)
             foreach (var p in allPartitions)
             {
-                results.Add(new ModelRefreshable(RefreshObjectType.Partition, 
-                    manifestOptions.Type.ConvertToTOM(), 
+                Log.Verbose("Requesting default refresh type '{RefreshType}' for partition: {Partition}", defaultRefreshType, p);
+                results.Add(new ModelRefreshable(RefreshObjectType.Partition,
+                    defaultRefreshType, 
                     p.Table, 
-                    p.Partition));
+                    p.Partition)
+                );
             }
 
             return results.ToArray();            

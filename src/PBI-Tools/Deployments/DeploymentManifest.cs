@@ -478,6 +478,9 @@ namespace PbiTools.Deployments
             [DefaultValue(false)]
             public bool Skip { get; set; }
 
+            [JsonProperty("type")]
+            public DatasetRefreshType? Type { get; set; }
+
             [JsonProperty("objects")]
             public RefreshObjects Objects { get; set; }
         }
