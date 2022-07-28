@@ -1,8 +1,8 @@
 # Release Notes
 
-## 1.0.0-rc.2 - 2022-07-26
+## 1.0.0-rc.2 - 2022-07-28
 
-<version:1.0.0-rc.2+preview.3>
+<version:1.0.0-rc.2+preview.4>
 
 - **#97 Model Deployments**
 - #147 Refresh Tracing

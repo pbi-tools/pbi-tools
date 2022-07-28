@@ -2,7 +2,7 @@
 
     pbi-tools <action> -options
 
-_pbi-tools (Desktop), 1.0.0-rc.2+preview.3 - https://pbi.tools/_
+_pbi-tools (Desktop), 1.0.0-rc.2+preview.4 - https://pbi.tools/_
 
 ### Actions
 
