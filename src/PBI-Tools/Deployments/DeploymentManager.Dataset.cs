@@ -381,7 +381,7 @@ namespace PbiTools.Deployments
                             // The PBI server won't allow creating a Server trace unless the 'Initial Catalog' property is set
                             // Since the dataset might not exist at the start of the deployment, we're taking the safe route here
                             // and always reconnect with a new connection string at this point
-                            Log.Debug("Reconnecting to server with 'Initial Catalog' connection string setting.");
+                            Log.Debug("Reconnecting to server with 'Initial Catalog = {DatasetName}' connection string setting.", dataset.DisplayName);
                             connectionStringBldr.Add("Initial Catalog", dataset.DisplayName);
                             
                             server.Disconnect(endSession: false);
