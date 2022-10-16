@@ -31,6 +31,9 @@ namespace PbiTools.Deployments
         [JsonProperty("authentication")]
         public PbiDeploymentAuthentication Authentication { get; set; } = new();
 
+        [JsonProperty("credentials")]
+        public PbiDeploymentCredential[] Credentials { get; set; }
+
         [JsonProperty("options")]
         public PbiDeploymentOptions Options { get; set; } = new();
 
@@ -111,6 +114,95 @@ namespace PbiTools.Deployments
     public enum PbiDeploymentAuthenticationType
     {
         ServicePrincipal = 1
+    }
+
+    public class PbiDeploymentCredential
+    {
+
+        [JsonProperty("match")]
+        public CredentialMatch Match { get; set; } = new();
+
+        public class CredentialMatch
+        { 
+            [JsonProperty("datasourceType")]
+            public string DatasourceType { get; set; }
+
+            [JsonProperty("connectionDetails")]
+            public DatasourceConnectionDetails ConnectionDetails { get; set; } = new();
+        }
+
+        [JsonProperty("updateMode")]
+        public CredentialUpdateMode UpdateMode { get; set; }
+
+        public enum CredentialUpdateMode
+        { 
+            NotSpecified = 0,
+            Always = 1,
+            Never = 2
+        }
+
+        [JsonProperty("type")]
+        public CredentialType Type { get; set; }
+
+        [JsonProperty("username")]
+        public string Username { get; set; }
+
+        [JsonProperty("password")]
+        public string Password { get; set; }
+
+        [JsonProperty("details")]
+        public PbiCredentialDetails Details { get; set; } = new();
+
+        public class PbiCredentialDetails
+        {
+            /// <summary>
+            /// Gets or sets whether to encrypt the data source connection. The API
+            /// call will fail if you select encryption and Power BI is unable to
+            /// establish an encrypted connection with the data source. Possible
+            /// values include: 'Encrypted', 'NotEncrypted'
+            /// </summary>
+            [JsonProperty(PropertyName = "encryptedConnection")]
+            public EncryptedConnection EncryptedConnection { get; set; } = EncryptedConnection.Encrypted;
+
+            /// <summary>
+            /// Gets or sets the encryption algorithm. For a cloud data source,
+            /// specify `None`. For an on-premises data source, specify `RSA-OAEP`
+            /// and use the gateway public key to encrypt the credentials. Possible
+            /// values include: 'None', 'RSA-OAEP'
+            /// </summary>
+            [JsonProperty(PropertyName = "encryptionAlgorithm")]
+            public EncryptionAlgorithm EncryptionAlgorithm { get; set; } = EncryptionAlgorithm.None;
+
+            /// <summary>
+            /// Gets or sets the privacy level, which is relevant when combining
+            /// data from multiple sources. Possible values include: 'None',
+            /// 'Public', 'Organizational', 'Private'
+            /// </summary>
+            [JsonProperty(PropertyName = "privacyLevel")]
+            public PrivacyLevel PrivacyLevel { get; set; } = PrivacyLevel.None;
+
+            /// <summary>
+            /// Gets or sets whether the Azure AD identity (OAuth 2.0 credentials)
+            /// of the API caller (which must be the data source owner) will be
+            /// used to configure data source credentials (the owner OAuth access
+            /// token). Typically, you would either use this flag or
+            /// `useEndUserOAuth2Credentials`.
+            /// </summary>
+            [JsonProperty(PropertyName = "useCallerAADIdentity")]
+            public bool? UseCallerAADIdentity { get; set; }
+
+            /// <summary>
+            /// Gets or sets whether the end-user Azure AD identity (OAuth 2.0
+            /// credentials) is used when connecting to the data source in
+            /// DirectQuery mode. Use with data sources that support [single
+            /// sign-on
+            /// (SSO)](/power-bi/connect-data/power-bi-data-sources#single-sign-on-sso-for-directquery-sources).
+            /// Typically, you would either use this flag or
+            /// `useCallerAADIdentity`.
+            /// </summary>
+            [JsonProperty(PropertyName = "useEndUserOAuth2Credentials")]
+            public bool? UseEndUserOAuth2Credentials { get; set; }            
+        }
     }
 
     public class PbiDeploymentOptions
@@ -206,15 +298,47 @@ namespace PbiTools.Deployments
             [DefaultValue(nameof(DatasetRefreshType.Automatic))]
             public DatasetRefreshType Type { get; set; } = DatasetRefreshType.Automatic;
 
+            /// <summary>
+            /// The refresh type to apply to any incremental refresh policy partitions in a 'NoData' state.
+            /// </summary>
+            [JsonProperty("unprocessedPolicyRangePartitions")]
+            public DatasetRefreshType? UnprocessedPolicyRangePartitionsRefreshType { get; set; }
+
+            /// <summary>
+            /// If a table has an incremental refresh policy defined, ignoreRefreshPolicy will determine
+            /// if the policy is applied or not. If the policy is not applied, a process full operation
+            /// will leave partition definitions unchanged and all partitions in the table will be fully refreshed.
+            /// Default value is false.
+            /// </summary>
+            [JsonProperty("ignoreRefreshPolicy")]
+            [DefaultValue(false)]
+            public bool IgnoreRefreshPolicy { get; set; }
+
+            /// <summary>
+            /// If an incremental refresh policy is being applied, it needs to know the current date to determine
+            /// rolling window ranges for the historical range and the incremental range. The effectiveDate parameter
+            /// allows you to override the current date. This is useful for testing, demos, and business scenarios
+            /// where data is incrementally refreshed up to a date in the past or the future (for example, budgets
+            /// in the future). The default value is the current date.
+            /// </summary>
+            [JsonProperty("effectiveDate")]
+            public DateTime? EffectiveDate { get; set; }
+
+            /// <summary>
+            /// If set, does not explicitly request a refresh on a refresh policy partition, unless the partition
+            /// is explicitly mentioned in the objects array.
+            /// The default value is false.
+            /// </summary>
+            [JsonProperty("skipRefreshPolicyPartitions")]
+            [DefaultValue(false)]
+            public bool SkipRefreshPolicyPartitions { get; set; }
+
             [JsonProperty("objects")]
             public RefreshObjects Objects { get; set; }
 
             // *** https://docs.microsoft.com/rest/api/power-bi/datasets/refresh-dataset-in-group
-            // applyRefreshPolicy
             // commitMode
-            // effectiveDate
             // maxParallelism
-            // objects
             // retryCount
 
             [JsonProperty("tracing")]
@@ -279,9 +403,26 @@ namespace PbiTools.Deployments
             public bool DeployEmbeddedReport { get; set; }
 
             /// <summary>
+            /// Do not overwrite partitions that have Incremental Refresh Policies defined.
+            /// Default value is true.
+            /// </summary>
+            [JsonProperty("keepRefreshPolicyPartitions")]
+            [DefaultValue(true)]
+            public bool KeepRefreshPolicyPartitions { get; set; } = true;
+
+            /// <summary>
+            /// Applies refresh policies after metadata deployment.
+            /// Default value is false.
+            /// </summary>
+            [JsonProperty("applyRefreshPolicies")]
+            [DefaultValue(false)]
+            public bool ApplyRefreshPolicies { get; set; }
+
+            /// <summary>
             /// If <c>true</>, makes the deployment principal the dataset owner. Only applies to existing datasets; new datasets
             /// created during the deployment are always owned by the deployment principal.
             /// </summary>
+            /// <remarks>NotImplemented</remarks>
             [JsonProperty("takeOver")]
             public bool TakeOver { get; set; }
 
@@ -312,6 +453,8 @@ namespace PbiTools.Deployments
                 public string[] DataSources { get; set; }
             }
 
+            [JsonProperty("setCredentials")]
+            public bool SetCredentials { get; set; }
         }
 
         public class ReportOptions

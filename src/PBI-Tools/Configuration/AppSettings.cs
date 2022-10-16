@@ -29,6 +29,7 @@ namespace PbiTools.Configuration
             public static readonly string AppDataDir = $"{EnvPrefix}{nameof(AppDataDir)}";
             public static readonly string Debug = $"{EnvPrefix}{nameof(Debug)}";
             public static readonly string UICulture = $"{EnvPrefix}{nameof(UICulture)}";
+            public static readonly string EffectiveDate = $"{EnvPrefix}{nameof(EffectiveDate)}";
         }
 
         public static string GetEnvironmentSetting(string name) => System.Environment.GetEnvironmentVariable(name)
