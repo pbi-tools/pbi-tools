@@ -1,8 +1,8 @@
 # Release Notes
 
-## 1.0.0-rc.2 - 2022-07-28
+## 1.0.0-rc.2 - 2022-10-16
 
-<version:1.0.0-rc.2+preview.4>
+<version:1.0.0-rc.2+preview.5>
 
 - **#97 Model Deployments**
 - #147 Refresh Tracing
@@ -14,6 +14,8 @@
 - #135 Bind to Gateway
 - #167 Report partition status after update/refresh
 - #169 Report datasources
+- #151 Deployments of Incremental Refresh datasets
+- #195 Set (Cloud) credentials during dataset deployment - Basic
 - **#26 Bookmarks** (PbixProj v0.12 schema)
 - #91 Serialize/Deserialize _MobileState_
 - #153 Make "CreateOrOverwrite" default import mode
@@ -21,8 +23,8 @@
 - Fixed #127 Folder or File sources containing spaces aren't matched (Desktop edition only)
 - Fixed #102 (x-plat conform resolution of TEMP path)
 - Fixed #111 Deployment fails in model-only mode (due to logging)
-- Libraries updated: TOM 19.46, Power BI API 4.9, MSAL 4.45
-- Tested with PBI Desktop 2.107 (July '22)
+- Libraries updated: TOM 19.51, Power BI API 4.10, MSAL 4.47
+- Tested with PBI Desktop 2.109 (Sep '22)
 
 **System params expansion (#157)**
 
