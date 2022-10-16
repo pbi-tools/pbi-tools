@@ -365,6 +365,14 @@ namespace PbiTools.Deployments
             #endregion
 
             if (WhatIf) return; // TODO Determine further WhatIf stages...
+                                // TODO Print report DisplayName in WhatIf mode...
+
+            #region Set Credentials
+
+            var credsManager = new DatasetCredentialsManager(manifest, powerbi) { WhatIf = WhatIf };
+            await credsManager.SetCredentialsAsync(workspaceId, datasetId);
+
+            #endregion
 
             #region Deploy Report
             if (manifest.Options.Dataset.DeployEmbeddedReport) {
@@ -461,7 +469,9 @@ namespace PbiTools.Deployments
                     p.Mode,
                     p.SourceType,
                     p.State,
-                    p.ModifiedTime
+                    p.ModifiedTime,
+                    RangeStart = p.Source switch { TOM.PolicyRangePartitionSource policyRange => policyRange.Start.ToShortDateString() , _ => "" },
+                    RangeEnd = p.Source switch { TOM.PolicyRangePartitionSource policyRange => policyRange.End.ToShortDateString() , _ => "" }
                 })
                 .ToArray();
 
@@ -473,7 +483,9 @@ namespace PbiTools.Deployments
                 nameof(TOM.Partition.State),
                 nameof(TOM.Partition.SourceType),
                 nameof(TOM.Partition.Mode),
-                nameof(TOM.Partition.ModifiedTime)
+                nameof(TOM.Partition.ModifiedTime),
+                "RangeStart",
+                "RangeEnd"
             );
 
             foreach (var item in partitions)
@@ -484,7 +496,9 @@ namespace PbiTools.Deployments
                     $"{item.State}",
                     $"{item.SourceType}",
                     $"{item.Mode}",
-                    $"{item.ModifiedTime}"
+                    $"{item.ModifiedTime}",
+                    $"{item.RangeStart}",
+                    $"{item.RangeEnd}"
                 );
             }
 

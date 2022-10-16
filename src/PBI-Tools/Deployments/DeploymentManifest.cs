@@ -31,6 +31,9 @@ namespace PbiTools.Deployments
         [JsonProperty("authentication")]
         public PbiDeploymentAuthentication Authentication { get; set; } = new();
 
+        [JsonProperty("credentials")]
+        public PbiDeploymentCredential[] Credentials { get; set; }
+
         [JsonProperty("options")]
         public PbiDeploymentOptions Options { get; set; } = new();
 
@@ -111,6 +114,95 @@ namespace PbiTools.Deployments
     public enum PbiDeploymentAuthenticationType
     {
         ServicePrincipal = 1
+    }
+
+    public class PbiDeploymentCredential
+    {
+
+        [JsonProperty("match")]
+        public CredentialMatch Match { get; set; } = new();
+
+        public class CredentialMatch
+        { 
+            [JsonProperty("datasourceType")]
+            public string DatasourceType { get; set; }
+
+            [JsonProperty("connectionDetails")]
+            public DatasourceConnectionDetails ConnectionDetails { get; set; } = new();
+        }
+
+        [JsonProperty("updateMode")]
+        public CredentialUpdateMode UpdateMode { get; set; }
+
+        public enum CredentialUpdateMode
+        { 
+            NotSpecified = 0,
+            Always = 1,
+            Never = 2
+        }
+
+        [JsonProperty("type")]
+        public CredentialType Type { get; set; }
+
+        [JsonProperty("username")]
+        public string Username { get; set; }
+
+        [JsonProperty("password")]
+        public string Password { get; set; }
+
+        [JsonProperty("details")]
+        public PbiCredentialDetails Details { get; set; } = new();
+
+        public class PbiCredentialDetails
+        {
+            /// <summary>
+            /// Gets or sets whether to encrypt the data source connection. The API
+            /// call will fail if you select encryption and Power BI is unable to
+            /// establish an encrypted connection with the data source. Possible
+            /// values include: 'Encrypted', 'NotEncrypted'
+            /// </summary>
+            [JsonProperty(PropertyName = "encryptedConnection")]
+            public EncryptedConnection EncryptedConnection { get; set; } = EncryptedConnection.Encrypted;
+
+            /// <summary>
+            /// Gets or sets the encryption algorithm. For a cloud data source,
+            /// specify `None`. For an on-premises data source, specify `RSA-OAEP`
+            /// and use the gateway public key to encrypt the credentials. Possible
+            /// values include: 'None', 'RSA-OAEP'
+            /// </summary>
+            [JsonProperty(PropertyName = "encryptionAlgorithm")]
+            public EncryptionAlgorithm EncryptionAlgorithm { get; set; } = EncryptionAlgorithm.None;
+
+            /// <summary>
+            /// Gets or sets the privacy level, which is relevant when combining
+            /// data from multiple sources. Possible values include: 'None',
+            /// 'Public', 'Organizational', 'Private'
+            /// </summary>
+            [JsonProperty(PropertyName = "privacyLevel")]
+            public PrivacyLevel PrivacyLevel { get; set; } = PrivacyLevel.None;
+
+            /// <summary>
+            /// Gets or sets whether the Azure AD identity (OAuth 2.0 credentials)
+            /// of the API caller (which must be the data source owner) will be
+            /// used to configure data source credentials (the owner OAuth access
+            /// token). Typically, you would either use this flag or
+            /// `useEndUserOAuth2Credentials`.
+            /// </summary>
+            [JsonProperty(PropertyName = "useCallerAADIdentity")]
+            public bool? UseCallerAADIdentity { get; set; }
+
+            /// <summary>
+            /// Gets or sets whether the end-user Azure AD identity (OAuth 2.0
+            /// credentials) is used when connecting to the data source in
+            /// DirectQuery mode. Use with data sources that support [single
+            /// sign-on
+            /// (SSO)](/power-bi/connect-data/power-bi-data-sources#single-sign-on-sso-for-directquery-sources).
+            /// Typically, you would either use this flag or
+            /// `useCallerAADIdentity`.
+            /// </summary>
+            [JsonProperty(PropertyName = "useEndUserOAuth2Credentials")]
+            public bool? UseEndUserOAuth2Credentials { get; set; }            
+        }
     }
 
     public class PbiDeploymentOptions
@@ -361,6 +453,8 @@ namespace PbiTools.Deployments
                 public string[] DataSources { get; set; }
             }
 
+            [JsonProperty("setCredentials")]
+            public bool SetCredentials { get; set; }
         }
 
         public class ReportOptions
