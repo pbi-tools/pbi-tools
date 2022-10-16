@@ -8,6 +8,8 @@ using TOM = Microsoft.AnalysisServices.Tabular;
 
 namespace PbiTools.Deployments
 {
+    using Configuration;
+
 	public class XmlaRefreshManager
 	{
         private static readonly ILogger Log = Serilog.Log.ForContext<XmlaRefreshManager>();
@@ -26,6 +28,42 @@ namespace PbiTools.Deployments
 
         public PbiDeploymentEnvironment.RefreshOptions EnvironmentOptions { get; set; }
 
+        private void RequestModelRefresh(TOM.RefreshType refreshType)
+        {
+            if (ManifestOptions.IgnoreRefreshPolicy)
+            {
+                Log.Information("Ignoring RefreshPolicy.");
+                _database.Model.RequestRefresh(refreshType, TOM.RefreshPolicyBehavior.Ignore);
+            }
+            if (TryGetEffectiveDate(ManifestOptions, out var effectiveDate))
+            {
+                Log.Information("Using effective date: {EffectiveDate}", effectiveDate);
+                _database.Model.RequestRefresh(refreshType, effectiveDate);
+            }
+            else
+            {
+                _database.Model.RequestRefresh(refreshType);
+            }
+        }
+
+        private void RequestTableRefresh(string tableName, TOM.RefreshType refreshType)
+        {
+            if (ManifestOptions.IgnoreRefreshPolicy)
+            {
+                Log.Information("Ignoring RefreshPolicy.");
+                _database.Model.Tables[tableName].RequestRefresh(refreshType, TOM.RefreshPolicyBehavior.Ignore);
+            }
+            if (TryGetEffectiveDate(ManifestOptions, out var effectiveDate))
+            {
+                Log.Information("Using effective date: {EffectiveDate}", effectiveDate);
+                _database.Model.Tables[tableName].RequestRefresh(refreshType, effectiveDate);
+            }
+            else
+            {
+                _database.Model.Tables[tableName].RequestRefresh(refreshType);
+            }
+        }
+
         public void RunRefresh()
         {
             _database.Model.Sync();
@@ -37,11 +75,11 @@ namespace PbiTools.Deployments
                 {
                     case RefreshObjectType.Model:
                         Log.Information("Refreshing model ({RefreshType})...", refreshable.RefreshType);
-                        _database.Model.RequestRefresh(refreshable.RefreshType);
+                        RequestModelRefresh(refreshable.RefreshType);
                         break;
                     case RefreshObjectType.Table:
                         Log.Information("Refreshing table {Table} ({RefreshType})...", refreshable.Table, refreshable.RefreshType);
-                        _database.Model.Tables[refreshable.Table].RequestRefresh(refreshable.RefreshType);
+                        RequestTableRefresh(refreshable.Table, refreshable.RefreshType);
                         break;
                     case RefreshObjectType.Partition:
                         Log.Information("Refreshing partition {Table}|{Partition} ({RefreshType})...", refreshable.Table, refreshable.Partition, refreshable.RefreshType);
@@ -79,7 +117,7 @@ namespace PbiTools.Deployments
         public static ModelPartition[] GetPartitions(TOM.Model model) =>
             model.Tables
                 .SelectMany(t => t.Partitions)
-                .Select(p => new ModelPartition(p.Table.Name, p.Name))
+                .Select(p => new ModelPartition(p.Table.Name, p.Name, p.SourceType))
                 .ToArray();
 
         public static ModelRefreshable[] CalculateRefreshables(ModelPartition[] partitions,
@@ -91,7 +129,7 @@ namespace PbiTools.Deployments
                 && environmentOptions.Objects != null
                 && !environmentOptions.Objects.IsEmpty;
 
-            var defaultRefreshType = (environmentOptions.Type ?? manifestOptions.Type).ConvertToTOM();
+            var defaultRefreshType = (environmentOptions?.Type ?? manifestOptions.Type).ConvertToTOM();
             Log.Information("Using default refresh type: {RefreshType}", defaultRefreshType);
 
             if ((manifestOptions.Objects == null || manifestOptions.Objects.IsEmpty)
@@ -156,6 +194,9 @@ namespace PbiTools.Deployments
             // Handle remaining partitions (using manifest type)
             foreach (var p in allPartitions)
             {
+                if (manifestOptions.SkipRefreshPolicyPartitions && p.SourceType == TOM.PartitionSourceType.PolicyRange)
+                    continue;
+
                 Log.Verbose("Requesting default refresh type '{RefreshType}' for partition: {Partition}", defaultRefreshType, p);
                 results.Add(new ModelRefreshable(RefreshObjectType.Partition,
                     defaultRefreshType, 
@@ -167,18 +208,49 @@ namespace PbiTools.Deployments
             return results.ToArray();            
         }
 
+        internal static bool TryGetEffectiveDateFromEnv(out DateTime effectiveDate)
+        {
+            var envValue = AppSettings.GetEnvironmentSetting(AppSettings.Environment.EffectiveDate);
+            if (envValue == null)
+            {
+                effectiveDate = default;
+                return false;
+            }
+
+            return DateTime.TryParse(envValue,
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None,
+                out effectiveDate);
+        }
+
+        internal static bool TryGetEffectiveDate(PbiDeploymentOptions.RefreshOptions refreshOptions, out DateTime effectiveDate)
+        {
+            if (TryGetEffectiveDateFromEnv(out effectiveDate))
+                return true;
+
+            if (!refreshOptions.EffectiveDate.HasValue) { 
+                effectiveDate = default;
+                return false;
+            }
+
+            effectiveDate = refreshOptions.EffectiveDate.Value;
+            return true;
+        }
+
     }
 
     public struct ModelPartition
     {
-        public ModelPartition(string table, string partition)
+        public ModelPartition(string table, string partition, TOM.PartitionSourceType sourceType)
         {
             Table = table ?? throw new ArgumentNullException(nameof(table));
             Partition = partition ?? throw new ArgumentNullException(nameof(partition));
+            SourceType = sourceType;
         }
 
         public string Table { get; }
         public string Partition { get; }
+        public TOM.PartitionSourceType SourceType { get; }
 
         public override string ToString() => $"{Table}|{Partition}";
     }

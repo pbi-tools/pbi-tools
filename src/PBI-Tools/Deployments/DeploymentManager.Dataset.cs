@@ -234,6 +234,31 @@ namespace PbiTools.Deployments
                 dbNew.Name = dataset.DisplayName; // avoid name clash
 
                 // TODO Modify partitions, roles, role members if required
+
+                if (manifest.Options.Dataset.KeepRefreshPolicyPartitions)
+                {
+                    foreach (var table in dbNew.Model.Tables)
+                    {
+                        if (table.RefreshPolicy == null) continue;
+
+                        Log.Information("Copying remote partitions for RefreshPolicy table: {Table}", table.Name);
+
+                        var remoteTbl = remoteDb.Model.Tables.Find(table.Name);
+
+                        if (remoteTbl == null) continue;
+
+                        table.Partitions.Clear();
+
+                        foreach (var partition in remoteTbl.Partitions)
+                        {
+                            Log.Information("- {Partition}", partition.Name);
+                            var partitionJson = TOM.JsonSerializer.SerializeObject(partition);
+                            table.Partitions.Add(TOM.JsonSerializer.DeserializeObject<TOM.Partition>(partitionJson));
+                        }
+
+                    }
+                }
+
                 // TODO Allow saving BIM as deployment artifact
 
                 // Transfer new model schema...
@@ -258,6 +283,20 @@ namespace PbiTools.Deployments
                 datasetId = remoteDb.ID;
 
                 Log.Information("Model deployment succeeded.");
+
+                if (manifest.Options.Dataset.ApplyRefreshPolicies)
+                {
+                    if (XmlaRefreshManager.TryGetEffectiveDateFromEnv(out var effectiveDate))
+                    {
+                        Log.Information("Applying refresh policies with effective date: {EffectiveDate}.", effectiveDate);
+                        remoteDb.Model.ApplyRefreshPolicies(effectiveDate, refresh: false, refreshNonPolicyTables: false);
+                    }
+                    else
+                    {
+                        Log.Information("Applying refresh policies with current date.");
+                        remoteDb.Model.ApplyRefreshPolicies(refresh: false, refreshNonPolicyTables: false);
+                    }
+                }
 
                 ReportPartitionStatus(remoteDb.Model);
             }

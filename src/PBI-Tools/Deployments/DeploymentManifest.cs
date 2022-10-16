@@ -206,15 +206,47 @@ namespace PbiTools.Deployments
             [DefaultValue(nameof(DatasetRefreshType.Automatic))]
             public DatasetRefreshType Type { get; set; } = DatasetRefreshType.Automatic;
 
+            /// <summary>
+            /// The refresh type to apply to any incremental refresh policy partitions in a 'NoData' state.
+            /// </summary>
+            [JsonProperty("unprocessedPolicyRangePartitions")]
+            public DatasetRefreshType? UnprocessedPolicyRangePartitionsRefreshType { get; set; }
+
+            /// <summary>
+            /// If a table has an incremental refresh policy defined, ignoreRefreshPolicy will determine
+            /// if the policy is applied or not. If the policy is not applied, a process full operation
+            /// will leave partition definitions unchanged and all partitions in the table will be fully refreshed.
+            /// Default value is false.
+            /// </summary>
+            [JsonProperty("ignoreRefreshPolicy")]
+            [DefaultValue(false)]
+            public bool IgnoreRefreshPolicy { get; set; }
+
+            /// <summary>
+            /// If an incremental refresh policy is being applied, it needs to know the current date to determine
+            /// rolling window ranges for the historical range and the incremental range. The effectiveDate parameter
+            /// allows you to override the current date. This is useful for testing, demos, and business scenarios
+            /// where data is incrementally refreshed up to a date in the past or the future (for example, budgets
+            /// in the future). The default value is the current date.
+            /// </summary>
+            [JsonProperty("effectiveDate")]
+            public DateTime? EffectiveDate { get; set; }
+
+            /// <summary>
+            /// If set, does not explicitly request a refresh on a refresh policy partition, unless the partition
+            /// is explicitly mentioned in the objects array.
+            /// The default value is false.
+            /// </summary>
+            [JsonProperty("skipRefreshPolicyPartitions")]
+            [DefaultValue(false)]
+            public bool SkipRefreshPolicyPartitions { get; set; }
+
             [JsonProperty("objects")]
             public RefreshObjects Objects { get; set; }
 
             // *** https://docs.microsoft.com/rest/api/power-bi/datasets/refresh-dataset-in-group
-            // applyRefreshPolicy
             // commitMode
-            // effectiveDate
             // maxParallelism
-            // objects
             // retryCount
 
             [JsonProperty("tracing")]
@@ -279,9 +311,26 @@ namespace PbiTools.Deployments
             public bool DeployEmbeddedReport { get; set; }
 
             /// <summary>
+            /// Do not overwrite partitions that have Incremental Refresh Policies defined.
+            /// Default value is true.
+            /// </summary>
+            [JsonProperty("keepRefreshPolicyPartitions")]
+            [DefaultValue(true)]
+            public bool KeepRefreshPolicyPartitions { get; set; } = true;
+
+            /// <summary>
+            /// Applies refresh policies after metadata deployment.
+            /// Default value is false.
+            /// </summary>
+            [JsonProperty("applyRefreshPolicies")]
+            [DefaultValue(false)]
+            public bool ApplyRefreshPolicies { get; set; }
+
+            /// <summary>
             /// If <c>true</>, makes the deployment principal the dataset owner. Only applies to existing datasets; new datasets
             /// created during the deployment are always owned by the deployment principal.
             /// </summary>
+            /// <remarks>NotImplemented</remarks>
             [JsonProperty("takeOver")]
             public bool TakeOver { get; set; }
 
