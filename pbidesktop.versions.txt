@@ -1,5 +1,12 @@
 # https://docs.microsoft.com/power-bi/fundamentals/desktop-change-log
-2.107.683 # Jul '22
+2.109.1021 # Sep #22
+2.109.782
+2.109.642
+2.108.997;https://download.microsoft.com/download/8/8/0/880BCA75-79DD-466A-927D-1ABF1F5454B0/PBIDesktopSetup-2022-08_x64.exe # Aug '22
+2.108.825
+2.108.603
+2.107.841;https://download.microsoft.com/download/8/8/0/880BCA75-79DD-466A-927D-1ABF1F5454B0/PBIDesktopSetup-2022-07_x64.exe # Jul '22
+2.107.683
 2.106.883;https://download.microsoft.com/download/8/8/0/880BCA75-79DD-466A-927D-1ABF1F5454B0/PBIDesktopSetup-2022-06_x64.exe # Jun '22
 2.106.582
 2.105.1143;https://download.microsoft.com/download/8/8/0/880BCA75-79DD-466A-927D-1ABF1F5454B0/PBIDesktopSetup-2022-05_x64.exe # May '22
