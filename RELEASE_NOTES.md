@@ -1,8 +1,8 @@
 # Release Notes
 
-## 1.0.0-rc.2 - 2022-10-16
+## 1.0.0-rc.2 - 2022-11-22
 
-<version:1.0.0-rc.2+preview.5>
+<version:1.0.0-rc.2+preview.6>
 
 - **#97 Model Deployments**
 - #147 Refresh Tracing
@@ -23,8 +23,9 @@
 - Fixed #127 Folder or File sources containing spaces aren't matched (Desktop edition only)
 - Fixed #102 (x-plat conform resolution of TEMP path)
 - Fixed #111 Deployment fails in model-only mode (due to logging)
-- Libraries updated: TOM 19.51, Power BI API 4.10, MSAL 4.47
-- Tested with PBI Desktop 2.109 (Sep '22)
+- Fixed #207 Dataset deployment fails if model has field parameters
+- Libraries updated: TOM 19.52, Power BI API 4.11, MSAL 4.48
+- Tested with PBI Desktop 2.110 (Oct '22)
 
 **System params expansion (#157)**
 
