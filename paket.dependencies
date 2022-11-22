@@ -10,7 +10,7 @@ group Main
   nuget Serilog.Sinks.Console
   nuget Newtonsoft.Json
   nuget CsvHelper
-  nuget PowerArgs
+  nuget PowerArgs ~> 3
   nuget Moq
   nuget System.ValueTuple
   nuget Polly
@@ -77,6 +77,10 @@ group Fake-Build
   nuget Fake.DotNet.Testing.XUnit2
   nuget Fake.IO.FileSystem
   nuget Fake.IO.Zip
+  nuget Microsoft.Build 17.3.2
+  nuget Microsoft.Build.Framework 17.3.2
+  nuget Microsoft.Build.Tasks.Core 17.3.2
+  nuget Microsoft.Build.Utilities.Core 17.3.2
 
 group Fake-Tools
   source https://api.nuget.org/v3/index.json

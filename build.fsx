@@ -221,7 +221,8 @@ Target.create "Publish" (fun _ ->
                 OutputPath = Some path
                 Configuration = DotNet.BuildConfiguration.Release
                 MSBuildParams = { args.MSBuildParams with
-                                       Properties = msbuildProps }
+                                       Properties = msbuildProps
+                                       DisableInternalBinLog = true }
             }
     
     // Desktop build
