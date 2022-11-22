@@ -125,7 +125,10 @@ namespace PbiTools.Deployments
 
             #region Build Sources
             Log.Write(WhatIfLogLevel, "Deserializing tabular model from sources...");
-            var dbNew = TOM.JsonSerializer.DeserializeDatabase(dataset.Model.DataModel.ToString(), new TOM.DeserializeOptions { });
+            var dbNew = TOM.JsonSerializer.DeserializeDatabase(dataset.Model.DataModel.ToString()
+                , new TOM.DeserializeOptions { }
+                , AMO.CompatibilityMode.PowerBI
+            );
 
             static void LogDbInfo(TOM.Database db, string label, Serilog.Events.LogEventLevel level = Serilog.Events.LogEventLevel.Information) {
                 Log.Write(level, label);
