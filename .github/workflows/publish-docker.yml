@@ -48,10 +48,10 @@ jobs:
         run: |
           TAG=${{ github.event.inputs.version }}
           CUSTOM_TAG=${{ github.event.inputs.custom-tag }}
-          echo "::set-output name=VERSION::$TAG"
-          echo "::set-output name=DOCKER_TAG::${TAG/+/_}"
+          echo "VERSION=$TAG" >> $GITHUB_OUTPUT
+          echo "DOCKER_TAG=${TAG/+/_}" >> $GITHUB_OUTPUT
           if [[ "${{ github.event.inputs.custom-tag }}" != "" ]]; then
-              echo "::set-output name=DOCKER_TAG::$CUSTOM_TAG"
+              echo "DOCKER_TAG=$CUSTOM_TAG" >> $GITHUB_OUTPUT
           fi
 
       # Install the cosign tool except on PR
