@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <AssemblyName>pbi-tools.core</AssemblyName>
+    <StartupObject>PbiTools.Program</StartupObject>
+    <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>false</SelfContained>
+    <IncludeNativeLibrariesForSelfExtract>false</IncludeNativeLibrariesForSelfExtract>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\PBI-Tools\**\*.cs" Exclude="..\PBI-Tools\obj\**\*.*;..\PBI-Tools\Properties\**\*.*;..\PBI-Tools\Win32\**\*.*" />
+    <EmbeddedResource Include="..\PBI-Tools\Templates\**\*.*" Exclude="..\PBI-Tools\Templates\AS\**\*.*" />
+  </ItemGroup>
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
+</Project>
