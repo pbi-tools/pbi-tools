@@ -297,7 +297,7 @@ namespace PbiTools.PowerBI
                     return part;
                 package.DeletePart(partUri);
             }
-            return package.CreatePart(partUri, contentType);
+            return package.CreatePart(partUri, contentType, CompressionOption.Normal);
         }
 #endif
     }
