@@ -15,3 +15,5 @@ WildcardMatch
 Microsoft.Identity.Client
 Microsoft.PowerBI.Api
 LibGit2Sharp
+Spectre.Console
+dbup-sqlserver

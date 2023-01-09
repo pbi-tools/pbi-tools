@@ -7,9 +7,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Serilog;
-using PbiTools.Win32;
 using System.Text;
+using PbiTools.Win32;
+using Serilog;
 
 namespace PbiTools.Utils
 {
@@ -19,9 +19,12 @@ namespace PbiTools.Utils
 
         public static IEnumerable<PowerBIProcess> EnumerateProcesses()
         {
-            foreach (var proc in Process.GetProcessesByName("msmdsrv"))
+            foreach (var proc in Process.GetProcessesByName("msmdsrv")) // TODO Look for "pbidesktop" instead??
             {
+                var result = default(PowerBIProcess);
+
                 using (proc)
+                try
                 {
                     var cmdLine = proc.GetCommandLine().SplitCommandLine();
 
@@ -61,7 +64,7 @@ namespace PbiTools.Utils
 
                         pbixPathCandidates = pbixPathCandidates.Where(p => !IsTempSavePath(p.DosFilePath)).ToArray();
 
-                        yield return new PowerBIProcess
+                        result = new PowerBIProcess
                         {
                             ProductName = parent.MainModule.FileVersionInfo.ProductName,
                             ProductVersion = parent.MainModule.FileVersionInfo.ProductVersion,
@@ -74,8 +77,13 @@ namespace PbiTools.Utils
                         };
                     }
                 }
-            }
+                catch (System.ComponentModel.Win32Exception ex)
+                {
+                    Log.Verbose(ex, "Skipping process due to access violation. (PID: {ProcessID})", proc.Id);
+                }
 
+                if (result != null) yield return result;
+            }
         }
 
         public static bool IsTempSavePath(string path) =>

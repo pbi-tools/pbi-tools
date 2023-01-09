@@ -7,6 +7,7 @@ using PowerArgs;
 
 namespace PbiTools.Cli
 {
+    using Model;
     using PowerBI;
 
     public partial class CmdLineActions
@@ -67,11 +68,11 @@ namespace PbiTools.Cli
             if (outputFile.Exists && !overwrite)
                 throw new PbiToolsCliException(ExitCode.FileExists, $"Destination file '{outputFile.FullName}' exists and the '-overwrite' option was not specified.");
 
-            using (var proj = PbiTools.Model.PbixModel.FromFolder(folder))
+            using (var proj = PbixModel.FromFolder(folder))
             {
                 outputFile.Directory.Create();
 
-                proj.ToFile(outputFile.FullName, format, _dependenciesResolver);
+                proj.ToFile(outputFile.FullName, format, dependenciesResolver: _dependenciesResolver);
             }
 
             Log.Information("{Format} file written to: {Path}", format, outputFile.FullName);

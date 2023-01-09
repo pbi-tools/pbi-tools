@@ -71,6 +71,30 @@ namespace PbiTools.FileSystem
         }
 
         /// <summary>
+        /// Parses the file contents as a Json token.
+        /// Returns an empty object in case of a Json parser error.
+        /// </summary>
+        public static JToken ReadJsonToken(this IProjectFile file, JsonLoadSettings settings = null)
+        {
+            if (file.TryReadFile(out var stream))
+            {
+                using (var reader = new JsonTextReader(new StreamReader(stream)))
+                {
+                    try
+                    {
+                        return JToken.Load(reader, settings);
+                    }
+                    catch (JsonException e)
+                    {
+                        Log.Error(e, "Json file is invalid: {Path}", file.Path);
+                    }
+                }
+            }
+
+            return default;
+        }
+
+        /// <summary>
         /// Parses the file contents as a Json array.
         /// Returns an empty array in case of a Json parser error.
         /// </summary>

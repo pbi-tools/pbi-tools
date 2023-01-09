@@ -6,7 +6,7 @@
     <AssemblyName>pbi-tools.netcore.tests</AssemblyName>
     <RootNamespace>PbiTools.NetCore.Tests</RootNamespace>
     <Platforms>x64</Platforms>
-    <LangVersion>latest</LangVersion>
+    <LangVersion>preview</LangVersion>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
@@ -16,6 +16,7 @@
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="..\PBI-Tools.Tests\TestResources\**\*.*" />
+    <EmbeddedResource Include="..\data\**\*.*" LinkBase="data" />
     <EmbeddedResource Include="..\..\.temp\Adventure Works DW 2020.zip" LogicalName="Adventure Works DW 2020.zip" />
     <EmbeddedResource Include="..\..\.temp\Adventure Works DW 2020 - TE.zip" LogicalName="Adventure Works DW 2020 - TE.zip" />
   </ItemGroup>

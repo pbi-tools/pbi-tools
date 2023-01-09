@@ -11,6 +11,7 @@ using Serilog.Events;
 
 [assembly: InternalsVisibleTo("pbi-tools.tests")]
 [assembly: InternalsVisibleTo("pbi-tools.netcore.tests")]
+[assembly: InternalsVisibleTo("pbi-tools.net7.tests")]
 
 namespace PbiTools
 {
@@ -170,6 +171,7 @@ namespace PbiTools
     {
         UnexpectedError = -9,
         UnspecifiedError = -8,
+        NotImplemented = -3,
         InvalidArgs = -2,
         NoArgsProvided = -1,
         Success = 0,

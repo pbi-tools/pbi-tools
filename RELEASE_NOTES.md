@@ -1,5 +1,142 @@
 # Release Notes
 
+## 1.0.0-rc.2 - 2023-01-09
+
+- **#97 Model Deployments**
+- #147 Refresh Tracing
+- #141 Deployment of "thick" reports
+- #145 Non-string deployment parameters
+- #146 Environment-scoped parameters
+- #168 SqlScripts Deployments
+- #129 Object-specific refresh
+- #135 Bind to Gateway (new datasets)
+- #167 Report partition status after update/refresh
+- #169 Report datasources
+- #151 Deployments of Incremental Refresh datasets
+- #195 Set (Cloud) credentials during dataset deployment - Basic
+- **#26 Bookmarks** (PbixProj v0.12 schema)
+- #91 Serialize/Deserialize _MobileState_
+- #153 Make "CreateOrOverwrite" default import mode
+- #202 Ship .Net 7 version of pbi-tools Core
+- #56 Support for long paths on Windows
+- Fixed #109 'pbi-tools info' no longer fails when another instance of SSAS runs on the same machine
+- Fixed #127 Folder or File sources containing spaces aren't matched (Desktop edition only)
+- Fixed #102 x-plat conform resolution of TEMP path
+- Fixed #111 Deployment fails in model-only mode (due to logging)
+- Fixed #207 Dataset deployment fails if model has field parameters
+- Fixed #219 pbi-tools Core does not compress PBIX files when compiling
+- Libraries updated: TOM 19.54, Power BI API 4.11, MSAL 4.49, db-up 5.0
+- Tested with PBI Desktop 2.112 (Dec '22)
+- Converted Fake build system from runner to fsproj
+
+**System params expansion (#157)**
+
+- Explicit manifest parameters can now reference system parameters, including `{{ENVIRONMENT}}`, `{{PBITOOLS_VERSION}}`, `{{FILE_NAME}}`, `{{FILE_NAME_WITHOUT_EXT}}`, `{{PBIXPROJ_FOLDER}}`
+
+Example:
+```json
+  "parameters": {
+    "[Version]": "1.1.0",
+    "[Environment]": "{{ENVIRONMENT}}",
+    "[PBITOOLS_VERSION]": "{{PBITOOLS_VERSION}}",
+    "[GH-Branch]": "%GITHUB_REF_NAME%",
+    "[GH-RunId]": "%GITHUB_RUN_ID%",
+    "[GH-SHA]": "%GITHUB_SHA%",
+    "[FilterDate]": null
+  }
+```
+
+**Refresh Tracing and Refresh Summary Stats (#147)**
+
+- Retrieves traces during XMLA refresh, emits live logs and generates a refresh summary
+- Tracing can be entirely disabled
+- If enabled, events can be logged to the console. Any number of filter expressions are allowed. Filters are evaluated against composite keys: "{EventClass}|{EventSubclass}|{ObjectType}". Wildcards ('*', '?') are allowed.
+- Furthermore, a refresh summary can be produced, either as a console output and/or into a UTF-8 csv file. Summary stats allow filtering by event and object type.
+- All configuration for refresh tracing is held in options/refresh/tracing
+- Possible values for EventSubclass (referenced in logEvents/filter and summary/events) are listed here: <https://docs.microsoft.com/en-us/analysis-services/trace-events/progress-reports-data-columns?view=sql-analysis-services-2022>
+
+Example config section:
+```json
+"options": {
+  "refresh": {
+    "method": "XMLA",
+    "type": "Full",
+    "tracing": {
+      "enabled": true,
+      "logEvents": {
+        "filter": [
+          "*|TabularRefresh|Partition",
+          "*|ReadData|Partition"
+        ]
+      },
+      "summary": {
+        "events": [
+          "TabularRefresh",
+          "Process",
+          "ReadData",
+          "ExecuteSql"
+        ],
+        "objectTypes": [
+          "Partition"
+        ],
+        "outPath": "refresh_stats.csv",
+        "console": true
+      }
+    }
+  }
+```
+
+**Deploy embedded report alongside dataset (#141)**
+
+- Allows deploying report from a PbixProj folder alongside dataset from same project
+- Report is automatically bound to dataset. This happens offline, ensuring the PBIX has a valid dataset reference
+- Custom connections.json template can be specified via manifest/options/report/customConnectionsTemplate (HTTP url or relative file path). The template must contain the "{{DATASET_ID}}" placeholder and must be valid json.
+- Initial support for 'pbiServiceLive' connections only
+
+Enabled as part of manifest/options/dataset:
+```json
+  "options": {
+    "dataset": {
+      "deployEmbeddedReport": true
+    }
+  }
+```
+
+Report name and destination are derived from dataset, but can be customized via environment settings. Paramter replacement supported for 'workspace' and 'displayName':
+```json
+  "UAT": {
+    "workspace": "Datasets [PROD]",
+    "displayName": "{{PBIXPROJ_FOLDER}} [UAT]",
+    "refresh": true,
+    "report": {
+      "skip": false,
+      "workspace": "Name-or-ID",
+      "displayName": "Report Name.pbix"
+    }
+  }
+```
+
+Those changes provide the foundation for #66
+
+**Non-string deployment parameters (#145)**
+
+- Support text, number, bool, null, expression parameters
+- Fixed '"' escaping in text params
+- Enabled C# 'preview' LangVersion in test projects to use C#11 raw string literals for embedded json code
+
+Example payload:
+```json
+{
+    "Number": 1,
+    "Number2": 0.4,
+    "Null": null,
+    "String": "foo",
+    "Bool": true,
+    "Date": "#date(2022, 6, 1)",
+    "Duration": "#duration(5, 0, 0, 0)"
+}
+```
+
 ## 1.0.0-rc.1 - 2022-03-06
 
 - PbixProj v0.11 Schema

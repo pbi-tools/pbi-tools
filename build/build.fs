@@ -1,6 +1,3 @@
-#r "paket: groupref fake-build //"
-#load "./.fake/build.fsx/intellisense.fsx"
-
 open Fake.Core
 open Fake.BuildServer
 open Fake.DotNet
@@ -11,24 +8,6 @@ open Fake.IO.Globbing.Operators
 open System
 open System.IO
 open System.Text.RegularExpressions
-
-// [x] clean
-// [x] assemblyinfo
-// [x] build
-// [x] test
-// [ ] docs (gh-pages)
-// [ ] package (nuget)
-// [ ] release (myget, chocolatey)
-
-// --------------------------------------------------------------------------------------
-// START TODO: Provide project-specific details below
-// --------------------------------------------------------------------------------------
-
-// Information about the project are used
-//  - for version and project name in generated AssemblyInfo file
-//  - by the generated NuGet package
-//  - to run tests and to publish documentation on GitHub gh-pages
-//  - for documentation, you also need to edit info in "docs/tools/generate.fsx"
 
 // The name of the project
 // (used by attributes in AssemblyInfo, name of a NuGet package and directory in 'src')
@@ -63,57 +42,32 @@ let gitName = "pbi-tools"
 // The url for the raw files hosted
 let gitRaw = Environment.environVarOrDefault "gitRaw" ("https://raw.github.com/" + gitOwner)
 
-// --------------------------------------------------------------------------------------
-// END TODO: The rest of the file includes standard build steps
-// --------------------------------------------------------------------------------------
-
-BuildServer.install [
-    TeamFoundation.Installer  // Adds support for Azure DevOps
-]
-
 let buildDir = ".build"
 let outDir = buildDir @@ "out"
 let distDir = buildDir @@ "dist"
 let distFullDir = distDir @@ "desktop"
 let distCoreDir = distDir @@ "core"
+let distNet7Dir = distDir @@ "net7"
 let testDir = buildDir @@ "test"
 let tempDir = ".temp"
 
 // Pattern specifying assemblies to be tested using xUnit
 let testAssemblies = outDir @@ "*Tests*.dll"
 
-System.Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
-
-// Read additional information from the release notes document
-let releaseNotesData = 
-    File.ReadAllLines "RELEASE_NOTES.md"
-    |> ReleaseNotes.parseAll
-
-let release = List.head releaseNotesData
-let timestampString =
-    let now = DateTime.UtcNow
-    let ytd = now - DateTime(now.Year,1,1,0,0,0,DateTimeKind.Utc)
-    String.Format("{0:yy}{1:ddd}.{0:HHmm}",now,ytd + TimeSpan.FromDays(1.))
-let fileVersion = sprintf "%i.%i.%s"
-                   release.SemVer.Major
-                   release.SemVer.Minor
-                   timestampString
 let (|HasCustomVersion|_|) = function
     | head :: _ -> let m = Regex.Match(head, @"<version:([0-9a-zA-Z\-\.\+]+)>")
                    if (m.Success) then Some (m.Groups.[1].Value)
                    else None
     | _ -> None
-let releaseVersion = match release.Notes with
-                     | HasCustomVersion version -> version
-                     | _ -> release.NugetVersion
 
-Trace.logfn "Release Version:\n%s" releaseVersion
-Trace.logfn "Current Release:\n%O" release
+let mutable releaseNotesData = []
+let mutable fileVersion = ""
+let mutable releaseVersion = ""
 
-let stable = 
-    match releaseNotesData |> List.tryFind (fun r -> r.NugetVersion.Contains("-") |> not) with
-    | Some stable -> stable
-    | _ -> release
+// let stable = 
+//     match releaseNotesData |> List.tryFind (fun r -> r.NugetVersion.Contains("-") |> not) with
+//     | Some stable -> stable
+//     | _ -> release
 
 /// If 'PBITOOLS_PbiInstallDir' points to a valid PBI Desktop installation, set the MSBuild 'ReferencePath' property to that location
 let pbiInstallDir =
@@ -140,6 +94,7 @@ let genCSAssemblyInfo (projectPath : string) =
     let folderName = System.IO.Path.GetDirectoryName(projectPath)
     let basePath = folderName @@ "Properties"
     let fileName = basePath @@ "AssemblyInfo.cs"
+    let (release: ReleaseNotes.ReleaseNotes) = releaseNotesData |> List.head
     AssemblyInfoFile.createCSharp fileName
       [ AssemblyInfo.Title (projectName)
         AssemblyInfo.Product project
@@ -151,19 +106,22 @@ let genCSAssemblyInfo (projectPath : string) =
         AssemblyInfo.InformationalVersion releaseVersion
         AssemblyInfo.Metadata ("PBIBuildVersion", match pbiBuildVersion.Value with | Some v -> v | _ -> "" ) ]
 
+
+// --------------------------------------------------------------------------------------
+// TARGET IMPLEMENTATIONS
+// --------------------------------------------------------------------------------------
+
 // Generate assembly info files with the right version & up-to-date information
-Target.create "AssemblyInfo" (fun _ ->
+let assemblyInfo _ =
     !! "src/**/*.csproj"
     |> Seq.filter (fun s -> not <| s.Contains("PbiDownloader"))
     |> Seq.iter genCSAssemblyInfo
-)
-
 
 
 // --------------------------------------------------------------------------------------
 // Clean build results
 
-Target.create "Clean" (fun _ ->
+let clean _ =
     !! "src/*/bin"
     ++ "tests/*/bin"
     ++ "src/*/obj"
@@ -171,13 +129,12 @@ Target.create "Clean" (fun _ ->
     ++ buildDir 
     ++ tempDir
     |> Shell.cleanDirs
-)
 
 
 // --------------------------------------------------------------------------------------
 // Build library & test project
 
-Target.create "ZipSampleData" (fun _ ->
+let zipSampleData _ =
     tempDir |> Directory.ensure
     
     !! "data/Samples/Adventure Works DW 2020/**/*.*"
@@ -185,12 +142,11 @@ Target.create "ZipSampleData" (fun _ ->
 
     !! "data/Samples/Adventure Works DW 2020 - TE/**/*.*"
     |> Zip.zip "data/Samples/Adventure Works DW 2020 - TE" (tempDir @@ "Adventure Works DW 2020 - TE.zip")
-)
 
 
 // Including 'Restore' target addresses issue: https://github.com/fsprojects/Paket/issues/2697
 // Previously, msbuild would fail not being able to find **\obj\project.assets.json
-Target.create "Build" (fun _ ->
+let build _ =
     let msbuildProps = match pbiInstallDir.Value with
                        | Some dir -> Trace.logfn "Using assembly ReferencePath: %s" dir
                                      [ "ReferencePath", dir ]
@@ -203,10 +159,9 @@ Target.create "Build" (fun _ ->
     !! solutionFile
     |> MSBuild.runReleaseExt id null msbuildProps "Restore;Rebuild"
     |> ignore
-)
 
 
-Target.create "Publish" (fun _ -> 
+let publish _ = 
     let msbuildProps = match pbiInstallDir.Value with
                        | Some dir -> Trace.logfn "Using assembly ReferencePath: %s" dir
                                      [ "ReferencePath", dir ]
@@ -221,7 +176,8 @@ Target.create "Publish" (fun _ ->
                 OutputPath = Some path
                 Configuration = DotNet.BuildConfiguration.Release
                 MSBuildParams = { args.MSBuildParams with
-                                       Properties = msbuildProps }
+                                       Properties = msbuildProps
+                                       DisableInternalBinLog = true }
             }
     
     // Desktop build
@@ -247,10 +203,19 @@ Target.create "Publish" (fun _ ->
         |> DotNet.publish 
             (setParams (rid, distCoreDir @@ path)) 
     )
-)
+
+    // Net7 build
+    [ "win10-x64",      "win-x64"
+      "linux-x64",      "linux-x64"
+      "linux-musl-x64", "alpine-x64" ]
+    |> Seq.iter (fun (rid, path) ->
+        "src/PBI-Tools.NET7/PBI-Tools.NET7.csproj"
+        |> DotNet.publish 
+            (setParams (rid, distNet7Dir @@ path)) 
+    )
 
 
-Target.create "Pack" (fun _ ->
+let pack _ =
     !! (distFullDir @@ "*.*")
     |> Zip.zip distFullDir (sprintf @"%s\pbi-tools.%s.zip" buildDir releaseVersion)
 
@@ -261,12 +226,20 @@ Target.create "Pack" (fun _ ->
         !! (distCoreDir @@ dist @@ "*.*")
         |> Zip.zip (distCoreDir @@ dist) (sprintf @"%s\pbi-tools.core.%s_%s.zip" buildDir releaseVersion dist)
     )
-)
+
+    distNet7Dir
+    |> Directory.EnumerateDirectories
+    |> Seq.map (Path.GetFileName) 
+    |> Seq.iter (fun dist ->
+        !! (distNet7Dir @@ dist @@ "*.*")
+        |> Zip.zip (distNet7Dir @@ dist) (sprintf @"%s\pbi-tools.net7.%s_%s.zip" buildDir releaseVersion dist)
+    )
 
 
-Target.create "Test" (fun _ ->
+let test _ =
     !! "tests/*/bin/Release/**/pbi-tools*tests.dll"
-    -- "tests/*/bin/Release/**/*netcore*.dll"
+    -- "tests/*/bin/Release/**/*netcore.tests.dll"
+    -- "tests/*/bin/Release/**/*net7.tests.dll"
     |> XUnit2.run (fun p -> { p with HtmlOutputPath = Some (testDir @@ "xunit.html")
                                      XmlOutputPath = Some (testDir @@ "xunit.xml")
                                      ToolPath = "packages/fake-tools/xunit.runner.console/tools/net472/xunit.console.exe" } )
@@ -281,10 +254,17 @@ Target.create "Test" (fun _ ->
            ListTests = true
            Logger = Some "trx;LogFileName=TestOutput.NetCore.xml"
        })
-)
+    "tests/PBI-Tools.Net7.Tests/PBI-Tools.Net7.Tests.csproj"
+    |> DotNet.test (fun defaults ->
+       { defaults with
+           ResultsDirectory = Some "./.build/test"
+           Configuration = DotNet.BuildConfiguration.Release
+           ListTests = true
+           Logger = Some "trx;LogFileName=TestOutput.Net7.xml"
+       })
 
 
-Target.create "SmokeTest" (fun _ ->
+let smokeTest _ =
     // Copy all *.pbix from /data folder to TEMP
     // Run 'pbi-tools extract' on all
     // Fail if error code is returned
@@ -313,10 +293,9 @@ Target.create "SmokeTest" (fun _ ->
         |> Proc.run
         |> ignore
     )
-)
 
 
-Target.create "UsageDocs" (fun _ ->
+let usageDocs _ =
     [ (distFullDir @@ "pbi-tools.exe"), "./docs/usage.md"
       (distCoreDir @@ "win-x64" @@ "pbi-tools.core.exe"), "./docs/usage-core.md" ]
     |> Seq.iter (fun (command, output) ->
@@ -326,35 +305,83 @@ Target.create "UsageDocs" (fun _ ->
         |> Proc.run
         |> ignore
     )
-)
 
 
-Target.create "Help" (fun _ ->
+let help _ =
     Trace.traceError "Please specify a target to run."
-)
 
 // --------------------------------------------------------------------------------------
 
 open Fake.Core.TargetOperators
 
-"Clean"
-  ==> "AssemblyInfo"
-  ==> "ZipSampleData"
-  ==> "Build"
-  ==> "Test"
+let initTargets () =
+    BuildServer.install [
+        TeamFoundation.Installer  // Adds support for Azure DevOps
+    ]
 
-"Publish"
-  ==> "SmokeTest"
+    //System.Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 
-"Build"
-  ==> "Publish"
+    // Read additional information from the release notes document
+    releaseNotesData <- 
+        File.ReadAllLines "RELEASE_NOTES.md"
+        |> ReleaseNotes.parseAll
 
-"Publish"
-  ==> "Test"
-  ==> "UsageDocs"
-  ==> "Pack"
+    let release = releaseNotesData |> List.head
+    let timestampString =
+        let now = DateTime.UtcNow
+        let ytd = now - DateTime(now.Year,1,1,0,0,0,DateTimeKind.Utc)
+        String.Format("{0:yy}{1:ddd}.{0:HHmm}",now,ytd + TimeSpan.FromDays(1.))
+    fileVersion <- sprintf "%i.%i.%s"
+                    release.SemVer.Major
+                    release.SemVer.Minor
+                    timestampString
+    releaseVersion <- match release.Notes with
+                        | HasCustomVersion version -> version
+                        | _ -> release.NugetVersion
+    Trace.logfn "Release Version:\n%s" releaseVersion
+    //Trace.logfn "Current Release:\n%O" release
 
-// --------------------------------------------------------------------------------------
-// Show help by default. Invoke 'fake build -t <Target>' to override
+    Target.create "AssemblyInfo" assemblyInfo
+    Target.create "Clean" clean
+    Target.create "ZipSampleData" zipSampleData
+    Target.create "Build" build
+    Target.create "Publish" publish
+    Target.create "Pack" pack
+    Target.create "Test" test
+    Target.create "SmokeTest" smokeTest
+    Target.create "UsageDocs" usageDocs
+    Target.create "Help" help
 
-Target.runOrDefaultWithArguments "Help"
+    "Clean"
+    ==> "AssemblyInfo"
+    ==> "ZipSampleData"
+    ==> "Build"
+    ==> "Test"
+
+    "Publish"
+    ==> "SmokeTest"
+
+    "Build"
+    ==> "Publish"
+
+    "Publish"
+    ==> "Test"
+    ==> "UsageDocs"
+    ==> "Pack"
+
+
+//-----------------------------------------------------------------------------
+// Target Start
+//-----------------------------------------------------------------------------
+
+[<EntryPoint>]
+let main argv =
+    argv
+    |> Array.toList
+    |> Context.FakeExecutionContext.Create false "build.fsx"
+    |> Context.RuntimeContext.Fake
+    |> Context.setExecutionContext
+    initTargets ()
+    Target.runOrDefaultWithArguments "Help"
+
+    0 // return an integer exit code

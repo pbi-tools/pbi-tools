@@ -20,7 +20,7 @@ namespace PbiTools.ProjectSystem
         private static readonly ILogger Log = Serilog.Log.ForContext<PbixProject>();
 
         public const string Filename = ".pbixproj.json";
-        public static readonly Version CurrentVersion = Version.Parse("0.11");
+        public static readonly Version CurrentVersion = Version.Parse("0.12");
 
         /*
          * PBIXPROJ Change Log
@@ -65,6 +65,7 @@ namespace PbiTools.ProjectSystem
          *       - #90 Always serialize (partial) partitions payload, ensuring 'queryGroup' property is retained
          *       - #19 Do not serialize empty model/annotations[]
          *       - #85 Visuals with titles only differing in casing are now extracted into unique folders
+         * 0.12  - #26 Bookmarks
          *       - #91 Support for /Report/mobileState (mobileState.json, explorationState.json)
          */
 
@@ -230,7 +231,7 @@ namespace PbiTools.ProjectSystem
             var json = JObject.FromObject(this, JsonSerializer.Create(DefaultJsonSerializerSettings));
             if (this.Settings.IsDefault()) json.Remove("settings");
 
-            if (setModified) this.LastModified = DateTimeOffset.UtcNow;
+            if (setModified) this.LastModified = DateTimeOffset.UtcNow; // TODO Should this be changed BEFORE serializing the json?
 
             using var writer = new JsonTextWriter(File.CreateText(path ?? this.OriginalPath));
             writer.Formatting = Formatting.Indented;

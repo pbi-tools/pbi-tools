@@ -31,6 +31,7 @@ namespace PbiTools.Serialization
 
             this.DataModel = new TabularModelSerializer(rootFolder, settings.Model);
             this.ReportDocument = new ReportSerializer(rootFolder);
+            this.ReportMobileState = new MobileStateSerializer(rootFolder);
 #if NETFRAMEWORK
             this.DataMashup = new MashupSerializer(rootFolder, settings.Mashup);
 #endif
@@ -46,6 +47,7 @@ namespace PbiTools.Serialization
         public IPowerBIPartSerializer<JObject> DiagramViewState { get; }
         public IPowerBIPartSerializer<JObject> DiagramLayout { get; }
         public IPowerBIPartSerializer<JObject> ReportDocument { get; }
+        public IPowerBIPartSerializer<JObject> ReportMobileState { get; }
         public IPowerBIPartSerializer<JObject> DataModel { get; }
         public IPowerBIPartSerializer<JObject> Connections { get; }
         public IPowerBIPartSerializer<IDictionary<string, byte[]>> CustomVisuals { get; }

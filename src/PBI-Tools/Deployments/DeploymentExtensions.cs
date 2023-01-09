@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.PowerBI.Api;
+using Microsoft.PowerBI.Api.Models;
+using TOM = Microsoft.AnalysisServices.Tabular;
 
 namespace PbiTools.Deployments
 {
@@ -17,25 +19,108 @@ namespace PbiTools.Deployments
         /// with the string equivalent of the value of the variable, then returns the resulting
         /// string.
         /// </summary>
-        public static string ExpandEnv(this string input) => input == null
+        public static string ExpandEnv(this string input) =>
+            input == null
             ? null
             : Environment.ExpandEnvironmentVariables(input);
 
+        /// <summary>
+        /// Performs ENV expansion in all Text parameters, returns the original value for all other parameter types.
+        /// </summary>
+        public static DeploymentParameter ExpandEnv(this DeploymentParameter input) =>
+            input.Value is string s
+            ? input.CloneWithValue(Environment.ExpandEnvironmentVariables(s))
+            : input;
+
+        /// <summary>
+        /// Replaces the name of each environment variable embedded in any of the dictionary values
+        /// with the string equivalent of the value of the variable, then returns a new dictionary
+        /// with all expanded values.
+        /// </summary>
+        public static IDictionary<string, DeploymentParameter> ExpandEnv(this IDictionary<string, DeploymentParameter> input) =>
+            input == null
+            ? new Dictionary<string, DeploymentParameter>(StringComparer.InvariantCultureIgnoreCase)
+            : input.ToDictionary(x => x.Key, x => x.Value.ExpandEnv(), StringComparer.InvariantCultureIgnoreCase);
+
+        /// <summary>
+        /// Performs parameter replacement in all dictionary values, using the <c>externalParameters</c> dictionary as a source.
+        /// Only <see cref="DeploymentParameter"/>s of type string are modified.
+        /// </summary>
+        public static IDictionary<string, DeploymentParameter> ExpandParameters(this IDictionary<string, DeploymentParameter> target,
+            IDictionary<string, string> externalParameters)
+        {
+            foreach (var key in target.Keys.ToArray()) {
+                var item = target[key];
+                if (item.Value is string s && s.Contains("{{") && s.Contains("}}")) {
+                    target[key] = item.CloneWithValue(s.ExpandParameters(externalParameters));
+                }
+            }
+            return target;
+        }
+
+        /// <summary>
+        /// Performs parameter replacement in all dictionary values, using the <c>externalParameters</c> dictionary as a source.
+        /// Only <see cref="DeploymentParameter"/>s of type string are modified.
+        /// </summary>
+        public static IDictionary<string, DeploymentParameter> ExpandParameters(this IDictionary<string, DeploymentParameter> target,
+            IDictionary<string, DeploymentParameter> externalParameters)
+        {
+            foreach (var key in target.Keys.ToArray())
+            {
+                var item = target[key];
+                if (item.Value is string s && s.Contains("{{") && s.Contains("}}"))
+                {
+                    target[key] = item.CloneWithValue(s.ExpandParameters(externalParameters));
+                }
+            }
+            return target;
+        }
+
+        /// <summary>
+        /// Adds or sets the specified dictionary value.
+        /// </summary>
+        public static IDictionary<string, string> With(this IDictionary<string, string> dictionary, string key, string value) {
+            dictionary[key] = value;
+            return dictionary;
+        }
 
         /// <summary>
         /// Replaces the name of each parameter embedded in the specified string with the parameter value.
-        /// Parameters are marked with double curly braces.
+        /// Parameters are marked with double curly braces: <c>{{PARAMETER}}</c>.
         /// </summary>
-        public static string ExpandParameters(this string value, IDictionary<string, string> parameters) => value == null
+        public static string ExpandParameters(this string value, IDictionary<string, DeploymentParameter> parameters) =>
+            value == null
             ? null
-            : (parameters ?? new Dictionary<string, string>()).Aggregate(
+            : (parameters ?? new Dictionary<string, DeploymentParameter>()).Aggregate(
                 new StringBuilder(value), 
                 (sb, param) => 
+                {
+                    sb.Replace("{{" + param.Key + "}}", $"{param.Value}");
+                    return sb;
+                }
+            ).ToString();
+
+        /// <summary>
+        /// Replaces the name of each parameter embedded in the specified string with the parameter value.
+        /// Parameters are marked with double curly braces: <c>{{PARAMETER}}</c>.
+        /// </summary>
+        public static string ExpandParameters(this string value, IDictionary<string, string> parameters) =>
+            value == null
+            ? null
+            : (parameters ?? new Dictionary<string, string>()).Aggregate(
+                new StringBuilder(value),
+                (sb, param) =>
                 {
                     sb.Replace("{{" + param.Key + "}}", param.Value);
                     return sb;
                 }
             ).ToString();
+
+        /// <summary>
+        /// Expands parameters within the string first, then environment variables.
+        /// </summary>
+        public static string ExpandParamsAndEnv(this string value, IDictionary<string, DeploymentParameter> parameters) =>
+            value.ExpandParameters(parameters).ExpandEnv();
 
         /// <summary>
         /// Assigns each deployment environment its name from the environments dictionary.
@@ -51,14 +136,14 @@ namespace PbiTools.Deployments
         }
 
         /// <summary>
-        /// Looks up a Power BI workspace Id from its name, using a session cache first, then the Power BI API.
+        /// Looks up a Power BI workspace Id from its name, optionally using a session cache first, then the Power BI API.
         /// Only workspaces accessible to the authenticated user can be resolved.
         /// </summary>
-        public async static Task<Guid> ResolveWorkspaceIdAsync(this string name, IDictionary<string, Guid> cache, IPowerBIClient powerbi)
+        public async static Task<Guid> ResolveWorkspaceIdAsync(this string name, IPowerBIClient powerbi, IDictionary<string, Guid> cache = null)
         {
             DeploymentManager.Log.Debug("Resolving workspace ID for workspace: '{Workspace}'", name);
 
-            if (cache.ContainsKey(name))
+            if (cache != null && cache.ContainsKey(name))
                 return cache[name];
 
             var apiResult = await powerbi.Groups.GetGroupsAsync(filter: $"name eq '{name}'", top: 2);
@@ -67,7 +152,7 @@ namespace PbiTools.Deployments
             {
                 case 1:
                     var id = apiResult.Value[0].Id;
-                    cache[name] = id;
+                    if (cache != null) cache[name] = id;
                     DeploymentManager.Log.Information("Resolved workspace ID '{Id}' for workspace: '{Workspace}'", id, name);
                     return id;
                 case 0:
@@ -108,5 +193,21 @@ namespace PbiTools.Deployments
 
             return authentication;
         }
+
+        /// <summary>
+        /// Gets the first item in a collection, or the default value if there is none.
+        /// Allows the collection reference to be <c>null</c>.
+        /// </summary>
+        public static bool TryGetFirst<T>(this IEnumerable<T> collection, out T value) where T : class
+        {
+            value = collection?.FirstOrDefault();
+            return value != default;
+        }
+
+        /// <summary>
+        /// Converts a <see cref="DatasetRefreshType"/> value to the corresponding <see cref="TOM.RefreshType"/>.
+        /// </summary>
+        public static TOM.RefreshType ConvertToTOM(this DatasetRefreshType apiRefreshType) =>
+            (TOM.RefreshType)Enum.Parse(typeof(TOM.RefreshType), $"{apiRefreshType}");
     }
 }

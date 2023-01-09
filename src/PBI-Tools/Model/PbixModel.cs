@@ -30,10 +30,10 @@ namespace PbiTools.Model
         XDocument LinguisticSchemaXml { get; }
         JObject ReportMetadata { get; }
         JObject ReportSettings { get; }
+        JObject ReportMobileState { get; }
         string Version { get; }
 
         // TODO CustomProperties
-        // TODO ReportMobileState
 
         IDictionary<string, byte[]> CustomVisuals { get; } // TODO Change to Dict<Uri, Func<Stream>> ??
         IDictionary<string, byte[]> StaticResources { get; }
@@ -90,7 +90,7 @@ namespace PbiTools.Model
         }
 
 
-        private static readonly Version V3ModelVersion = new Version(1, 19);
+        private static readonly Version V3ModelVersion = new(1, 19);
 
         public static bool IsV3Version(string versionString)
         {
@@ -157,6 +157,9 @@ namespace PbiTools.Model
             Log.Debug("Reading ReportSettings...");
             pbixModel.ReportSettings = reader.ReadReportSettingsV3();
 
+            Log.Debug("Reading ReportMobileState...");
+            pbixModel.ReportMobileState = reader.ReadReportMobileState();
+
             Log.Debug("Reading CustomVisuals...");
             pbixModel.CustomVisuals = reader.ReadCustomVisuals();
 
@@ -209,6 +212,7 @@ namespace PbiTools.Model
                 pbixModel.LinguisticSchemaXml = serializers.LinguisticSchemaXml.DeserializeSafe();
                 pbixModel.ReportMetadata = serializers.ReportMetadata.DeserializeSafe(isOptional: false);
                 pbixModel.ReportSettings = serializers.ReportSettings.DeserializeSafe(isOptional: false);
+                pbixModel.ReportMobileState = serializers.ReportMobileState.DeserializeSafe();
                 pbixModel.CustomVisuals = serializers.CustomVisuals.DeserializeSafe();
                 pbixModel.StaticResources = serializers.StaticResources.DeserializeSafe();                
                 pbixModel.DataModel = serializers.DataModel.DeserializeSafe();
@@ -280,6 +284,9 @@ namespace PbiTools.Model
                 if (serializers.ReportSettings.Serialize(this.ReportSettings))
                     Log.Information("Settings extracted to: {Path}", serializers.ReportSettings.BasePath);
 
+                if (serializers.ReportMobileState.Serialize(this.ReportMobileState))
+                    Log.Information("MobileState extracted to: {Path}", serializers.ReportMobileState.BasePath);
+
                 if (serializers.DiagramLayout.Serialize(this.DiagramLayout))
                     Log.Information("DiagramLayout extracted to: {Path}", serializers.DiagramLayout.BasePath);
 
@@ -320,14 +327,11 @@ namespace PbiTools.Model
         /// <summary>
         /// Generates a PBIX/PBIT file from the model.
         /// </summary>
-        /// <param name="path"></param>
-        /// <param name="format"></param>
-        /// <param name="dependenciesResolver"></param>
-        public void ToFile(string path, PbiFileFormat format, IDependenciesResolver dependenciesResolver = null)
+        public void ToFile(string path, PbiFileFormat format, JObject connectionsOverwrite = default, IDependenciesResolver dependenciesResolver = default)
         {
             Log.Information("Generating {Format} file at '{Path}'...", format, path);
 
-            if (format == PbiFileFormat.PBIX && this.DataModel != null)
+            if (format == PbiFileFormat.PBIX && this.DataModel != null && connectionsOverwrite == default)
                 throw new PbiToolsCliException(ExitCode.InvalidArgs,
                     "Compiling a project containing a data model into a PBIX file is not supported. Please compile into a PBIT file instead."
                 );
@@ -335,14 +339,18 @@ namespace PbiTools.Model
 #if NETFRAMEWORK
             var modelName = PowerBIPartConverters.ConvertToValidModelName(Path.GetFileNameWithoutExtension(path));
             var converters = new PowerBIPartConverters(modelName, dependenciesResolver ?? DependenciesResolver.Default);
-            var pbiPackage = new PbiPackage(this, converters, format); // TODO Handle missing Report part
+            var pbiPackage = new PbiPackage(this, converters, format)  // TODO Handle missing Report part
+            {
+                ConnectionsOverwrite = connectionsOverwrite
+            };
 
             pbiPackage.Save(path);
 #elif NET
             var writer = new PbixWriter(this, new PowerBIPartConverters(), format);
-            writer.WriteTo(path);
+            writer.WriteTo(path, connectionsOverwrite);
 #endif
         }
+
 
         #region IPbixModel
 
@@ -356,31 +364,25 @@ namespace PbiTools.Model
         public XDocument LinguisticSchemaXml { get; private set; }
         public JObject ReportMetadata { get; private set; }
         public JObject ReportSettings { get; private set; }
+        public JObject ReportMobileState { get; private set; }
         public string Version { get; private set; }
         public IDictionary<string, byte[]> CustomVisuals { get; private set; }
         public IDictionary<string, byte[]> StaticResources { get; private set; }
 
         public PbixProject PbixProj { get; private set; }
 
-#endregion
+        #endregion
+
 
         /// <summary>
         /// Returns the default folder location for this instance.
         /// </summary>
-        public string GetProjectFolder()
+        public string GetProjectFolder() => this.Type switch
         {
-            switch (this.Type) 
-            {
-                case PbixModelSource.PbixProjFolder:
-                case PbixModelSource.TabularModel:
-                    return this.SourcePath;
-                case PbixModelSource.PowerBIPackage:
-                case PbixModelSource.LiveSession:
-                    return PbixProject.GetDefaultProjectFolderForFile(this.SourcePath);
-                default:
-                        throw new NotSupportedException($"Unsupported PbixModelSource: {this.Type}.");
-            }
-        }
+            PbixModelSource.PbixProjFolder or PbixModelSource.TabularModel => this.SourcePath,
+            PbixModelSource.PowerBIPackage or PbixModelSource.LiveSession => PbixProject.GetDefaultProjectFolderForFile(this.SourcePath),
+            _ => throw new NotSupportedException($"Unsupported PbixModelSource: {this.Type}."),
+        };
 
         public void Dispose()
         {

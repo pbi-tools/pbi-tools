@@ -39,6 +39,9 @@ namespace PbiTools.Cli
 #if NETFRAMEWORK
                     { "pbiBuildVersion", AssemblyVersionInformation.AssemblyMetadata_PBIBuildVersion },
 #endif
+#if WINDOWS
+                    { "longPathsEnabled", WindowsRegistry.IsEnabled(@"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem", "LongPathsEnabled") },
+#endif
                     { "amoVersion", typeof(Microsoft.AnalysisServices.Tabular.Server).Assembly
                         .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion },
                     { "toolPath", Process.GetCurrentProcess().MainModule.FileName },
@@ -72,6 +75,25 @@ namespace PbiTools.Cli
                 }
             }
         }
+
+#if WINDOWS
+        public static class WindowsRegistry
+        {
+            public static bool IsEnabled(string keyName, string valueName)
+            {
+                try {
+                    return Microsoft.Win32.Registry.GetValue(keyName, valueName, default) switch
+                    {
+                        int i => System.Convert.ToBoolean(i),
+                        _ => false
+                    };
+                }
+                catch {
+                    return false;
+                }
+            }
+        }
+#endif
 
     }
 

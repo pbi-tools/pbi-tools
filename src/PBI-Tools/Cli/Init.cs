@@ -7,6 +7,7 @@ using System.IO;
 using Newtonsoft.Json.Linq;
 using PowerArgs;
 using static Microsoft.PowerBI.Api.Models.ImportConflictHandlerMode;
+using static Microsoft.PowerBI.Api.Models.DatasetRefreshType;
 
 namespace PbiTools.Cli
 {
@@ -37,6 +38,82 @@ namespace PbiTools.Cli
                 else
                 {
                     pbixProj.Deployments = new Dictionary<string, JToken> {
+                        { "Dataset from Folder", new PbiDeploymentManifest {
+                            Description = "",
+                            Mode = PbiDeploymentMode.Dataset,
+                            Source = new() {
+                                Type = PbiDeploymentSourceType.Folder,
+                                Path = "./Dataset"
+                            },
+                            Parameters = DeploymentParameters.From(new Dictionary<string, JToken> {
+                                { "WORKSPACE_PREFIX", "Team-A" },
+                                { "Flag", true },
+                                { "[RangeStart]", "#date(2020, 10, 1)"},
+                                { "[TakeRows]", 1000m },
+                                { "Complex", new JObject {
+                                    { "value", null }
+                                }}
+                            }),
+                            Options = new() {
+                                PbiBaseUri = DeploymentManager.DefaultPowerBIApiBaseUri,
+                                Dataset = new() {
+                                    ReplaceParameters = true,
+                                    DeployEmbeddedReport = true
+                                }, 
+                                Refresh = new() {
+                                    Enabled = true,
+                                    Method = PbiDeploymentOptions.RefreshOptions.RefreshMethod.XMLA,
+                                    Type = Automatic,
+                                    Objects = RefreshObjects.FromJson(new JObject {
+                                        { "Info", (string)Full },
+                                        { "HistoricTransactions", "None" }
+                                    }),
+                                    SkipNewDataset = true,
+                                    Tracing = new() {
+                                        Enabled = true,
+                                        LogEvents = new() { Filter = new[] { 
+                                            "*|ReadData|*" 
+                                        } },
+                                        Summary = new() {
+                                            Events = new[] { "TabularRefresh" },
+                                            ObjectTypes = new[] { "Partition" },
+                                            Console = true,
+                                            OutPath = "./artifacts/refresh-summary.csv"
+                                        }
+                                    },
+                                }
+                            },
+                            Authentication = new() {
+                                Type = PbiDeploymentAuthenticationType.ServicePrincipal,
+                                Authority = "https://login.microsoftonline.com/your-tenant-name-or-id",
+                                ValidateAuthority = true,
+                                TenantId = "Service Principal Tenant ID/Name. Use as shortcut instead of providing full AuthorityUrl.",
+                                ClientId = "Service Principal ClientId",
+                                ClientSecret = "%ENV_VARIABLE_NAME%"
+                            },
+                            Environments = new Dictionary<string, PbiDeploymentEnvironment> {
+                                { "Development", new() {
+                                    Workspace = "{{WORKSPACE_PREFIX}} - {{WORKSPACE}}",
+                                    Disabled = false,
+                                    Refresh = new() {
+                                        Objects = RefreshObjects.FromJson(new JObject {
+                                        })
+                                    }
+                                }},
+                                { "UAT", new() {
+                                    Workspace = "Workspace-Name",
+                                    Disabled = false,
+                                    DisplayName = "{{PBIXPROJ_FOLDER}} [UAT]",
+                                    Refresh = new() { 
+                                        Skip = true
+                                    }
+                                }},
+                                { "Production", new() {
+                                    Workspace = "00000000-0000-0000-0000-000000000000",
+                                    Disabled = true
+                                }}
+                            }
+                        }.AsJson() },
                         { "Report from File with folder wildcard", new PbiDeploymentManifest {
                             Description = "This profile deploys a number of reports from .pbix files. One of the path segments, {{WORKSPACE}}, is used as a deployment parameter for a destination workspace name.",
                             Mode = PbiDeploymentMode.Report,
@@ -44,9 +121,9 @@ namespace PbiTools.Cli
                                 Type = PbiDeploymentSourceType.File,
                                 Path = "./Reports/{{WORKSPACE}}/*.pbix"
                             },
-                            Parameters = new Dictionary<string, string> {
-                                { "WORKSPACE_PREFIX", "Team-A" }
-                            },
+                            Parameters = DeploymentParameters.From(new Dictionary<string, JToken> {
+                                { "WORKSPACE_PREFIX", "Team-A" },
+                            }),
                             Options = new() {
                                 PbiBaseUri = DeploymentManager.DefaultPowerBIApiBaseUri,
                                 TempDir = @"D:\TEMP",
@@ -55,7 +132,8 @@ namespace PbiTools.Cli
                                     SkipReport = false,
                                     OverrideModelLabel = true,
                                     OverrideReportLabel = true
-                                }
+                                },
+                                //LoadFullReportInfo = true
                             },
                             Authentication = new() {
                                 Type = PbiDeploymentAuthenticationType.ServicePrincipal,
@@ -87,8 +165,8 @@ namespace PbiTools.Cli
                                 Type = PbiDeploymentSourceType.Folder,
                                 Path = "./Reports/{{WORKSPACE}}/*"
                             },
-                            Parameters = new Dictionary<string, string> {
-                            },
+                            Parameters = DeploymentParameters.From(new Dictionary<string, JToken> {
+                            }),
                             Options = new() {
                                 PbiBaseUri = DeploymentManager.DefaultPowerBIApiBaseUri,
                                 TempDir = "%PATH_FROM_ENV%",

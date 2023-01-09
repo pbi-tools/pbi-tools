@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <AssemblyName>pbi-tools.net7.tests</AssemblyName>
+    <RootNamespace>PbiTools.NetCore.Tests</RootNamespace>
+    <Platforms>x64</Platforms>
+    <LangVersion>preview</LangVersion>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- See: https://github.com/dotnet/sdk/issues/2809 -->
+    <AssemblySearchPaths>$(ReferencePath);$(AssemblySearchPaths)</AssemblySearchPaths>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\PBI-Tools.Tests\TestResources\**\*.*" />
+    <EmbeddedResource Include="..\data\**\*.*" LinkBase="data" />
+    <EmbeddedResource Include="..\..\.temp\Adventure Works DW 2020.zip" LogicalName="Adventure Works DW 2020.zip" />
+    <EmbeddedResource Include="..\..\.temp\Adventure Works DW 2020 - TE.zip" LogicalName="Adventure Works DW 2020 - TE.zip" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\PBI-Tools.Tests\**\*.cs" Exclude="..\PBI-Tools.Tests\obj\**\*.*;..\PBI-Tools.Tests\Properties\**\*.*" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\PBI-Tools.NET7\PBI-Tools.NET7.csproj" />
+  </ItemGroup>
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
+</Project>

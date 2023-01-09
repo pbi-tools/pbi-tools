@@ -35,5 +35,10 @@ namespace PbiTools.Utils
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Returns <c>true</> if the value is not null or whitespace, otherwise <c>false</c>.
+        /// </summary>
+        public static bool HasValue(this string value) => !String.IsNullOrWhiteSpace(value);
+
     }
 }

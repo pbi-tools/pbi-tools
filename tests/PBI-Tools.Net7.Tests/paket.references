@@ -1,0 +1,12 @@
+Serilog
+Serilog.Sinks.Console
+Newtonsoft.Json
+PowerArgs
+Moq
+System.IO.Compression
+
+group Tests-netcore
+
+  xunit
+  xunit.runner.visualstudio
+  Microsoft.NET.Test.Sdk
