@@ -1,17 +1,15 @@
 # Release Notes
 
-## 1.0.0-rc.2 - 2022-11-22
-
-<version:1.0.0-rc.2+preview.6>
+## 1.0.0-rc.2 - 2023-01-09
 
 - **#97 Model Deployments**
 - #147 Refresh Tracing
-- #141 Deploying "thick" reports
+- #141 Deployment of "thick" reports
 - #145 Non-string deployment parameters
 - #146 Environment-scoped parameters
 - #168 SqlScripts Deployments
 - #129 Object-specific refresh
-- #135 Bind to Gateway
+- #135 Bind to Gateway (new datasets)
 - #167 Report partition status after update/refresh
 - #169 Report datasources
 - #151 Deployments of Incremental Refresh datasets
@@ -19,13 +17,17 @@
 - **#26 Bookmarks** (PbixProj v0.12 schema)
 - #91 Serialize/Deserialize _MobileState_
 - #153 Make "CreateOrOverwrite" default import mode
+- #202 Ship .Net 7 version of pbi-tools Core
+- #56 Support for long paths on Windows
 - Fixed #109 'pbi-tools info' no longer fails when another instance of SSAS runs on the same machine
 - Fixed #127 Folder or File sources containing spaces aren't matched (Desktop edition only)
-- Fixed #102 (x-plat conform resolution of TEMP path)
+- Fixed #102 x-plat conform resolution of TEMP path
 - Fixed #111 Deployment fails in model-only mode (due to logging)
 - Fixed #207 Dataset deployment fails if model has field parameters
-- Libraries updated: TOM 19.52, Power BI API 4.11, MSAL 4.48
-- Tested with PBI Desktop 2.110 (Oct '22)
+- Fixed #219 pbi-tools Core does not compress PBIX files when compiling
+- Libraries updated: TOM 19.54, Power BI API 4.11, MSAL 4.49, db-up 5.0
+- Tested with PBI Desktop 2.112 (Dec '22)
+- Converted Fake build system from runner to fsproj
 
 **System params expansion (#157)**
 
