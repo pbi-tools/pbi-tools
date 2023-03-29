@@ -26,8 +26,8 @@ namespace PbiTools.Deployments
         internal Func<Uri, ServiceClientCredentials, IPowerBIClient> PowerBIClientFactory { get; set; }
             = (uri, creds) => new PowerBIClient(uri, creds);
 
-        internal Func<PbiDeploymentAuthentication, IPowerBITokenProvider> PowerBITokenProviderFactory { get; set; }
-            = (options) => new ServicePrincipalPowerBITokenProvider(options);
+        internal Func<PbiDeploymentOAuthCredentials, IOAuthTokenProvider> PowerBITokenProviderFactory { get; set; }
+            = (options) => new PowerBIServicePrincipalTokenProvider(options);
 
 
         public DeploymentManager(PbixProject project) : this(project, Program.AppSettings) { }

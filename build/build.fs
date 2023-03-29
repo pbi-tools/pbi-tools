@@ -150,7 +150,7 @@ let build _ =
     let msbuildProps = match pbiInstallDir.Value with
                        | Some dir -> Trace.logfn "Using assembly ReferencePath: %s" dir
                                      [ "ReferencePath", dir ]
-                       | _ -> []
+                       | _ -> [ "_", "dummy" ]  // temp fix for https://github.com/fsprojects/FAKE/issues/2738
     // let setParams (defaults:MSBuildParams) =
     //     { defaults with
     //         MaxCpuCount = None 

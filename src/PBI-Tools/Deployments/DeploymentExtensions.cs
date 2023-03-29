@@ -165,33 +165,29 @@ namespace PbiTools.Deployments
         /// <summary>
         /// Expands environment variables referenced in ClientId, ClientSecret, TenantId, or Authority, and verifies all required settings are provided.
         /// </summary>
-        public static PbiDeploymentAuthentication ExpandAndValidate(this PbiDeploymentAuthentication authentication)
+        public static PbiDeploymentOAuthCredentials ExpandAndValidate(this PbiDeploymentOAuthCredentials credentials)
         {
-            if (authentication == null) throw new ArgumentNullException(nameof(PbiDeploymentManifest.Authentication));
+            if (credentials == null) throw new ArgumentNullException(nameof(PbiDeploymentManifest.Authentication));
 
-            if (authentication.Type == PbiDeploymentAuthenticationType.ServicePrincipal)
-            { 
-                if (authentication.ClientId == null) throw new ArgumentNullException(nameof(PbiDeploymentAuthentication.ClientId));
-                
-                if (authentication.ClientSecret == null) throw new ArgumentNullException(nameof(PbiDeploymentAuthentication.ClientSecret));
-                
-                if (authentication.TenantId == null && authentication.Authority == null)
-                    throw new ArgumentNullException(nameof(PbiDeploymentAuthentication.TenantId), $"Either {nameof(authentication.TenantId)} or {nameof(authentication.Authority)} must be provided. Both are blank.");
-                
-                if (authentication.TenantId != null && authentication.Authority != null)
-                    DeploymentManager.Log.Warning($"Both {nameof(authentication.TenantId)} and {nameof(authentication.Authority)} are provided. '{nameof(authentication.TenantId)}' will be ignored.");
+            if (credentials.ClientId == null) throw new ArgumentNullException(nameof(PbiDeploymentAuthentication.ClientId));
 
-                return new PbiDeploymentAuthentication {
-                    Authority = authentication.Authority.ExpandEnv(),
-                    ClientId = authentication.ClientId.ExpandEnv(),
-                    ClientSecret = authentication.ClientSecret.ExpandEnv(),
-                    TenantId = authentication.TenantId.ExpandEnv(),
-                    Type = authentication.Type,
-                    ValidateAuthority = authentication.ValidateAuthority
-                };
-            }
+            if (credentials.ClientSecret == null) throw new ArgumentNullException(nameof(PbiDeploymentAuthentication.ClientSecret));
 
-            return authentication;
+            if (credentials.TenantId == null && credentials.Authority == null)
+                throw new ArgumentNullException(nameof(PbiDeploymentAuthentication.TenantId), $"Either {nameof(credentials.TenantId)} or {nameof(credentials.Authority)} must be provided. Both are blank.");
+
+            if (credentials.TenantId != null && credentials.Authority != null)
+                DeploymentManager.Log.Warning($"Both {nameof(credentials.TenantId)} and {nameof(credentials.Authority)} are provided. '{nameof(credentials.TenantId)}' will be ignored.");
+
+            return new PbiDeploymentOAuthCredentials
+            {
+                Authority = credentials.Authority.ExpandEnv(),
+                ClientId = credentials.ClientId.ExpandEnv(),
+                ClientSecret = credentials.ClientSecret.ExpandEnv(),
+                TenantId = credentials.TenantId.ExpandEnv(),
+                ValidateAuthority = credentials.ValidateAuthority,
+                Scopes = credentials.Scopes
+            };
         }
 
         /// <summary>

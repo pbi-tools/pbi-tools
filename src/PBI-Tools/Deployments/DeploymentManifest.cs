@@ -86,11 +86,15 @@ namespace PbiTools.Deployments
         File = 2
     }
 
-    public class PbiDeploymentAuthentication
+    public class PbiDeploymentAuthentication : PbiDeploymentOAuthCredentials
     {
         [JsonProperty("type")]
         public PbiDeploymentAuthenticationType Type { get; set; }
 
+    }
+
+    public class PbiDeploymentOAuthCredentials
+    {
         /// <summary>
         /// The Azure AD authority URI. This can be used instead of <see cref="TenantId"/> when full control is required over
         /// the Azure Cloud, the audience, and the tenant.
@@ -109,6 +113,9 @@ namespace PbiTools.Deployments
 
         [JsonProperty("clientSecret")]
         public string ClientSecret { get; set; }
+
+        [JsonProperty("scopes")]
+        public string[] Scopes { get; set; }
     }
 
     public enum PbiDeploymentAuthenticationType
@@ -116,7 +123,7 @@ namespace PbiTools.Deployments
         ServicePrincipal = 1
     }
 
-    public class PbiDeploymentCredential
+    public class PbiDeploymentCredential : PbiDeploymentOAuthCredentials
     {
 
         [JsonProperty("match")]
@@ -136,11 +143,28 @@ namespace PbiTools.Deployments
 
         public enum CredentialUpdateMode
         { 
+            /// <summary>
+            /// Only updates credentials if no credentials are specified for this datasource.
+            /// </summary>
             NotSpecified = 0,
+            /// <summary>
+            /// Always updates credentials.
+            /// </summary>
             Always = 1,
-            Never = 2
+            /// <summary>
+            /// Never updates credentials.
+            /// </summary>
+            Never = 2,
+            /// <summary>
+            /// Updates credential before each refresh.
+            /// </summary>
+            BeforeRefresh = 3
         }
 
+        /// <summary>
+        /// Allowed values are: Basic, Anonymous, OAuth2.
+        /// </summary>
+        /// <value></value>
         [JsonProperty("type")]
         public CredentialType Type { get; set; }
 
@@ -149,6 +173,9 @@ namespace PbiTools.Deployments
 
         [JsonProperty("password")]
         public string Password { get; set; }
+
+        [JsonProperty("useDeploymentToken")]
+        public bool UseDeploymentToken { get; set; }
 
         [JsonProperty("details")]
         public PbiCredentialDetails Details { get; set; } = new();
@@ -159,7 +186,8 @@ namespace PbiTools.Deployments
             /// Gets or sets whether to encrypt the data source connection. The API
             /// call will fail if you select encryption and Power BI is unable to
             /// establish an encrypted connection with the data source. Possible
-            /// values include: 'Encrypted', 'NotEncrypted'
+            /// values include: 'Encrypted', 'NotEncrypted'.
+            /// Default value is <see cref="EncryptedConnection.Encrypted"/>.
             /// </summary>
             [JsonProperty(PropertyName = "encryptedConnection")]
             public EncryptedConnection EncryptedConnection { get; set; } = EncryptedConnection.Encrypted;
@@ -168,7 +196,8 @@ namespace PbiTools.Deployments
             /// Gets or sets the encryption algorithm. For a cloud data source,
             /// specify `None`. For an on-premises data source, specify `RSA-OAEP`
             /// and use the gateway public key to encrypt the credentials. Possible
-            /// values include: 'None', 'RSA-OAEP'
+            /// values include: 'None', 'RSA-OAEP'.
+            /// Default value is <see cref="EncryptionAlgorithm.None"/>.
             /// </summary>
             [JsonProperty(PropertyName = "encryptionAlgorithm")]
             public EncryptionAlgorithm EncryptionAlgorithm { get; set; } = EncryptionAlgorithm.None;
@@ -176,7 +205,8 @@ namespace PbiTools.Deployments
             /// <summary>
             /// Gets or sets the privacy level, which is relevant when combining
             /// data from multiple sources. Possible values include: 'None',
-            /// 'Public', 'Organizational', 'Private'
+            /// 'Public', 'Organizational', 'Private'.
+            /// Default value is <see cref="PrivacyLevel.None"/>.
             /// </summary>
             [JsonProperty(PropertyName = "privacyLevel")]
             public PrivacyLevel PrivacyLevel { get; set; } = PrivacyLevel.None;
@@ -201,7 +231,7 @@ namespace PbiTools.Deployments
             /// `useCallerAADIdentity`.
             /// </summary>
             [JsonProperty(PropertyName = "useEndUserOAuth2Credentials")]
-            public bool? UseEndUserOAuth2Credentials { get; set; }            
+            public bool? UseEndUserOAuth2Credentials { get; set; }
         }
     }
 

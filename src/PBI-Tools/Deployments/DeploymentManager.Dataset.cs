@@ -336,7 +336,7 @@ namespace PbiTools.Deployments
                 {
                     table.AddRow(
                         $"{item.DatasourceType}",
-                        $"{item.ConnectionDetails.ToJsonString(Newtonsoft.Json.Formatting.None)}",
+                        item.ConnectionDetails.ToJsonString(Newtonsoft.Json.Formatting.None).EscapeMarkup(),
                         $"{item.DatasourceId}",
                         $"{item.GatewayId}"
                     );
@@ -370,9 +370,11 @@ namespace PbiTools.Deployments
             if (WhatIf) return; // TODO Determine further WhatIf stages...
                                 // TODO Print report DisplayName in WhatIf mode...
 
+            var refreshEnabled = manifest.Options.Refresh.Enabled && deploymentEnv.Refresh?.Skip != true;
+
             #region Set Credentials
 
-            var credsManager = new DatasetCredentialsManager(manifest, powerbi) { WhatIf = WhatIf };
+            var credsManager = new DatasetCredentialsManager(manifest, powerbi, refreshEnabled, authResult) { WhatIf = WhatIf };
             await credsManager.SetCredentialsAsync(workspaceId, datasetId);
 
             #endregion
@@ -413,7 +415,7 @@ namespace PbiTools.Deployments
             sqlScripts.RunSqlScripts();
 
             #region Refresh
-            if (manifest.Options.Refresh.Enabled && deploymentEnv.Refresh?.Skip != true)
+            if (refreshEnabled)
             {
                 var stopWatch = System.Diagnostics.Stopwatch.StartNew();
 

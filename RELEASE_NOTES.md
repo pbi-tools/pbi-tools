@@ -1,5 +1,23 @@
 # Release Notes
 
+## 1.0.0-rc.3 - 2023-03-29
+
+<version:1.0.0-rc.3+preview.1>
+
+- #195 Set (Cloud) credentials during dataset deployment - Anonymous
+- #195 Set (Cloud) credentials during dataset deployment - OAuth2
+- #195 Case-insensitive matching of data sources
+- Manifest Schema Changes
+  - manifest.credentials[].updateMode: { NotSpecified, Always, Never, BeforeRefresh }
+  - manifest.credentials[].type: { Basic, Anonymous, OAuth2 }
+  - manifest.credentials[].authority
+  - manifest.credentials[].validateAuthority
+  - manifest.credentials[].tenantId
+  - manifest.credentials[].clientId
+  - manifest.credentials[].clientSecret
+  - manifest.credentials[].scopes
+  - manifest.credentials[].useDeploymentToken
+
 ## 1.0.0-rc.2 - 2023-01-09
 
 - **#97 Model Deployments**
