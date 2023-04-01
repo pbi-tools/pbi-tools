@@ -45,4 +45,8 @@
     </Reference>
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\.build\out\*.zip" LinkBase="EmbeddedTool" />
+  </ItemGroup>
+
 </Project>

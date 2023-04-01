@@ -1,4 +1,4 @@
-﻿// Copyright (c) Mathias Thierbach
+// Copyright (c) Mathias Thierbach
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using System;
@@ -21,6 +21,13 @@ namespace PbiTools.Cli
             var sb = new StringBuilder();
             
             var definitions = CmdLineArgumentsDefinitionExtensions.For<CmdLineActions>().RemoveAutoAliases(true);
+            definitions.ExeName =
+#if NETFRAMEWORK
+                "pbi-tools"
+#elif NET
+                "pbi-tools.core"
+#endif
+                ;
 
             sb.AppendLine("## Usage");
             sb.AppendLine();
@@ -77,7 +84,7 @@ namespace PbiTools.Cli
                 }
             }
 
-            if (String.IsNullOrEmpty(outPath))
+            if (string.IsNullOrEmpty(outPath))
             { 
                 using (_appSettings.SuppressConsoleLogs())
                 {

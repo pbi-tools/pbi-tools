@@ -2,7 +2,7 @@
 
     pbi-tools <action> -options
 
-_pbi-tools (Desktop), 1.0.0-rc.3+preview.1 - https://pbi.tools/_
+_pbi-tools (Desktop), 1.0.0-rc.3+preview.2 - https://pbi.tools/_
 
 ### Actions
 
@@ -118,6 +118,18 @@ _Extracts the PBIX file into the specified extraction folder (relative to the cu
 
 _Extracts the specified PBIX file into the default extraction folder (relative to the PBIX file location), using the 'Auto' compatibility mode. Any settings specified in the '.pbixproj.json' file already present in the destination folder will be honored._
 
+#### extract-pbidesktop
+
+    extract-pbidesktop <installerPath> [<targetFolder>] [<overwrite>] 
+
+Extracts binaries from a PBIDesktopSetup.exe|.msi installer bundle (silent/x-copy install).
+
+| Option | Default Value | Is Switch | Description |
+| --- | --- | --- | --- |
+| installerPath* |  |  | The path to an existing PBIDesktopSetup.exe|PBIDesktopSetup.msi file. |
+| targetFolder |  |  | The destination folder. '-overwrite' must be specified if folder is not empty. |
+| overwrite | `False` | X | Overwrite any contents in the destination folder. Default: false |
+
 #### generate-bim
 
     generate-bim <folder> [<generateDataSources>] [<transforms>] 
@@ -171,11 +183,11 @@ Initializes a PbixProj workpace.
 
 #### launch-pbi
 
-    launch-pbi <pbixPath> 
+    launch-pbi [<pbixPath>] 
 
-Starts a new instance of Power BI Desktop with the PBIX/PBIT file specified. Does not support Windows Store installations.
+Starts a new instance of Power BI Desktop, optionally loading a specified PBIX/PBIT file. Does not support Windows Store installations.
 
 | Option | Default Value | Is Switch | Description |
 | --- | --- | --- | --- |
-| pbixPath* |  |  | The path to an existing PBIX or PBIT file. |
+| pbixPath |  |  | The path to an existing PBIX or PBIT file. |
 

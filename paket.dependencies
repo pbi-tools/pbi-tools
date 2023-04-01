@@ -34,6 +34,7 @@ group Main
   nuget Microsoft.NETCore.Targets
   nuget LibGit2Sharp
   nuget Spectre.Console
+  nuget Spectre.Console.Cli
   nuget dbup-sqlserver
 
 group Tests
@@ -96,3 +97,9 @@ group DotNet-Tools
 
   nuget fake-cli prerelease
   nuget paket
+
+group WiX
+  source https://api.nuget.org/v3/index.json
+  storage: packages
+
+  nuget WixSharp.wix.bin

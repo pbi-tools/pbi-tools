@@ -143,6 +143,23 @@ let zipSampleData _ =
     !! "data/Samples/Adventure Works DW 2020 - TE/**/*.*"
     |> Zip.zip "data/Samples/Adventure Works DW 2020 - TE" (tempDir @@ "Adventure Works DW 2020 - TE.zip")
 
+let buildTools _ =
+    !! "tools/*/*.csproj"
+    |> Seq.iter (fun path ->
+        let proj = path |> FileInfo.ofPath
+        let outPath = outDir @@ proj.Directory.Name
+
+        proj.FullName
+        |> DotNet.publish (fun args ->
+            { args with
+                OutputPath = Some outPath
+                Configuration = DotNet.BuildConfiguration.Release
+            })
+
+        !! (outPath @@ "*.*")
+        |> Zip.zip outPath (outDir @@ (sprintf "%s.zip" proj.Directory.Name))
+
+    )
 
 // Including 'Restore' target addresses issue: https://github.com/fsprojects/Paket/issues/2697
 // Previously, msbuild would fail not being able to find **\obj\project.assets.json
@@ -344,6 +361,7 @@ let initTargets () =
     Target.create "AssemblyInfo" assemblyInfo
     Target.create "Clean" clean
     Target.create "ZipSampleData" zipSampleData
+    Target.create "BuildTools" buildTools
     Target.create "Build" build
     Target.create "Publish" publish
     Target.create "Pack" pack
@@ -355,6 +373,7 @@ let initTargets () =
     "Clean"
     ==> "AssemblyInfo"
     ==> "ZipSampleData"
+    ==> "BuildTools"
     ==> "Build"
     ==> "Test"
 

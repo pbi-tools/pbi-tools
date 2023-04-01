@@ -191,6 +191,8 @@ NUGET
       Serilog (>= 2.10)
     Spectre.Console (0.46)
       System.Memory (>= 4.5.5)
+    Spectre.Console.Cli (0.46)
+      Spectre.Console (>= 0.46)
     System.Buffers (4.5.1)
     System.Collections (4.3) - restriction: || (&& (== net472) (< net45)) (== net6.0) (== net7.0)
       Microsoft.NETCore.Platforms (>= 1.1) - restriction: || (&& (== net472) (< net45)) (== net6.0) (== net7.0)
@@ -1016,3 +1018,9 @@ NUGET
       NETStandard.Library (>= 1.6.1)
       xunit.extensibility.core (2.4.2)
     xunit.runner.visualstudio (2.4.5)
+
+GROUP WiX
+STORAGE: PACKAGES
+NUGET
+  remote: https://api.nuget.org/v3/index.json
+    WixSharp.wix.bin (3.11.2)
