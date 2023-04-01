@@ -1,8 +1,17 @@
 # Release Notes
 
-## 1.0.0-rc.3 - 2023-03-29
+## 1.0.0-rc.3 - 2023-04-01
 
-<version:1.0.0-rc.3+preview.1>
+<version:1.0.0-rc.3+preview.2>
+
+- New CLI action: extract-pbidesktop
+  - Extracts binaries from a PBIDesktopSetup.exe|.msi installer bundle (silent/x-copy install). (Implemented using an embedded tool: wix-extract.exe)
+  - Arguments:
+    - `<installerPath>` - The path to an existing PBIDesktopSetup.exe|PBIDesktopSetup.msi file.
+    - `<targetFolder>` - The destination folder. '-overwrite' must be specified if folder is not empty.
+    - `<overwrite>` - Overwrite any contents in the destination folder. Default: false
+- Change to 'launch-pbi' CLI action: `<pbixPath>` argument is now optional. If not specified, a new PBIDesktop instance is started without opening an existing file.
+- New build target: "BuildTools" - Builds all csproj inside ./tools and bundles each tool output as a .zip archive in ./.build/out/*.zip
 
 - #195 Set (Cloud) credentials during dataset deployment - Anonymous
 - #195 Set (Cloud) credentials during dataset deployment - OAuth2

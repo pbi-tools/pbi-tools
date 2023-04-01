@@ -1,8 +1,8 @@
 ## Usage
 
-     <action> -options
+    pbi-tools.core <action> -options
 
-_pbi-tools (Core), 1.0.0-rc.3+preview.1 - https://pbi.tools/_
+_pbi-tools (Core), 1.0.0-rc.3+preview.2 - https://pbi.tools/_
 
 ### Actions
 
