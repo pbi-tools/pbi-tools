@@ -48,5 +48,7 @@ namespace PbiTools.Utils
             return asm.GetManifestResourceStream(match);
         }
 
+        public static bool ContainsName(string name, Assembly assembly = null) =>
+            (assembly ?? Assembly.GetCallingAssembly()).GetManifestResourceNames().Contains(name);
     }
 }
