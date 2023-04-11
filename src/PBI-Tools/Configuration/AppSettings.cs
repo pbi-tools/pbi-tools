@@ -11,6 +11,8 @@ using Serilog.Events;
 
 namespace PbiTools.Configuration
 {
+    using ProjectSystem;
+
     public class AppSettings
     {
         public const string EnvPrefix = "PBITOOLS_";
@@ -30,6 +32,7 @@ namespace PbiTools.Configuration
             public static readonly string Debug = $"{EnvPrefix}{nameof(Debug)}";
             public static readonly string UICulture = $"{EnvPrefix}{nameof(UICulture)}";
             public static readonly string EffectiveDate = $"{EnvPrefix}{nameof(EffectiveDate)}";
+            public static readonly string DefaultModelSerialization = $"{EnvPrefix}{nameof(DefaultModelSerialization)}";
         }
 
         public static string GetEnvironmentSetting(string name) => System.Environment.GetEnvironmentVariable(name)
@@ -47,6 +50,12 @@ namespace PbiTools.Configuration
                 "0" => false,
                 _ => false
             };
+
+        public static ModelSerializationMode? DefaultModelSerializationMode => GetEnvironmentSetting(Environment.DefaultModelSerialization) switch
+        {
+            var s when Enum.TryParse<ModelSerializationMode>(s, out var result) => result,
+            _ => null
+        };
 
         public AppSettings()
         {

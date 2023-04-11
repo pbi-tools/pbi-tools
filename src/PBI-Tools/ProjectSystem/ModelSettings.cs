@@ -7,12 +7,19 @@ using PowerArgs;
 
 namespace PbiTools.ProjectSystem
 {
+    using Configuration;
+
     public enum ModelSerializationMode
     {
-        [ArgDescription("Serializes the tabular model into the default PbixProj folder structure and performs various transformations to optimize file contents for source control.")]
+        [ArgDescription("The default serialization format, effective if no option is specified. The default is TMDL.")]
         Default = 1,
         [ArgDescription("Serializes the tabular model into a single JSON file containing the full TMSL payload from the PBIX model. No transformations are applied.")]
         Raw = 2,
+        [ArgDescription("Serializes the tabular model into the default PbixProj folder structure and performs various transformations to optimize file contents for source control.")]
+        Legacy = 3,
+        [ArgDescription("Serializes the tabular model into TMDL format.")]
+        Tmdl = 4,
+
         // [ArgDescription("Serializes the tabular model into a single JSON file containing the full TMSL payload from the PBIX model. All transformations are applied.")]
         // SingleFile = 3,
         // [ArgDescription("Serializes the tabular model into Tabular Editor's Save-to-folder format.")]
@@ -34,7 +41,7 @@ namespace PbiTools.ProjectSystem
         */
 
         [JsonProperty("serializationMode")]
-        public ModelSerializationMode SerializationMode { get; set; } = ModelSerializationMode.Default;
+        public ModelSerializationMode SerializationMode { get; set; } = AppSettings.DefaultModelSerializationMode ?? ModelSerializationMode.Default;
 
         [JsonIgnore]
         public bool IsDefault => 
@@ -61,9 +68,15 @@ namespace PbiTools.ProjectSystem
 
         #endregion
 
+        /// <summary>
+        /// Serialization settings for TOM annotations.
+        /// </summary>
         [JsonProperty("annotations", NullValueHandling = NullValueHandling.Ignore)]
         public ModelAnnotationSettings Annotations { get; set; } = new();
 
+        /// <summary>
+        /// Serialization settings for measures. Applies to PbixProj format only.
+        /// </summary>
         [JsonProperty("measures", NullValueHandling = NullValueHandling.Ignore)]
         public ModelMeasureSettings Measures { get; set; } = new();
 
