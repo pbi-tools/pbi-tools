@@ -1,9 +1,10 @@
 # Release Notes
 
-## 1.0.0-rc.3 - 2023-04-01
+## 1.0.0-rc.3 - 2023-04-11
 
-<version:1.0.0-rc.3+preview.2>
-
+- #262 TMDL Serialization Support
+  - New model serialization modes: `Tmdl` (default), `Legacy` (PbixProj)
+  - New (optional) environment variable: `PBITOOLS_DefaultModelSerialization`
 - New CLI action: extract-pbidesktop
   - Extracts binaries from a PBIDesktopSetup.exe|.msi installer bundle (silent/x-copy install). (Implemented using an embedded tool: wix-extract.exe)
   - Arguments:
