@@ -70,7 +70,6 @@ namespace PbiTools.PowerBI
 
 
         // TODO CustomProperties new Uri("/docProps/custom.xml", UriKind.Relative)
-        // TODO ReportMobileState new Uri("/Report/MobileState", UriKind.Relative)
 
         public static string ConvertToValidModelName(string name)
         { 
