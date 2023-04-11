@@ -11,6 +11,8 @@ using System.Xml;
 using System.Xml.Linq;
 using Newtonsoft.Json.Linq;
 using Serilog;
+using Microsoft.AnalysisServices;
+using TOM = Microsoft.AnalysisServices.Tabular;
 
 namespace PbiTools.Serialization
 {
@@ -77,7 +79,42 @@ namespace PbiTools.Serialization
 
             Log.Information("Using tabular model serialization mode: {Mode}", _settings.SerializationMode);
 
-            if (_settings.SerializationMode == ModelSerializationMode.Default)
+            switch (_settings.SerializationMode)
+            {
+                case ModelSerializationMode.Legacy:
+                case ModelSerializationMode.Raw:
+                    return SerializeLegacy(db);
+
+                case ModelSerializationMode.Default:
+                case ModelSerializationMode.Tmdl:
+                    return SerializeTmdl(db);
+
+                default:
+                    throw new PbiToolsCliException(ExitCode.NotImplemented, $"ModelSerializationMode not implemented: {_settings.SerializationMode}.");
+            }
+        }
+
+        internal bool SerializeTmdl(JObject db)
+        {
+            var tomDb = TOM.JsonSerializer.DeserializeDatabase(db.ToString(),
+                new TOM.DeserializeOptions {  },
+                CompatibilityMode.PowerBI);
+
+            var modelFolder = new DirectoryInfo(_modelFolder.BasePath);
+            if (modelFolder.Exists)
+                modelFolder.Delete(recursive: true);
+
+            TOM.TmdlSerializer.SerializeModel(tomDb.Model, _modelFolder.BasePath);
+
+            _modelFolder.MarkWritten();
+
+            return true;
+        }
+
+        internal bool SerializeLegacy(JObject db)
+        {
+
+            if (_settings.SerializationMode == ModelSerializationMode.Legacy)
             { 
                 db = db
                     .RemoveProperties(_settings?.IgnoreProperties)
@@ -99,8 +136,6 @@ namespace PbiTools.Serialization
                 // Translations
                 // Relationships
             }
-
-            // TODO: ModelSerializationMode.TabularEditor
 
             SaveDatabase(db, _modelFolder, _fileName);
 
@@ -420,11 +455,28 @@ namespace PbiTools.Serialization
             // handle: no /Model folder
             if (!_modelFolder.Exists()) return false;
 
-            if (_modelFolder.GetSubfolder(Names.DataSources).Exists())
+            if (_modelFolder.GetFile("model.tmd").Exists())
             {
-                // TODO Support V1 models
-                throw new NotSupportedException("Deserialization of legacy PBIX models is not supported. Please convert the project to the V3 Power BI metadata format first.");
+                database = DeserializeTmdl();
+                return true;
             }
+            else if(_modelFolder.GetFile(DefaultDatabaseFileName).Exists())
+            {
+                if (_modelFolder.GetSubfolder(Names.DataSources).Exists())
+                {
+                    // TODO Support V1 models
+                    throw new NotSupportedException("Deserialization of legacy PBIX models is not supported. Please convert the project to the V3 Power BI metadata format first.");
+                }
+
+                database = DeserializeLegacy();
+                return true;
+            }
+
+            return false;
+        }
+
+        internal JObject DeserializeLegacy()
+        {
 
             //   database.json -- model/relationships,model/annotations ++ tables,dataSources
             //   tables/{name}/table.json -- columns,*partitions*,annotations
@@ -439,7 +491,7 @@ namespace PbiTools.Serialization
             // **dataSources/{name}/dataSource.json -- Provider,Location
             // **dataSources/{name}/mashup/** (ZipArchive)
 
-            var db = _modelFolder.GetFile("database.json").ReadJson();
+            var db = _modelFolder.GetFile(DefaultDatabaseFileName).ReadJson();
 
             var model = db.Value<JObject>("model");
 
@@ -471,8 +523,18 @@ namespace PbiTools.Serialization
     "Translations"
              */
 
-            database = db;
-            return true;
+            return db;
+        }
+
+        internal JObject DeserializeTmdl() 
+        {
+            var model = TOM.TmdlSerializer.DeserializeModel(_modelFolder.BasePath);
+            return JObject.Parse(
+                TOM.JsonSerializer.SerializeDatabase(
+                    model.Database as TOM.Database,
+                    new TOM.SerializeOptions { SplitMultilineStrings = true }
+                )
+            );
         }
 
 
