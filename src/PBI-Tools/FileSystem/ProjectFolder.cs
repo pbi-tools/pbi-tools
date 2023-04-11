@@ -63,6 +63,12 @@ namespace PbiTools.FileSystem
         /// Writes a binary file at the specified path by providing a <see cref="TextWriter"/> to write to.
         /// </summary>
         void WriteText(string path, Action<TextWriter> onTextWriterAvailable);
+
+        /// <summary>
+        /// Creates or opens a file for writing UTF-8 encoded text at the specified relative path within this folder.
+        /// If the file already exists, its contents are overwritten.
+        /// </summary>
+        TextWriter CreateTextWriter(string path);
     }
 
 
@@ -136,7 +142,15 @@ namespace PbiTools.FileSystem
             WriteFile(path, File.CreateText, onTextWriterAvailable);
         }
 
-        private void WriteFile<T>(string path, Func<string, T> factory, Action<T> callback) where T : IDisposable
+        public TextWriter CreateTextWriter(string path)
+        {
+            string fullPath = default;
+            WriteFile(path, _fullPath => fullPath = _fullPath);
+
+            return File.CreateText(fullPath);
+        }
+
+        private void WriteFile(string path, Action<string> writeFileImpl)
         {
             var fullPath = GetFullPath(path);
             Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
@@ -148,12 +162,18 @@ namespace PbiTools.FileSystem
             }
 
             Log.Verbose("Writing file: {Path}", fullPath);
-            using (var writer = factory(fullPath))
-            {
-                callback(writer);
-            }
+            writeFileImpl(fullPath);
 
             _root.FileWritten(fullPath); // keeps track of files added or updated
+        }
+
+        private void WriteFile<T>(string path, Func<string, T> factory, Action<T> callback) where T : IDisposable
+        {
+            WriteFile(path, fullPath => 
+            {
+                using var writer = factory(fullPath);
+                callback(writer);
+            });
         }
 
         private static string SanitizePath(string path)

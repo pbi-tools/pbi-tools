@@ -234,9 +234,9 @@ namespace PbiTools.Model
 
                 var pbixModel = new PbixModel(modelFolder.BasePath, PbixModelSource.TabularModel)
                 {
-                    PbixProj = pbixProject ?? new()
+                    PbixProj = pbixProject ?? new(),
+                    DataModel = serializer.DeserializeSafe()
                 };
-                pbixModel.DataModel = serializer.DeserializeSafe();
 
                 return pbixModel;
             }

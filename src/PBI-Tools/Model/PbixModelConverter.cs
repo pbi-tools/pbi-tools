@@ -110,7 +110,9 @@ namespace PbiTools.Model
                     var fileInfo = new FileInfo(output.Path);
                     using (var projFolder = new ProjectRootFolder(fileInfo.Directory.FullName))
                     {
-                        var serializer = new TabularModelSerializer(projFolder.GetFolder(), settings.Settings.Model, fileInfo.Name);
+                        var modelSettings = settings.Settings.Model;
+                        modelSettings.SerializationMode = ModelSerializationMode.Raw;
+                        var serializer = new TabularModelSerializer(projFolder.GetFolder(), modelSettings, fileInfo.Name);
                         serializer.Serialize(Model.DataModel);
                     }
                     break;
@@ -126,17 +128,23 @@ namespace PbiTools.Model
 
         public PbixModelOutput ResolveOutput(string outputPath)
         {
-            if (outputPath is null) {
+            if (outputPath is null)
+            {
+                // Inferring output type and location
+
                 return Model.Type switch
                 {
                     PbixModelSource.TabularModel when Path.HasExtension(Model.SourcePath) =>
                         // Model was created from a TMSL file: Default output '/Model' folder relative to source file
                         new PbixModelOutput {
                             Type = PbixModelOutputType.TabularModelFolder,
-                            Path = Path.Combine(new FileInfo(Model.SourcePath).DirectoryName, TabularModelSerializer.FolderName)
+                            Path = Path.Combine(
+                                new FileInfo(Model.SourcePath).DirectoryName,
+                                TabularModelSerializer.FolderName
+                            )
                         },
                     PbixModelSource.TabularModel =>
-                        // Model was created from a TMSL folder
+                        // Model was created from a '/Model' folder
                         new PbixModelOutput
                         {
                             Type = PbixModelOutputType.TabularModelFolder,
@@ -164,7 +172,7 @@ namespace PbiTools.Model
             if (outputIsFile && !(new[] {".json", ".bim"}.Contains(Path.GetExtension(outputPath).ToLowerInvariant())))
                 throw new PbiToolsCliException(ExitCode.UnsupportedFileType, "Only .json/.bim source files are supported.");
 
-            if (outputIsFile)
+            if (outputIsFile) // At this point it is confirmed the file has .bim or .json extension
             {
                 return new PbixModelOutput
                 {
@@ -173,7 +181,7 @@ namespace PbiTools.Model
                 };
             }
 
-            if (TabularModelOnly)            
+            if (TabularModelOnly)
             {
                 return new PbixModelOutput
                 {
@@ -203,8 +211,17 @@ namespace PbiTools.Model
 
     public enum PbixModelOutputType
     { 
+        /// <summary>
+        /// Full PbixProj folder.
+        /// </summary>
         PbixProj,
+        /// <summary>
+        /// TMDL or PbixProj legacy Model folder.
+        /// </summary>
         TabularModelFolder,
+        /// <summary>
+        /// A BIM/TMSL file.
+        /// </summary>
         TabularModelFile
     }
 }

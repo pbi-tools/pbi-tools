@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Mathias Thierbach
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using Newtonsoft.Json;
@@ -67,6 +68,13 @@ namespace PbiTools.FileSystem
             }
 
             return default;
+        }
+
+        internal static void MarkWritten(this IProjectFolder folder) {
+            foreach (var projectFile in folder.GetFiles("*.*", searchOption: System.IO.SearchOption.AllDirectories).OfType<ProjectFile>())
+            {
+                projectFile.MarkWritten();
+            }
         }
     }
 

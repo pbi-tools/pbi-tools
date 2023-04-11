@@ -135,6 +135,12 @@ namespace PbiTools.Tests
             _root.FilesStore[NormalizePath(path)] = sb.ToString();
         }
 
+        public TextWriter CreateTextWriter(string path)
+        {
+            throw new NotImplementedException();
+        }
+
+
         public bool ContainsPath(string path)
         {
             return _root.FilesStore.ContainsKey(NormalizePath(path));
@@ -179,5 +185,6 @@ namespace PbiTools.Tests
         {
             throw new NotImplementedException();
         }
+
     }
 }

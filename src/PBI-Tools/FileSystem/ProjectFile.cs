@@ -41,6 +41,7 @@ namespace PbiTools.FileSystem
         /// Provides a <see cref="TextWriter"/> to write the file to.
         /// </summary>
         void WriteText(Action<TextWriter> onTextWriterAvailable);
+
     }
 
 
@@ -97,6 +98,11 @@ namespace PbiTools.FileSystem
                 callback(writer);
             }
 
+            this.MarkWritten();
+        }
+
+        internal void MarkWritten()
+        {
             _root.FileWritten(Path); // keeps track of files added or updated
         }
     }
