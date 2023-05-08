@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Serilog;
@@ -210,7 +210,7 @@ namespace PbiTools.Deployments
 
         internal static bool TryGetEffectiveDateFromEnv(out DateTime effectiveDate)
         {
-            var envValue = AppSettings.GetEnvironmentSetting(AppSettings.Environment.EffectiveDate);
+            var envValue = AppSettings.GetEnvironmentSetting(Env.EffectiveDate);
             if (envValue == null)
             {
                 effectiveDate = default;
