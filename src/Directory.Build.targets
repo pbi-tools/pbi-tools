@@ -5,7 +5,7 @@
     <!-- See: https://github.com/dotnet/sdk/issues/1553 -->
     <Platforms>x64</Platforms>
     <PlatformTarget>x64</PlatformTarget>
-    <LangVersion>latest</LangVersion>
+    <LangVersion>11.0</LangVersion>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <ApplicationIcon>$(MSBuildThisFileDirectory)pbi-tools.ico</ApplicationIcon>

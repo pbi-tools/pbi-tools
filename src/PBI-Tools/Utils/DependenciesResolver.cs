@@ -10,6 +10,8 @@ using Serilog;
 
 namespace PbiTools.Utils
 {
+    using Configuration;
+
     public interface IDependenciesResolver
     {
         bool TryFindMsmdsrv(out string path);
@@ -195,6 +197,34 @@ namespace PbiTools.Utils
             return _effectivePbiInstall.InstallDir;
         }
 
+        public static void LoadExternalAmoLibraries()
+        {
+            if (Env.TryGetEnvironmentSetting(Env.ExternalAmoPath, out var externalAmoPath)) 
+            {
+                var dirInfo = new DirectoryInfo(externalAmoPath);
+                if (!dirInfo.Exists)
+                {
+                    Console.WriteLine($"[WRN] Cannot resolve directory from AppSetting '{Env.ExternalAmoPath}': [{externalAmoPath}]");
+                    return;
+                }
+
+                foreach (var file in dirInfo.GetFiles("Microsoft.AnalysisServices*.dll", SearchOption.TopDirectoryOnly).OrderBy(x => x.Name))
+                {
+                    try
+                    {
+                        Assembly.LoadFrom(file.FullName);
+
+                        Console.WriteLine($"External assembly loaded: {file.FullName}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Failed to load assembly: {file.FullName}");
+                        Console.WriteLine(ex.ToString());
+                    }
+
+                }
+            }
+        }
     }
 #endif
 

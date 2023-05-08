@@ -17,6 +17,21 @@ namespace PbiTools
 {
     using Cli;
     using Configuration;
+    using Utils;
+
+#if NETFRAMEWORK
+    class Module
+    {
+
+        [ModuleInitializer]
+        internal static void ModuleInit()
+        {
+            DependenciesResolver.LoadExternalAmoLibraries();
+            CosturaUtility.Initialize();
+        }
+
+    }
+#endif
 
     class Program
     {

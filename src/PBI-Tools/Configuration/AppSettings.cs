@@ -36,6 +36,9 @@ namespace PbiTools.Configuration
         public static readonly string UICulture = $"{EnvPrefix}{nameof(UICulture)}";
         public static readonly string EffectiveDate = $"{EnvPrefix}{nameof(EffectiveDate)}";
         public static readonly string DefaultModelSerialization = $"{EnvPrefix}{nameof(DefaultModelSerialization)}";
+#if NETFRAMEWORK
+        public static readonly string ExternalAmoPath = $"{EnvPrefix}{nameof(ExternalAmoPath)}";
+#endif
     }
 
     public class AppSettings
