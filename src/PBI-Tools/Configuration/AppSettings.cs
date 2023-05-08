@@ -13,9 +13,33 @@ namespace PbiTools.Configuration
 {
     using ProjectSystem;
 
+    public static class Env
+    {
+        public static string GetEnvironmentSetting(string name) => Environment.GetEnvironmentVariable(name) switch
+        {
+            var value when value is not null => Environment.ExpandEnvironmentVariables(value),
+            _ => null
+        };
+
+        public static bool TryGetEnvironmentSetting(string name, out string value)
+        {
+            value = GetEnvironmentSetting(name);
+            return value != null;
+        }
+
+        private const string EnvPrefix = "PBITOOLS_";
+
+        public static readonly string LogLevel = $"{EnvPrefix}{nameof(LogLevel)}";
+        public static readonly string PbiInstallDir = $"{EnvPrefix}{nameof(PbiInstallDir)}";
+        public static readonly string AppDataDir = $"{EnvPrefix}{nameof(AppDataDir)}";
+        public static readonly string Debug = $"{EnvPrefix}{nameof(Debug)}";
+        public static readonly string UICulture = $"{EnvPrefix}{nameof(UICulture)}";
+        public static readonly string EffectiveDate = $"{EnvPrefix}{nameof(EffectiveDate)}";
+        public static readonly string DefaultModelSerialization = $"{EnvPrefix}{nameof(DefaultModelSerialization)}";
+    }
+
     public class AppSettings
     {
-        public const string EnvPrefix = "PBITOOLS_";
 
         public const string Edition
 #if NETFRAMEWORK
@@ -24,25 +48,9 @@ namespace PbiTools.Configuration
             = "Core";
 #endif
 
-        public static class Environment
-        {
-            public static readonly string LogLevel = $"{EnvPrefix}{nameof(LogLevel)}";
-            public static readonly string PbiInstallDir = $"{EnvPrefix}{nameof(PbiInstallDir)}";
-            public static readonly string AppDataDir = $"{EnvPrefix}{nameof(AppDataDir)}";
-            public static readonly string Debug = $"{EnvPrefix}{nameof(Debug)}";
-            public static readonly string UICulture = $"{EnvPrefix}{nameof(UICulture)}";
-            public static readonly string EffectiveDate = $"{EnvPrefix}{nameof(EffectiveDate)}";
-            public static readonly string DefaultModelSerialization = $"{EnvPrefix}{nameof(DefaultModelSerialization)}";
-        }
+        public static string GetEnvironmentSetting(string name) => Env.GetEnvironmentSetting(name);
 
-        public static string GetEnvironmentSetting(string name) => System.Environment.GetEnvironmentVariable(name)
-            switch
-            {
-                var value when value is not null => System.Environment.ExpandEnvironmentVariables(value),
-                _ => null
-            };
-
-        public static bool GetBooleanSetting(string name) => GetEnvironmentSetting(name)
+        public static bool GetBooleanSetting(string name) => Env.GetEnvironmentSetting(name)
             switch
             {
                 var value when bool.TryParse(value, out var result) => result,
@@ -51,7 +59,7 @@ namespace PbiTools.Configuration
                 _ => false
             };
 
-        public static ModelSerializationMode? DefaultModelSerializationMode => GetEnvironmentSetting(Environment.DefaultModelSerialization) switch
+        public static ModelSerializationMode? DefaultModelSerializationMode => GetEnvironmentSetting(Env.DefaultModelSerialization) switch
         {
             var s when Enum.TryParse<ModelSerializationMode>(s, out var result) => result,
             _ => null
@@ -60,7 +68,7 @@ namespace PbiTools.Configuration
         public AppSettings()
         {
             // The Console log level can optionally be configured vai an environment variable:
-            var envLogLevel = GetEnvironmentSetting(Environment.LogLevel);
+            var envLogLevel = GetEnvironmentSetting(Env.LogLevel);
             var initialLogLevel = envLogLevel != null && Enum.TryParse<LogEventLevel>(envLogLevel, out var logLevel)
                 ? logLevel
                 : LogEventLevel.Information; // Default log level
@@ -81,7 +89,7 @@ namespace PbiTools.Configuration
         public bool TryApplyCustomCulture(out Exception error) 
         {
             error = default;
-            var envSetting = GetEnvironmentSetting(Environment.UICulture);
+            var envSetting = GetEnvironmentSetting(Env.UICulture);
             if (String.IsNullOrWhiteSpace(envSetting))
                 return true;
 
@@ -101,7 +109,7 @@ namespace PbiTools.Configuration
 
         public static JObject AsJson() =>
             new JObject(
-                typeof(Environment).GetFields(System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public)
+                typeof(Env).GetFields(System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public)
                 .Select(f =>
                 {
                     var envName = (string)f.GetValue(null);

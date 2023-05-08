@@ -1,4 +1,4 @@
-﻿// Copyright (c) Mathias Thierbach
+// Copyright (c) Mathias Thierbach
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using System;
@@ -63,7 +63,7 @@ namespace PbiTools
                 Log.Information("Log level: {LogLevel}", AppSettings.LevelSwitch.MinimumLevel);
 
             if (!AppSettings.TryApplyCustomCulture(out var error)) {
-                Log.Warning(error, $"The UI Culture specified in [{AppSettings.Environment.UICulture}] could not be applied. Continuing with default OS settings.");
+                Log.Warning(error, $"The UI Culture specified in [{Env.UICulture}] could not be applied. Continuing with default OS settings.");
             }
 
             ArgRevivers.SetReviver(CmdLineActions.NullableRevivers.Int);

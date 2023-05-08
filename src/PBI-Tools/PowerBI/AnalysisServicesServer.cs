@@ -35,7 +35,7 @@ namespace PbiTools.PowerBI
 
         private readonly string _tempPath;
         private string _asToolPath;
-        private readonly bool debugMode = AppSettings.GetBooleanSetting(AppSettings.Environment.Debug);
+        private readonly bool debugMode = AppSettings.GetBooleanSetting(Env.Debug);
 
         public AnalysisServicesServer(ASInstanceConfig config, IDependenciesResolver dependenciesResolver)
         {
