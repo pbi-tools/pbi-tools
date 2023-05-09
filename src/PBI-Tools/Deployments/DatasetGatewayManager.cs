@@ -19,11 +19,13 @@ namespace PbiTools.Deployments
         private static readonly ILogger Log = Serilog.Log.ForContext<DatasetGatewayManager>();
 
         private readonly Options _options;
+		private readonly PbiDeploymentOptions.ConsoleOptions _consoleOptions;
         private readonly IPowerBIClient _powerBI;
 
-        public DatasetGatewayManager(Options options, IPowerBIClient powerBIClient)
+        public DatasetGatewayManager(Options options, PbiDeploymentOptions.ConsoleOptions consoleOptions, IPowerBIClient powerBIClient)
         {
             _options = options;
+            _consoleOptions = consoleOptions ?? throw new ArgumentNullException(nameof(consoleOptions));
             _powerBI = powerBIClient ?? throw new ArgumentNullException(nameof(powerBIClient));
 
             Enabled = options != null && (options.GatewayId != default || options.DiscoverGateways);
@@ -42,7 +44,7 @@ namespace PbiTools.Deployments
 
             var gateways = await _powerBI.Datasets.DiscoverGatewaysInGroupAsync(workspaceId, datasetId);
 
-            var table = new Spectre.Console.Table { Width = Environment.UserInteractive ? null : 80 };
+            var table = new Spectre.Console.Table { Expand = _consoleOptions.ExpandTable };
 
             table.AddColumns("ID", "Name", "Type");
 

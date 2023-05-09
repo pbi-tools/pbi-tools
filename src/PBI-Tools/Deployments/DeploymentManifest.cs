@@ -273,6 +273,9 @@ namespace PbiTools.Deployments
         [JsonProperty("sqlScripts")]
         public SqlScriptsOptions SqlScripts { get; set; } = new();
 
+        [JsonProperty("console")]
+        public ConsoleOptions Console { get; set; } = new();
+
 
         public class ImportOptions
         {
@@ -569,6 +572,21 @@ namespace PbiTools.Deployments
             }
         }
 
+        public class ConsoleOptions
+        { 
+            /// <summary>
+            /// If specified, sets an explicit console width. This setting can be useful with certain CI/CD runners.
+            /// </summary>
+            [JsonProperty("width")]
+            public int? Width { get; set; }
+
+            /// <summary>
+            /// Indicates whether or not tables printed to the console should fit the available space.
+            /// If <c>false</c>, the table width will be auto calculated. Defaults to <c>false</c>.
+            /// </summary>
+            [JsonProperty("expandTable"), DefaultValue(false)]
+            public bool ExpandTable { get; set; }
+        }
     }
 
     public class PbiDeploymentEnvironment

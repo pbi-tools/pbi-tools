@@ -28,6 +28,8 @@ namespace PbiTools.Deployments
 
         public PbiDeploymentEnvironment.RefreshOptions EnvironmentOptions { get; set; }
 
+        public PbiDeploymentOptions.ConsoleOptions ConsoleOptions { get; set; }
+
         private void RequestModelRefresh(TOM.RefreshType refreshType)
         {
             if (ManifestOptions.IgnoreRefreshPolicy)
@@ -88,7 +90,7 @@ namespace PbiTools.Deployments
                 }
             }
 
-            using var trace = new XmlaRefreshTrace(_database.Server, ManifestOptions.Tracing ?? new(), BasePath);
+            using var trace = new XmlaRefreshTrace(_database.Server, ManifestOptions.Tracing ?? new(), ConsoleOptions ?? new(), BasePath);
             trace.Start();
 
             try

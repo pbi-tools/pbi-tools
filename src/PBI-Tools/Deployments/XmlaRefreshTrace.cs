@@ -29,6 +29,7 @@ namespace PbiTools.Deployments
         private static readonly ILogger Log = Serilog.Log.ForContext<XmlaRefreshTrace>();
 
 		private readonly PbiDeploymentOptions.RefreshOptions.TraceOptions _options;
+		private readonly PbiDeploymentOptions.ConsoleOptions _consoleOptions;
 		private readonly string _basePath;
 		private readonly string _sessionId;
 		private readonly bool _processSummary;
@@ -37,9 +38,10 @@ namespace PbiTools.Deployments
 
 		private TOM.Trace trace;
 
-        public XmlaRefreshTrace(TOM.Server server, PbiDeploymentOptions.RefreshOptions.TraceOptions options, string basePath)
+        public XmlaRefreshTrace(TOM.Server server, PbiDeploymentOptions.RefreshOptions.TraceOptions options, PbiDeploymentOptions.ConsoleOptions consoleOptions, string basePath)
         {
 			_options = options ?? throw new ArgumentNullException(nameof(options));
+			_consoleOptions = consoleOptions ?? throw new ArgumentNullException(nameof(consoleOptions));
 			_basePath = basePath ?? throw new ArgumentNullException(nameof(basePath));
 
 			if (options.Enabled) {
@@ -223,7 +225,7 @@ namespace PbiTools.Deployments
 					{
 						if (_options.Summary.Console)
 						{
-							var table = new Table { Width = Environment.UserInteractive ? null : 80 };
+							var table = new Table { Expand = _consoleOptions.ExpandTable };
 
 							var properties = typeof(RefreshSummaryRecord).GetProperties();
 							Array.ForEach(properties, p => table.AddColumn(p.Name));
