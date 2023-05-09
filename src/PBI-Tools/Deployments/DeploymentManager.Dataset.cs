@@ -301,7 +301,7 @@ namespace PbiTools.Deployments
                     }
                 }
 
-                ReportPartitionStatus(remoteDb.Model);
+                ReportPartitionStatus(remoteDb.Model, manifest.Options.Console);
             }
 
             if (!WhatIf || !createdNewDb)
@@ -323,7 +323,7 @@ namespace PbiTools.Deployments
             if (!WhatIf || !createdNewDb) {
                 var dataSources = await powerbi.Datasets.GetDatasourcesInGroupAsync(workspaceId, datasetId);
 
-                var table = new Spectre.Console.Table { Width = Environment.UserInteractive ? null : 80 };
+                var table = new Spectre.Console.Table { Expand = manifest.Options.Console.ExpandTable };
 
                 table.AddColumns(
                     nameof(Microsoft.PowerBI.Api.Models.Datasource.DatasourceType),
@@ -352,7 +352,7 @@ namespace PbiTools.Deployments
 
             #region Bind to Gateway (New dataset only)
 
-            var gatewayManager = new DatasetGatewayManager(dataset.Options.Dataset.Gateway, powerbi) { WhatIf = WhatIf };
+            var gatewayManager = new DatasetGatewayManager(dataset.Options.Dataset.Gateway, dataset.Options.Console, powerbi) { WhatIf = WhatIf };
 
             await gatewayManager.DiscoverGatewaysAsync(workspaceId, datasetId);
 
@@ -444,11 +444,12 @@ namespace PbiTools.Deployments
                                 {
                                     BasePath = basePath,
                                     ManifestOptions = dataset.Options.Refresh,
-                                    EnvironmentOptions = deploymentEnv.Refresh
+                                    EnvironmentOptions = deploymentEnv.Refresh,
+                                    ConsoleOptions = dataset.Options.Console
                                 }
                                 .RunRefresh();
 
-                                ReportPartitionStatus(db.Model);
+                                ReportPartitionStatus(db.Model, manifest.Options.Console);
                             }
                             break;
                         default:
@@ -463,7 +464,7 @@ namespace PbiTools.Deployments
 
         }
 
-        private static void ReportPartitionStatus(TOM.Model model)
+        private static void ReportPartitionStatus(TOM.Model model, PbiDeploymentOptions.ConsoleOptions consoleOptions)
         {
             var partitions = model.Tables
                 .SelectMany(t => t.Partitions)
@@ -480,7 +481,7 @@ namespace PbiTools.Deployments
                 })
                 .ToArray();
 
-            var table = new Spectre.Console.Table { Width = Environment.UserInteractive ? null : 80 };
+            var table = new Spectre.Console.Table { Expand = consoleOptions.ExpandTable };
 
             table.AddColumns(
                 nameof(TOM.Table),
