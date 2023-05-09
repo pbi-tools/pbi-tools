@@ -73,7 +73,7 @@ namespace PbiTools.Deployments
                 Log.Debug("Performing deployment from manifest at: {Path}", Project.OriginalPath);
 
                 if (!_manifests.ContainsKey(profileName))
-                    throw new DeploymentException($"The current project does not contain the specified deploymment '{profileName}'");
+                    throw new DeploymentException($"The current project does not contain the specified deployment '{profileName}'");
 
                 var manifest = _manifests[profileName];
                 
