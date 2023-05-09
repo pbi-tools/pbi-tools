@@ -144,7 +144,7 @@ namespace PbiTools
             }
             catch (Exception ex) when (ex.IsKnownException())
             {
-                Log.Fatal(ex.Message);
+                Log.Fatal("The operation FAILED: {ExceptionMessage}", ex.Message);
                 result = ExitCode.KnownException;
             }
             catch (Exception ex) /* Any unhandled exception */
