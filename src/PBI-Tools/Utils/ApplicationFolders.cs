@@ -13,7 +13,7 @@ namespace PbiTools.Utils
         private const string LOCALAPPDATA = "%LOCALAPPDATA%";
 
         public static string AppDataFolder => 
-            AppSettings.GetEnvironmentSetting(AppSettings.Environment.AppDataDir)
+            AppSettings.GetEnvironmentSetting(Env.AppDataDir)
             ?? Path.Combine(
                 Environment.ExpandEnvironmentVariables(LOCALAPPDATA),
                 "pbi-tools"

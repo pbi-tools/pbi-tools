@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Weavers xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="FodyWeavers.xsd">
-  <Costura IgnoreSatelliteAssemblies="true" IncludeRuntimeReferences="false" IncludeDebugSymbols="false">
+  <Costura IgnoreSatelliteAssemblies="true" IncludeRuntimeReferences="false" IncludeDebugSymbols="false" LoadAtModuleInit="false">
     <Unmanaged64Assemblies>
       git2-106a5f2
     </Unmanaged64Assemblies>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Serilog;
@@ -27,6 +27,8 @@ namespace PbiTools.Deployments
         public PbiDeploymentOptions.RefreshOptions ManifestOptions { get; set; }
 
         public PbiDeploymentEnvironment.RefreshOptions EnvironmentOptions { get; set; }
+
+        public PbiDeploymentOptions.ConsoleOptions ConsoleOptions { get; set; }
 
         private void RequestModelRefresh(TOM.RefreshType refreshType)
         {
@@ -88,7 +90,7 @@ namespace PbiTools.Deployments
                 }
             }
 
-            using var trace = new XmlaRefreshTrace(_database.Server, ManifestOptions.Tracing ?? new(), BasePath);
+            using var trace = new XmlaRefreshTrace(_database.Server, ManifestOptions.Tracing ?? new(), ConsoleOptions ?? new(), BasePath);
             trace.Start();
 
             try
@@ -210,7 +212,7 @@ namespace PbiTools.Deployments
 
         internal static bool TryGetEffectiveDateFromEnv(out DateTime effectiveDate)
         {
-            var envValue = AppSettings.GetEnvironmentSetting(AppSettings.Environment.EffectiveDate);
+            var envValue = AppSettings.GetEnvironmentSetting(Env.EffectiveDate);
             if (envValue == null)
             {
                 effectiveDate = default;

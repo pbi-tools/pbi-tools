@@ -1,5 +1,23 @@
 # Release Notes
 
+## 1.0.0-rc.4 - 2023-05-09
+
+- Upgraded to TOM 19.64, including **TMDL Preview-2**
+  - Fixes #265, #273
+- #232 CI Runner Console Output
+  - `manifest.options.console.width`: _If specified, sets an explicit console width. This setting can be useful with certain CI/CD runners._
+  - `manifest.options.console.expandTable`: _Indicates whether or not tables printed to the console should fit the available space. If `false` (default), the table width will be auto calculated._
+- #274 Allow running pbi-tools with private AMO DLLs
+  - New env setting: `PBITOOLS_ExternalAmoPath` (Desktop/NetFx only)
+  - If provided and a valid directory, loads all _"Microsoft.AnalysisServices*.dll"_ assemblies from that folder into current AppDomain (prior to Fody embedded dlls).
+  - Allows users to run pbi-tools session with private set of AMO DLLs
+- #272 Simplified error reporting (no stack trace) for certain known exception types
+  - IOException: _The process cannot access the file because it is being used by another process._
+- Fixed #269 Typo in deployment error message
+- PbixProj v0.13 Schema (_Note that the RC.3 release should have had a version bump, too._)
+  - #195 OAuth2 creds in deployment manifest { scopes, useDeploymentToken }
+  - #232 Deployment log setting: manifest.options.console { width, expandTable }
+
 ## 1.0.0-rc.3 - 2023-04-11
 
 - #262 TMDL Serialization Support
@@ -27,6 +45,51 @@
   - manifest.credentials[].clientSecret
   - manifest.credentials[].scopes
   - manifest.credentials[].useDeploymentToken
+
+**Example: OAuth2 credentials for another PBI dataset**
+
+```json
+      "credentials": [
+        {
+          "match": {
+            "datasourceType": "AnalysisServices",
+            "connectionDetails": {
+              "server": "powerbi://api.powerbi.com/v1.0/myorg/WORKSPACE",
+              "database": "DATASET_NAME"
+            }
+          },
+          "type": "OAuth2",
+          "updateMode": "BeforeRefresh",
+          "tenantId": "your-tenant.com",
+          "clientId": "c2e24fe7-4785-4776-9040-eb19c16ed700",
+          "clientSecret": "%CLIENT_SECRET%",
+          "scopes": [
+            "https://analysis.windows.net/powerbi/api/.default"
+          ]
+        }
+      ]
+```
+
+**Example: Use deployment token to access another PBI dataset during refresh**
+
+_This will only work for other Power BI resources (because of OAuth scope). Ensure that the service principal used for the deployment has sufficient access to the referenced dataset._
+
+```json
+      "credentials": [
+        {
+          "match": {
+            "datasourceType": "AnalysisServices",
+            "connectionDetails": {
+              "server": "powerbi://api.powerbi.com/v1.0/myorg/WORKSPACE",
+              "database": "DATASET_NAME"
+            }
+          },
+          "type": "OAuth2",
+          "updateMode": "BeforeRefresh",
+          "useDeploymentToken": true
+        }
+      ]
+```
 
 ## 1.0.0-rc.2 - 2023-01-09
 

@@ -10,6 +10,7 @@ using Microsoft.PowerBI.Api;
 using Microsoft.Rest;
 using Serilog;
 using Serilog.Events;
+using Spectre.Console;
 
 namespace PbiTools.Deployments
 {
@@ -72,9 +73,15 @@ namespace PbiTools.Deployments
                 Log.Debug("Performing deployment from manifest at: {Path}", Project.OriginalPath);
 
                 if (!_manifests.ContainsKey(profileName))
-                    throw new DeploymentException($"The current project does not contain the specified deploymment '{profileName}'");
+                    throw new DeploymentException($"The current project does not contain the specified deployment '{profileName}'");
 
                 var manifest = _manifests[profileName];
+                
+                var prevConsoleWidth = AnsiConsole.Console.Profile.Width;
+                if (manifest.Options.Console.Width.HasValue) {
+                    AnsiConsole.Console.Profile.Width = manifest.Options.Console.Width.Value;
+                }
+                
                 switch (manifest.Mode)
                 {
                     case PbiDeploymentMode.Report:
@@ -85,6 +92,10 @@ namespace PbiTools.Deployments
                         break;
                     default:
                         throw new DeploymentException($"Unsupported deployment mode: '{manifest.Mode}'");
+                }
+
+                if (manifest.Options.Console.Width.HasValue) {
+                    AnsiConsole.Console.Profile.Width = prevConsoleWidth;
                 }
             }
 

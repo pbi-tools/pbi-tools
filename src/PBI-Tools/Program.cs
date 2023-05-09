@@ -1,4 +1,4 @@
-﻿// Copyright (c) Mathias Thierbach
+// Copyright (c) Mathias Thierbach
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using System;
@@ -17,6 +17,21 @@ namespace PbiTools
 {
     using Cli;
     using Configuration;
+    using Utils;
+
+#if NETFRAMEWORK
+    class Module
+    {
+
+        [ModuleInitializer]
+        internal static void ModuleInit()
+        {
+            DependenciesResolver.LoadExternalAmoLibraries();
+            CosturaUtility.Initialize();
+        }
+
+    }
+#endif
 
     class Program
     {
@@ -63,7 +78,7 @@ namespace PbiTools
                 Log.Information("Log level: {LogLevel}", AppSettings.LevelSwitch.MinimumLevel);
 
             if (!AppSettings.TryApplyCustomCulture(out var error)) {
-                Log.Warning(error, $"The UI Culture specified in [{AppSettings.Environment.UICulture}] could not be applied. Continuing with default OS settings.");
+                Log.Warning(error, $"The UI Culture specified in [{Env.UICulture}] could not be applied. Continuing with default OS settings.");
             }
 
             ArgRevivers.SetReviver(CmdLineActions.NullableRevivers.Int);
@@ -127,6 +142,11 @@ namespace PbiTools
                 Log.Error(ex.Message);
                 result = ex.ErrorCode;
             }
+            catch (Exception ex) when (ex.IsKnownException())
+            {
+                Log.Fatal("The operation FAILED: {ExceptionMessage}", ex.Message);
+                result = ExitCode.KnownException;
+            }
             catch (Exception ex) /* Any unhandled exception */
             {
                 // TODO Explicitly log into crash file...
@@ -167,10 +187,20 @@ namespace PbiTools
             System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 
+    internal static class Exceptions
+    {
+        public static bool IsKnownException(this Exception ex) => ex switch
+        { 
+            System.IO.IOException e when (e.HResult & 0xffff) == 32 => true, // The process cannot access the file because it is being used by another process.
+            _ => false
+        };
+    }
+
     public enum ExitCode
     {
         UnexpectedError = -9,
         UnspecifiedError = -8,
+        KnownException = -7,
         NotImplemented = -3,
         InvalidArgs = -2,
         NoArgsProvided = -1,
