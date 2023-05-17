@@ -76,6 +76,7 @@ namespace PbiTools.ProjectSystem
         {
             DateFormatString = "yyyy-MM-ddTHH:mm:ssK",
             Formatting = Formatting.Indented,
+            MaxDepth = 128
             //ContractResolver = new DefaultContractResolver { NamingStrategy = new CamelCaseNamingStrategy() },
             // don't use CamelCaseContractResolver as we need to maintain casing in query names, custom settings, and deployment manifest labels
             DefaultValueHandling = DefaultValueHandling.Ignore
