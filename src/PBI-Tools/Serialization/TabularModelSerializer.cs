@@ -529,12 +529,27 @@ namespace PbiTools.Serialization
         internal JObject DeserializeTmdl() 
         {
             var model = TOM.TmdlSerializer.DeserializeModel(_modelFolder.BasePath);
-            return JObject.Parse(
-                TOM.JsonSerializer.SerializeDatabase(
+
+            string tmsl;
+            try
+            {
+                tmsl = TOM.JsonSerializer.SerializeDatabase(
                     model.Database as TOM.Database,
                     new TOM.SerializeOptions { SplitMultilineStrings = true }
-                )
-            );
+                );
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, "Error serializing TMDL model. Re-trying with Power BI compatibility mode.");
+
+                model.Database.CompatibilityMode = CompatibilityMode.PowerBI;
+                tmsl = TOM.JsonSerializer.SerializeDatabase(
+                    model.Database as TOM.Database,
+                    new TOM.SerializeOptions { SplitMultilineStrings = true }
+                );
+            }
+
+            return JObject.Parse(tmsl);
         }
 
 
