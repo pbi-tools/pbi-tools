@@ -4,5 +4,6 @@
   "csharp.suppressDotnetRestoreNotification": true,
   "csharp.suppressBuildAssetsNotification": true,
   "omnisharp.organizeImportsOnFormat": true,
-  "omnisharp.enableMsBuildLoadProjectsOnDemand": true
+  "omnisharp.enableMsBuildLoadProjectsOnDemand": true,
+  "dotnet.defaultSolution": "PBI-Tools.sln"
 }
