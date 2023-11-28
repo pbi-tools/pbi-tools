@@ -1,10 +1,8 @@
 # Release Notes
 
-## 1.0.0-rc.5 - 2023-06-09
+## 1.0.0-rc.5 - 2023-11-28
 
-<version:1.0.0-rc.5+preview.1>
-
-- Upgraded to TOM 19.65
+- Upgraded to TOM 19.67 (aligns with Tabular Editor 2.20.x)
 - Temp fix for #290 (Cannot deploy/compile TMDL model with Power BI-specific artifacts, for instance field params)
   - To be reverted once the next TMDL preview handles this scenario internally
 
