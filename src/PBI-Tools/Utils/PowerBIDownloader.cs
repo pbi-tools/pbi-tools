@@ -20,10 +20,10 @@ namespace PbiTools.Utils
                 var html = web.Load("https://www.microsoft.com/en-us/download/details.aspx?id=58494" /*"https://aka.ms/pbiSingleInstaller"*/); // MUST get the en-us version so that the text matching works
 
                 info = new PowerBIDownloadInfo {
-                    Version = html.DocumentNode.SelectSingleNode("//div[contains(@class,'header') and contains(text(),'Version:')]")
+                    Version = html.DocumentNode.SelectSingleNode("//div[contains(@class,'dlcdetail__filegrid')]//h3[contains(text(),'Version:')]")
                         .ParentNode.SelectSingleNode("p")
                         .InnerText,
-                    DatePublished = html.DocumentNode.SelectSingleNode("//div[contains(@class,'header') and contains(text(),'Date Published:')]")
+                    DatePublished = html.DocumentNode.SelectSingleNode("//div[contains(@class,'dlcdetail__filegrid')]//h3[contains(text(),'Date Published:')]")
                         .ParentNode.SelectSingleNode("p")
                         .InnerText
                 };

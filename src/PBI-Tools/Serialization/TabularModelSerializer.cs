@@ -104,7 +104,7 @@ namespace PbiTools.Serialization
             if (modelFolder.Exists)
                 modelFolder.Delete(recursive: true);
 
-            TOM.TmdlSerializer.SerializeModel(tomDb.Model, _modelFolder.BasePath);
+            TOM.TmdlSerializer.SerializeModelToFolder(tomDb.Model, _modelFolder.BasePath);
 
             _modelFolder.MarkWritten();
 
@@ -455,7 +455,7 @@ namespace PbiTools.Serialization
             // handle: no /Model folder
             if (!_modelFolder.Exists()) return false;
 
-            if (_modelFolder.GetFile("model.tmd").Exists())
+            if (_modelFolder.GetFile("model.tmdl").Exists() || _modelFolder.GetFile("model.tmd").Exists())
             {
                 database = DeserializeTmdl();
                 return true;
@@ -528,7 +528,7 @@ namespace PbiTools.Serialization
 
         internal JObject DeserializeTmdl() 
         {
-            var model = TOM.TmdlSerializer.DeserializeModel(_modelFolder.BasePath);
+            var model = TOM.TmdlSerializer.DeserializeModelFromFolder(_modelFolder.BasePath);
 
             string tmsl;
             try

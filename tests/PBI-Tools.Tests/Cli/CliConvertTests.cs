@@ -101,7 +101,7 @@ namespace PbiTools.Tests
                 );
 
                 Assert.True(Directory.Exists(Path.Combine(_sourceDir, "Model")));
-                Assert.True(File.Exists(Path.Combine(_sourceDir, "Model", "model.tmd")));
+                Assert.True(File.Exists(Path.Combine(_sourceDir, "Model", "model.tmdl")));
             }
 
             [Fact]
@@ -121,7 +121,7 @@ namespace PbiTools.Tests
                 );
 
                 Assert.True(Directory.Exists(outPath));
-                Assert.True(File.Exists(Path.Combine(outPath, "model.tmd")));
+                Assert.True(File.Exists(Path.Combine(outPath, "model.tmdl")));
             }
 
             [Fact]

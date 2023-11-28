@@ -44,16 +44,7 @@ namespace PbiTools.PowerBI
         {
             if (content == null) return null;
 
-            return () =>
-            {
-                var stream = new MemoryStream();
-                var writer = new BinarySerializationWriter(stream);
-
-                var obj = content.ToObject<T>(CamelCaseSerializer);
-                obj.Serialize(writer);
-
-                return stream;
-            };
+            throw new NotSupportedException("Legacy serialization formats are no longer supported.");
         }
     }
 }
