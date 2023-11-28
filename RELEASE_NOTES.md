@@ -1,6 +1,6 @@
 # Release Notes
 
-## 1.0.0-rc.6 - 2023-11-28
+## 1.0.0-rc.7 - 2023-11-28
 
 - Upgraded to TOM 19.69.6.2 (TMDL Preview-7; aligns with Tabular Editor 2.21.x)
 
