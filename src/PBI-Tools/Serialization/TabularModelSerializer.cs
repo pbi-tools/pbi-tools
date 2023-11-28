@@ -104,7 +104,7 @@ namespace PbiTools.Serialization
             if (modelFolder.Exists)
                 modelFolder.Delete(recursive: true);
 
-            TOM.TmdlSerializer.SerializeModelToFolder(tomDb.Model, _modelFolder.BasePath);
+            TOM.TmdlSerializer.SerializeDatabaseToFolder(tomDb, _modelFolder.BasePath);
 
             _modelFolder.MarkWritten();
 
@@ -526,28 +526,12 @@ namespace PbiTools.Serialization
             return db;
         }
 
-        internal JObject DeserializeTmdl() 
+        internal JObject DeserializeTmdl()
         {
-            var model = TOM.TmdlSerializer.DeserializeModelFromFolder(_modelFolder.BasePath);
-
-            string tmsl;
-            try
-            {
-                tmsl = TOM.JsonSerializer.SerializeDatabase(
-                    model.Database as TOM.Database,
-                    new TOM.SerializeOptions { SplitMultilineStrings = true }
-                );
-            }
-            catch (Exception ex)
-            {
-                Log.Debug(ex, "Error serializing TMDL model. Re-trying with Power BI compatibility mode.");
-
-                model.Database.CompatibilityMode = CompatibilityMode.PowerBI;
-                tmsl = TOM.JsonSerializer.SerializeDatabase(
-                    model.Database as TOM.Database,
-                    new TOM.SerializeOptions { SplitMultilineStrings = true }
-                );
-            }
+            var db = TOM.TmdlSerializer.DeserializeDatabaseFromFolder(_modelFolder.BasePath);
+            var tmsl = TOM.JsonSerializer.SerializeDatabase(db,
+                new TOM.SerializeOptions { SplitMultilineStrings = true }
+            );
 
             return JObject.Parse(tmsl);
         }
