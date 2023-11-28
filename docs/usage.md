@@ -2,7 +2,7 @@
 
     pbi-tools <action> -options
 
-_pbi-tools (Desktop), 1.0.0-rc.5+preview.1 - https://pbi.tools/_
+_pbi-tools (Desktop), 1.0.0-rc.5 - https://pbi.tools/_
 
 ### Actions
 
@@ -54,7 +54,7 @@ Performs an offline conversion of PbixProj or Tabular model sources into another
 
     deploy <folder> <label> [<environment>] [<basePath>] [<whatIf>] 
 
-Deploys artifacts to Power BI Service or Azure Analysis Services using a deployment manifest. Currently, only 'Report' deployment, from .pbix files or PbixProj folders, is supported.
+Deploys artifacts (reports, datasets) to Power BI Service using a deployment manifest.
 
 | Option | Default Value | Is Switch | Description |
 | --- | --- | --- | --- |

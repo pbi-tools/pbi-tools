@@ -14,7 +14,7 @@ namespace PbiTools.Cli
     {
 
         [ArgActionMethod, ArgShortcut("deploy")]
-        [ArgDescription("Deploys artifacts to Power BI Service or Azure Analysis Services using a deployment manifest. Currently, only 'Report' deployment, from .pbix files or PbixProj folders, is supported.")]
+        [ArgDescription("Deploys artifacts (reports, datasets) to Power BI Service using a deployment manifest.")]
         public void Deploy(
             [ArgRequired, ArgExistingDirectory, ArgDescription("The PbixProj folder containing the deployment manifest.")]
                 string folder,
