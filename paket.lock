@@ -43,18 +43,18 @@ NUGET
     LibGit2Sharp (0.28)
       LibGit2Sharp.NativeBinaries (2.0.320)
     LibGit2Sharp.NativeBinaries (2.0.320)
-    Microsoft.AnalysisServices.AdomdClient.NetCore.retail.amd64 (19.67) - restriction: || (== net6.0) (== net7.0)
+    Microsoft.AnalysisServices.AdomdClient.NetCore.retail.amd64 (19.69.6.2) - restriction: || (== net6.0) (== net7.0)
       Microsoft.Identity.Client (>= 4.43)
-    Microsoft.AnalysisServices.AdomdClient.retail.amd64 (19.67) - restriction: == net472
+    Microsoft.AnalysisServices.AdomdClient.retail.amd64 (19.69.6.2) - restriction: == net472
       Microsoft.Identity.Client (>= 4.43)
-    Microsoft.AnalysisServices.NetCore.retail.amd64 (19.67) - restriction: || (== net6.0) (== net7.0)
+    Microsoft.AnalysisServices.NetCore.retail.amd64 (19.69.6.2) - restriction: || (== net6.0) (== net7.0)
       Microsoft.Identity.Client (>= 4.43)
-    Microsoft.AnalysisServices.retail.amd64 (19.67) - restriction: == net472
+    Microsoft.AnalysisServices.retail.amd64 (19.69.6.2) - restriction: == net472
       Microsoft.Identity.Client (>= 4.43)
-    Microsoft.AnalysisServices.Tabular.Tmdl.NetCore.retail.amd64 (19.67.0-TmdlPreview) - restriction: || (== net6.0) (== net7.0)
-      Microsoft.AnalysisServices.NetCore.retail.amd64 (>= 19.67)
-    Microsoft.AnalysisServices.Tabular.Tmdl.retail.amd64 (19.67.0-TmdlPreview) - restriction: == net472
-      Microsoft.AnalysisServices.retail.amd64 (>= 19.67)
+    Microsoft.AnalysisServices.Tabular.Tmdl.NetCore.retail.amd64 (19.69.6.2-tmdlpreview) - restriction: || (== net6.0) (== net7.0)
+      Microsoft.AnalysisServices.NetCore.retail.amd64 (>= 19.69.6.2)
+    Microsoft.AnalysisServices.Tabular.Tmdl.retail.amd64 (19.69.6.2-tmdlpreview) - restriction: == net472
+      Microsoft.AnalysisServices.retail.amd64 (>= 19.69.6.2)
       System.ValueTuple (>= 4.5)
     Microsoft.Azure.Services.AppAuthentication (1.6.2)
       Microsoft.IdentityModel.Clients.ActiveDirectory (>= 5.2.9)
@@ -130,7 +130,7 @@ NUGET
     Microsoft.Win32.Registry (5.0) - restriction: || (&& (== net472) (< net452)) (== net6.0) (== net7.0)
       System.Security.AccessControl (>= 5.0)
       System.Security.Principal.Windows (>= 5.0)
-    Moq (4.20.69)
+    Moq (4.20.70)
       Castle.Core (>= 5.1.1)
       System.Threading.Tasks.Extensions (>= 4.5.4) - restriction: || (== net472) (&& (== net6.0) (>= net462)) (&& (== net6.0) (< netstandard2.1)) (&& (== net7.0) (>= net462)) (&& (== net7.0) (< netstandard2.1))
     NETStandard.Library (2.0.3) - copy_local: true
