@@ -2,7 +2,7 @@
 
     pbi-tools.core <action> -options
 
-_pbi-tools (Core), 1.0.0-rc.7 - https://pbi.tools/_
+_pbi-tools (Core), 1.0.0-rc.8 - https://pbi.tools/_
 
 ### Actions
 
@@ -29,7 +29,7 @@ Performs an offline conversion of PbixProj or Tabular model sources into another
 | --- | --- | --- | --- |
 | source* |  |  | The source(s) to convert. Can be a PbixProj folder, a Model/TE folder, or a TMSL json file. |
 | outPath |  |  | The (optional) destination. Can be a folder or a file, depending on the conversion mode. Must be a folder if the source is a TMSL json file. |
-| modelSerialization |  |  | The model serialization mode. <br> `Default`  - The default serialization format, effective if no option is specified. The default is TMDL. <br> `Raw`  - Serializes the tabular model into a single JSON file containing the full TMSL payload from the PBIX model. No transformations are applied. <br> `Legacy`  - Serializes the tabular model into the default PbixProj folder structure and performs various transformations to optimize file contents for source control. <br> `Tmdl`  - Serializes the tabular model into TMDL format. |
+| modelSerialization |  |  | The model serialization mode. <br> `Default`  - The default serialization format, effective if no option is specified. The default is TMDL. <br> `Raw`  - Serializes the tabular model into a single JSON file containing the full TMSL payload from the PBIX model. No transformations are applied. <br> `Legacy`  - Serializes the tabular model into the default PbixProj folder structure and performs various transformations to optimize file contents for source control. <br> `Tmdl`  - Serializes the tabular model into TMDL format. Annotation settings are applied. |
 | mashupSerialization |  |  | The mashup serialization mode. <br> `Default`  - Similar to 'Raw' mode, with the exception that QueryGroups are extracted into a separate file for readability. <br> `Raw`  - Serializes all Mashup parts with no transformations applied. <br> `Expanded`  - Serializes the Mashup metadata part into a Json document, and embedded M queries into separate files. This mode is not supported for compilation. |
 | settingsFile |  |  | An external .pbixproj.json file containing serialization settings. Serialization modes specified as command-line arguments take precedence. |
 | updateSettings | `False` | X | If set, updates the effective PbixProj settings file used for this conversion. |
