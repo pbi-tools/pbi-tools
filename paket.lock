@@ -43,19 +43,14 @@ NUGET
     LibGit2Sharp (0.28)
       LibGit2Sharp.NativeBinaries (2.0.320)
     LibGit2Sharp.NativeBinaries (2.0.320)
-    Microsoft.AnalysisServices.AdomdClient.NetCore.retail.amd64 (19.69.6.2) - restriction: || (== net6.0) (== net7.0)
+    Microsoft.AnalysisServices.AdomdClient.NetCore.retail.amd64 (19.74.2) - restriction: || (== net6.0) (== net7.0)
       Microsoft.Identity.Client (>= 4.43)
-    Microsoft.AnalysisServices.AdomdClient.retail.amd64 (19.69.6.2) - restriction: == net472
+    Microsoft.AnalysisServices.AdomdClient.retail.amd64 (19.74.2) - restriction: == net472
       Microsoft.Identity.Client (>= 4.43)
-    Microsoft.AnalysisServices.NetCore.retail.amd64 (19.69.6.2) - restriction: || (== net6.0) (== net7.0)
+    Microsoft.AnalysisServices.NetCore.retail.amd64 (19.74.2) - restriction: || (== net6.0) (== net7.0)
       Microsoft.Identity.Client (>= 4.43)
-    Microsoft.AnalysisServices.retail.amd64 (19.69.6.2) - restriction: == net472
+    Microsoft.AnalysisServices.retail.amd64 (19.74.2) - restriction: == net472
       Microsoft.Identity.Client (>= 4.43)
-    Microsoft.AnalysisServices.Tabular.Tmdl.NetCore.retail.amd64 (19.69.6.2-tmdlpreview) - restriction: || (== net6.0) (== net7.0)
-      Microsoft.AnalysisServices.NetCore.retail.amd64 (>= 19.69.6.2)
-    Microsoft.AnalysisServices.Tabular.Tmdl.retail.amd64 (19.69.6.2-tmdlpreview) - restriction: == net472
-      Microsoft.AnalysisServices.retail.amd64 (>= 19.69.6.2)
-      System.ValueTuple (>= 4.5)
     Microsoft.Azure.Services.AppAuthentication (1.6.2)
       Microsoft.IdentityModel.Clients.ActiveDirectory (>= 5.2.9)
       System.Diagnostics.Process (>= 4.3) - restriction: || (&& (== net472) (< net452)) (== net6.0) (== net7.0)

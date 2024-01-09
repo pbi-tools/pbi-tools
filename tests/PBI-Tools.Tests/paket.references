@@ -1,7 +1,6 @@
 Serilog
 Serilog.Sinks.Console
 Microsoft.AnalysisServices.retail.amd64
-Microsoft.AnalysisServices.Tabular.Tmdl.retail.amd64
 Newtonsoft.Json
 PowerArgs
 Moq

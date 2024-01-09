@@ -7,7 +7,6 @@ HtmlAgilityPack
 CsvHelper
 WildcardMatch
 Microsoft.AnalysisServices.NetCore.retail.amd64
-Microsoft.AnalysisServices.Tabular.Tmdl.NetCore.retail.amd64
 Microsoft.AnalysisServices.AdomdClient.NetCore.retail.amd64
 System.IO.Packaging
 Microsoft.Identity.Client
