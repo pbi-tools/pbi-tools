@@ -12,6 +12,7 @@ using System.Xml.Linq;
 using Newtonsoft.Json.Linq;
 using Serilog;
 using Microsoft.AnalysisServices;
+using Microsoft.AnalysisServices.Tabular.Serialization;
 using TOM = Microsoft.AnalysisServices.Tabular;
 
 namespace PbiTools.Serialization
@@ -96,6 +97,10 @@ namespace PbiTools.Serialization
 
         internal bool SerializeTmdl(JObject db)
         {
+            db = db
+                .RemoveProperties(_settings?.IgnoreProperties)
+                .ApplyAnnotationRules(_settings?.Annotations);
+
             var tomDb = TOM.JsonSerializer.DeserializeDatabase(db.ToString(),
                 new TOM.DeserializeOptions {  },
                 CompatibilityMode.PowerBI);
@@ -104,7 +109,35 @@ namespace PbiTools.Serialization
             if (modelFolder.Exists)
                 modelFolder.Delete(recursive: true);
 
-            TOM.TmdlSerializer.SerializeDatabaseToFolder(tomDb, _modelFolder.BasePath);
+            var optionsBuilder = new MetadataSerializationOptionsBuilder(MetadataSerializationStyle.Tmdl);
+
+            optionsBuilder = _settings?.ExcludeChildrenMetadata == true
+                ? optionsBuilder.WithoutChildrenMetadata()
+                : optionsBuilder.WithChildrenMetadata();
+
+            optionsBuilder = _settings?.IncludeRestrictedInformation == true
+                ? optionsBuilder.WithRestrictedInformation()
+                : optionsBuilder.WithoutRestrictedInformation();
+
+            var formattingOptions = new MetadataFormattingOptionsBuilder();
+            if (_settings?.Formatting is {} formatting)
+            {
+                if (!string.IsNullOrEmpty(formatting.Encoding))
+                    formattingOptions =
+                        formattingOptions.WithEncoding(formatting.GetEncoding());
+
+                formattingOptions = formattingOptions
+                    .WithNewLineStyle(formatting.NewLineStyle);
+
+                if (formatting.IndentationMode == IndentationMode.Spaces)
+                    formattingOptions = formattingOptions.WithSpacesIndentationMode(formatting.IndentationSize);
+                else if (formatting.IndentationMode == IndentationMode.Tabs)
+                    formattingOptions = formattingOptions.WithTabsIndentationMode();
+            }
+            
+            optionsBuilder = optionsBuilder.WithFormattingOptions(formattingOptions.GetOptions());
+
+            TOM.TmdlSerializer.SerializeDatabaseToFolder(tomDb, optionsBuilder.GetOptions(), _modelFolder.BasePath);
 
             _modelFolder.MarkWritten();
 

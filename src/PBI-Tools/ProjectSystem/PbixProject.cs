@@ -20,7 +20,7 @@ namespace PbiTools.ProjectSystem
         private static readonly ILogger Log = Serilog.Log.ForContext<PbixProject>();
 
         public const string Filename = ".pbixproj.json";
-        public static readonly Version CurrentVersion = Version.Parse("0.13");
+        public static readonly Version CurrentVersion = Version.Parse("0.14");
 
         /*
          * PBIXPROJ Change Log
@@ -69,6 +69,12 @@ namespace PbiTools.ProjectSystem
          *       - #91 Support for /Report/mobileState (mobileState.json, explorationState.json)
          * 0.13  - #195 OAuth2 creds in deployment manifest { scopes, useDeploymentToken }
          *       - #232 Deployment log setting: manifest.options.console { width, expandTable }
+         * 0.14  - settings.model.excludeChildrenMetadata
+         *       - settings.model.includeRestrictedInformation
+         *       - settings.model.formatting.encoding
+         *       - settings.model.formatting.newLineStyle
+         *       - settings.model.formatting.indentationMode
+         *       - settings.model.formatting.indentationSize
          */
 
 

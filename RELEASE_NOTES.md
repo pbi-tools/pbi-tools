@@ -1,5 +1,17 @@
 # Release Notes
 
+## 1.0.0-rc.8 - 2024-01-09
+
+- Upgraded to TOM 19.74.2 (TMDL Preview-9)
+- PbixProj v0.13 Schema (_Note that the RC.3 release should have had a version bump, too._)
+  - settings.model.excludeChildrenMetadata
+  - settings.model.includeRestrictedInformation
+  - settings.model.formatting.encoding
+  - settings.model.formatting.newLineStyle
+  - settings.model.formatting.indentationMode
+  - settings.model.formatting.indentationSize
+- Various dependencies updated
+
 ## 1.0.0-rc.7 - 2023-11-28
 
 - Upgraded to TOM 19.69.6.2 (TMDL Preview-7; aligns with Tabular Editor 2.21.x)
