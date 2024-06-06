@@ -137,6 +137,11 @@ namespace PbiTools
                 }
                 result = ExitCode.InvalidArgs;
             }
+            catch (AggregateException exx) when (exx.GetBaseException() is PbiToolsCliException ex)
+            {
+                Log.Error(ex.Message);
+                result = ex.ErrorCode;
+            }
             catch (PbiToolsCliException ex)
             {
                 Log.Error(ex.Message);
