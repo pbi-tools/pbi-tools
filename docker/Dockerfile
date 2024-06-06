@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/runtime:6.0
+FROM mcr.microsoft.com/dotnet/runtime:8.0
 
 ARG PBI_TOOLS_VERSION
 

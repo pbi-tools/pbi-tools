@@ -7,6 +7,7 @@ open Fake.IO.FileSystemOperators
 open Fake.IO.Globbing.Operators
 open System
 open System.IO
+open System.Text
 open System.Text.RegularExpressions
 
 // The name of the project
@@ -15,7 +16,7 @@ let project = "pbi-tools"
 
 // Short summary of the project
 // (used as description in AssemblyInfo and as a short summary for NuGet package)
-let summary = "The Power BI developer's toolkit."
+let summary = "Power BI source control and DevOps tool."
 
 // Longer description of the project
 // (used as a description for NuGet package; line breaks are automatically cleaned up)
@@ -23,7 +24,7 @@ let description = "A command-line tool to work with Power BI Desktop files. Enab
 
 // List of author names (for NuGet package)
 let authors = [ "Mathias Thierbach" ]
-let company = "Mathias Thierbach"
+let company = "pbi-tools Ltd"
 
 // Tags for your project (for NuGet package)
 let tags = "powerbi, pbix, source-control, automation"
@@ -47,7 +48,7 @@ let outDir = buildDir @@ "out"
 let distDir = buildDir @@ "dist"
 let distFullDir = distDir @@ "desktop"
 let distCoreDir = distDir @@ "core"
-let distNet7Dir = distDir @@ "net7"
+let distNet6Dir = distDir @@ "net6"
 let testDir = buildDir @@ "test"
 let tempDir = ".temp"
 
@@ -212,7 +213,7 @@ let publish _ =
 
     
     // Core build
-    [ "win10-x64",      "win-x64"
+    [ "win-x64",        "win-x64"
       "linux-x64",      "linux-x64"
       "linux-musl-x64", "alpine-x64" ]
     |> Seq.iter (fun (rid, path) ->
@@ -221,14 +222,14 @@ let publish _ =
             (setParams (rid, distCoreDir @@ path)) 
     )
 
-    // Net7 build
+    // Net6 build
     [ "win10-x64",      "win-x64"
       "linux-x64",      "linux-x64"
       "linux-musl-x64", "alpine-x64" ]
     |> Seq.iter (fun (rid, path) ->
-        "src/PBI-Tools.NET7/PBI-Tools.NET7.csproj"
+        "src/PBI-Tools.NET6/PBI-Tools.NET6.csproj"
         |> DotNet.publish 
-            (setParams (rid, distNet7Dir @@ path)) 
+            (setParams (rid, distNet6Dir @@ path)) 
     )
 
 
@@ -244,19 +245,19 @@ let pack _ =
         |> Zip.zip (distCoreDir @@ dist) (sprintf @"%s\pbi-tools.core.%s_%s.zip" buildDir releaseVersion dist)
     )
 
-    distNet7Dir
+    distNet6Dir
     |> Directory.EnumerateDirectories
     |> Seq.map (Path.GetFileName) 
     |> Seq.iter (fun dist ->
-        !! (distNet7Dir @@ dist @@ "*.*")
-        |> Zip.zip (distNet7Dir @@ dist) (sprintf @"%s\pbi-tools.net7.%s_%s.zip" buildDir releaseVersion dist)
+        !! (distNet6Dir @@ dist @@ "*.*")
+        |> Zip.zip (distNet6Dir @@ dist) (sprintf @"%s\pbi-tools.net6.%s_%s.zip" buildDir releaseVersion dist)
     )
 
 
 let test _ =
     !! "tests/*/bin/Release/**/pbi-tools*tests.dll"
     -- "tests/*/bin/Release/**/*netcore.tests.dll"
-    -- "tests/*/bin/Release/**/*net7.tests.dll"
+    -- "tests/*/bin/Release/**/*net6.tests.dll"
     |> XUnit2.run (fun p -> { p with HtmlOutputPath = Some (testDir @@ "xunit.html")
                                      XmlOutputPath = Some (testDir @@ "xunit.xml")
                                      ToolPath = "packages/fake-tools/xunit.runner.console/tools/net472/xunit.console.exe" } )
@@ -271,7 +272,8 @@ let test _ =
            ListTests = true
            Logger = Some "trx;LogFileName=TestOutput.NetCore.xml"
        })
-    "tests/PBI-Tools.Net7.Tests/PBI-Tools.Net7.Tests.csproj"
+
+    "tests/PBI-Tools.Net6.Tests/PBI-Tools.Net6.Tests.csproj"
     |> DotNet.test (fun defaults ->
        { defaults with
            ResultsDirectory = Some "./.build/test"
@@ -325,7 +327,8 @@ let usageDocs _ =
 
 
 let help _ =
-    Trace.traceError "Please specify a target to run."
+    Trace.traceImportant "Please specify a target to run."
+    Target.listAvailable()
 
 // --------------------------------------------------------------------------------------
 

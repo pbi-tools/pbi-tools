@@ -11,7 +11,7 @@ using Serilog.Events;
 
 [assembly: InternalsVisibleTo("pbi-tools.tests")]
 [assembly: InternalsVisibleTo("pbi-tools.netcore.tests")]
-[assembly: InternalsVisibleTo("pbi-tools.net7.tests")]
+[assembly: InternalsVisibleTo("pbi-tools.net6.tests")]
 
 namespace PbiTools
 {
