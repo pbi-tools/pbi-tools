@@ -100,7 +100,7 @@ let genCSAssemblyInfo (projectPath : string) =
       [ AssemblyInfo.Title (projectName)
         AssemblyInfo.Product project
         AssemblyInfo.Company company
-        AssemblyInfo.Copyright (sprintf "Copyright \u00A9 Mathias Thierbach 2018-%i" (let today = DateTime.Today in today.Year)) // Avoids warning FS0052, see: https://github.com/fsharp/FAKE/issues/1803
+        AssemblyInfo.Copyright (sprintf "Copyright (C) Mathias Thierbach 2018-%i" (let today = DateTime.Today in today.Year)) // Avoids warning FS0052, see: https://github.com/fsharp/FAKE/issues/1803
         AssemblyInfo.Description summary
         AssemblyInfo.Version release.AssemblyVersion
         AssemblyInfo.FileVersion fileVersion
@@ -231,6 +231,44 @@ let publish _ =
         |> DotNet.publish 
             (setParams (rid, distNet6Dir @@ path)) 
     )
+
+
+let sign _ =
+    // distFullDir @@ "pbi-tools.exe"
+    // distCoreDir @@ "win-x64" @@ "pbi-tools.core.exe"
+    // distNet6Dir @@ "win-x64" @@ "pbi-tools.net6.exe"
+    // distDir/**/*.exe
+
+    let ifl = distDir @@ "files.txt"
+
+    !! (distDir @@ "**/*.exe")
+    |> File.write false ifl
+
+    let args = [|
+        "azuresigntool"
+        "sign"
+        "-kvu"; Environment.environVarOrFail "PBITOOLS_KVU"
+        "-kvt"; Environment.environVarOrFail "PBITOOLS_KVT"
+        "-kvi"; Environment.environVarOrFail "PBITOOLS_KVI"
+        "-kvs"; Environment.environVarOrFail "PBITOOLS_KVS"
+        "-kvc"; Environment.environVarOrFail "PBITOOLS_KVC"
+        "-du"; "https://pbi.tools"
+        "-tr"; "http://timestamp.digicert.com"
+        "-td"; "sha384"
+        "-fd"; "sha384"
+        "-ifl"; ifl
+        "-v" |]
+
+    let result = Process.shellExec {
+            Program = "dotnet"
+            CommandLine = String.Join(' ', args)
+            Args = []
+            WorkingDir = "."
+        }
+
+    // Check the result
+    if result <> 0 then
+        failwithf "Shell command failed with exit code %d" result
 
 
 let pack _ =
@@ -367,6 +405,7 @@ let initTargets () =
     Target.create "BuildTools" buildTools
     Target.create "Build" build
     Target.create "Publish" publish
+    Target.create "Sign" sign
     Target.create "Pack" pack
     Target.create "Test" test
     Target.create "SmokeTest" smokeTest
@@ -387,6 +426,7 @@ let initTargets () =
     ==> "Publish"
 
     "Publish"
+    ==> "Sign"
     ==> "Test"
     ==> "UsageDocs"
     ==> "Pack"
