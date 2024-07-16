@@ -7,7 +7,6 @@ using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 using Serilog;
 
 namespace PbiTools.ProjectSystem
@@ -20,7 +19,7 @@ namespace PbiTools.ProjectSystem
         private static readonly ILogger Log = Serilog.Log.ForContext<PbixProject>();
 
         public const string Filename = ".pbixproj.json";
-        public static readonly Version CurrentVersion = Version.Parse("0.14");
+        public static readonly Version CurrentVersion = Version.Parse("1.0");
 
         /*
          * PBIXPROJ Change Log
@@ -75,6 +74,9 @@ namespace PbiTools.ProjectSystem
          *       - settings.model.formatting.newLineStyle
          *       - settings.model.formatting.indentationMode
          *       - settings.model.formatting.indentationSize
+         * 1.0   - Added manifest.options.dataset.gateway.mode { OnCreation, Disabled, Always }
+         *       - Added settings.model.metadataOrderHints
+         *       - Added settings.model.expressionTrimStyle
          */
 
 
