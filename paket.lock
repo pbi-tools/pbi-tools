@@ -73,7 +73,7 @@ NUGET
       Microsoft.SqlServer.Server (>= 1.0) - restriction: || (&& (== net472) (< net462)) (&& (== net472) (>= netstandard2.1)) (== net6.0) (== net8.0)
       System.Configuration.ConfigurationManager (>= 6.0.1) - restriction: || (== net472) (== net6.0) (&& (== net8.0) (>= net462)) (&& (== net8.0) (< net6.0)) (&& (== net8.0) (< netstandard2.1))
       System.Configuration.ConfigurationManager (>= 8.0) - restriction: || (&& (== net472) (>= net8.0)) (&& (== net6.0) (>= net8.0)) (== net8.0)
-      System.Runtime.Caching (>= 6.0) - restriction: || (&& (== net472) (< net462)) (&& (== net472) (>= net6.0)) (&& (== net472) (>= netstandard2.1)) (== net6.0) (&& (== net8.0) (< net6.0)) (&& (== net8.0) (< netstandard2.1))
+      System.Runtime.Caching (>= 6.0) - restriction: || (&& (== net472) (== net8.0)) (&& (== net472) (< net462)) (&& (== net472) (>= net6.0)) (&& (== net472) (>= netstandard2.1)) (== net6.0) (&& (== net8.0) (< net6.0)) (&& (== net8.0) (< netstandard2.1))
       System.Runtime.Caching (>= 8.0) - restriction: || (&& (== net472) (>= net8.0)) (&& (== net6.0) (>= net8.0)) (== net8.0)
     Microsoft.Data.SqlClient.SNI.runtime (5.2) - restriction: || (&& (== net472) (>= net6.0)) (== net6.0) (== net8.0)
     Microsoft.Identity.Client (4.61.3)
@@ -763,6 +763,7 @@ STORAGE: NONE
 CONTENT: NONE
 NUGET
   remote: https://api.nuget.org/v3/index.json
+    AzureSignTool (5.0)
     fake-cli (6.0)
     Paket (8.0.3)
 
