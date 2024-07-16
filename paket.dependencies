@@ -2,7 +2,7 @@ version 7.1.5
 
 group Main
   source https://api.nuget.org/v3/index.json
-  framework: net472,net6.0,net7.0
+  framework: net472,net6.0,net8.0
   storage: none
   content: none
 
@@ -23,10 +23,10 @@ group Main
   nuget PeNet
   nuget CommandLineParser
   nuget WildcardMatch
-  nuget Microsoft.AnalysisServices.retail.amd64 framework: net472
-  nuget Microsoft.AnalysisServices.AdomdClient.retail.amd64 framework: net472
-  nuget Microsoft.AnalysisServices.NetCore.retail.amd64 framework: net6.0,net7.0
-  nuget Microsoft.AnalysisServices.AdomdClient.NetCore.retail.amd64 framework: net6.0,net7.0
+  nuget Microsoft.AnalysisServices.retail.amd64                     19.84.1 framework: net472
+  nuget Microsoft.AnalysisServices.AdomdClient.retail.amd64         19.84.1 framework: net472
+  nuget Microsoft.AnalysisServices.NetCore.retail.amd64             19.84.1 framework: net6.0,net8.0
+  nuget Microsoft.AnalysisServices.AdomdClient.NetCore.retail.amd64 19.84.1 framework: net6.0,net8.0
   nuget System.IO.Packaging
   nuget Microsoft.Identity.Client
   nuget Microsoft.PowerBI.Api
@@ -49,7 +49,7 @@ group Tests
 
 group Tests-netcore
   source https://api.nuget.org/v3/index.json
-  framework: net6.0,net7.0
+  framework: net6.0,net8.0
   storage: none
   content: none
 
@@ -60,7 +60,7 @@ group Tests-netcore
 # dependencies used for retrieving FAKE and its modules
 group Fake-Build
   source https://api.nuget.org/v3/index.json
-  framework: net6.0
+  framework: net8.0
   storage: none
 
   nuget FSharp.Core
@@ -79,10 +79,11 @@ group Fake-Build
   nuget Fake.DotNet.Testing.XUnit2
   nuget Fake.IO.FileSystem
   nuget Fake.IO.Zip
-  nuget Microsoft.Build 17.3.2
-  nuget Microsoft.Build.Framework 17.3.2
-  nuget Microsoft.Build.Tasks.Core 17.3.2
-  nuget Microsoft.Build.Utilities.Core 17.3.2
+  nuget Microsoft.Build
+  nuget Microsoft.Build.Framework
+  nuget Microsoft.Build.Tasks.Core
+  nuget Microsoft.Build.Utilities.Core
+  nuget MSBuild.StructuredLogger
 
 group Fake-Tools
   source https://api.nuget.org/v3/index.json
@@ -97,6 +98,7 @@ group DotNet-Tools
 
   nuget fake-cli prerelease
   nuget paket
+  nuget AzureSignTool
 
 group WiX
   source https://api.nuget.org/v3/index.json

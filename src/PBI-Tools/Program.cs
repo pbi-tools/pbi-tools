@@ -3,15 +3,9 @@
 
 using System;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using PowerArgs;
 using Serilog;
 using Serilog.Events;
-
-[assembly: InternalsVisibleTo("pbi-tools.tests")]
-[assembly: InternalsVisibleTo("pbi-tools.netcore.tests")]
-[assembly: InternalsVisibleTo("pbi-tools.net7.tests")]
 
 namespace PbiTools
 {
@@ -22,21 +16,19 @@ namespace PbiTools
 #if NETFRAMEWORK
     class Module
     {
-
-        [ModuleInitializer]
+        [System.Runtime.CompilerServices.ModuleInitializer]
         internal static void ModuleInit()
         {
             DependenciesResolver.LoadExternalAmoLibraries();
             CosturaUtility.Initialize();
         }
-
     }
 #endif
 
     class Program
     {
 #if NETFRAMEWORK
-        [DllImport("kernel32.dll")]
+        [System.Runtime.InteropServices.DllImport("kernel32.dll")]
         private static extern ErrorModes SetErrorMode(ErrorModes uMode);
 
         [Flags]
@@ -89,8 +81,30 @@ namespace PbiTools
 
         static int Main(string[] args)
         {
+            if (Environment.UserInteractive)
+            {
+                Console.Title = "pbi-tools";
+                var template = """
+{{ProductName!}} | {{Copyright!}}
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+See <https://goto.pbi.tools/license> for full license details.
+
+
+""";
+                ArgUsage.GenerateUsageFromTemplate<CmdLineActions>(template).WriteLine();
+            }
+
             // When invoked w/o args, print usage and exit immediately (do not trigger ArgException)
-            if ((args ?? new string[0]).Length == 0)
+            if ((args ?? Array.Empty<string>()).Length == 0)
             {
                 ArgUsage.GenerateUsageFromTemplate<CmdLineActions>().WriteLine();
                 return (int)ExitCode.NoArgsProvided;
@@ -114,8 +128,6 @@ namespace PbiTools
                     Log.Verbose(action.HandledException, "PowerArgs exception");
                 }
 
-                // TODO Define and handle specific exceptions to report back to user directly (No PBI install, etc...)
-
                 result = action.HandledException == null ? ExitCode.Success : ExitCode.InvalidArgs;
             }
             catch (ArgException ex)
@@ -136,6 +148,11 @@ namespace PbiTools
 #endif
                 }
                 result = ExitCode.InvalidArgs;
+            }
+            catch (AggregateException exx) when (exx.GetBaseException() is PbiToolsCliException ex)
+            {
+                Log.Error(ex.Message);
+                result = ex.ErrorCode;
             }
             catch (PbiToolsCliException ex)
             {

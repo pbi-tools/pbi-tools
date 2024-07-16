@@ -22,13 +22,15 @@ namespace PbiTools.Deployments
 		private readonly PbiDeploymentOptions.ConsoleOptions _consoleOptions;
         private readonly IPowerBIClient _powerBI;
 
-        public DatasetGatewayManager(Options options, PbiDeploymentOptions.ConsoleOptions consoleOptions, IPowerBIClient powerBIClient)
+        public DatasetGatewayManager(Options options, PbiDeploymentOptions.ConsoleOptions consoleOptions, IPowerBIClient powerBIClient, bool createdNewDb)
         {
             _options = options;
             _consoleOptions = consoleOptions ?? throw new ArgumentNullException(nameof(consoleOptions));
             _powerBI = powerBIClient ?? throw new ArgumentNullException(nameof(powerBIClient));
 
-            Enabled = options != null && (options.GatewayId != default || options.DiscoverGateways);
+            Enabled = options != null
+                && ((options.Mode == Options.GatewayBindMode.OnCreation && createdNewDb) || (options.Mode == Options.GatewayBindMode.Always))
+                && (options.GatewayId != default || options.DiscoverGateways);
         }
 
         public bool WhatIf { get; set; }
@@ -36,7 +38,7 @@ namespace PbiTools.Deployments
         public bool Enabled { get; }
 
         /// <summary>
-        /// TODO
+        /// Discovers and reports the gateways the dataset can be bound to.
         /// </summary>
         public async Task DiscoverGatewaysAsync(Guid workspaceId, string datasetId)
         {
@@ -52,7 +54,7 @@ namespace PbiTools.Deployments
             {
                 table.AddRow(
                     item.Id.ToString(),
-                    item.Name,
+                    item.Name.EscapeMarkup(),
                     item.Type.ToString()
                 );
             }
@@ -63,17 +65,15 @@ namespace PbiTools.Deployments
         }
 
         /// <summary>
-        /// TODO
+        /// If gateway binding is enabled, binds the dataset to the specified gateway.
+        /// Does nothing in WhatIf mode.
         /// </summary>
-        public async Task BindToGatewayAsync(Guid workspaceId, string datasetId, IDictionary<string, DeploymentParameter> parameters)
+        /// <returns>True if the dataset was bound to a gateway.</returns>
+        public async Task<bool> BindToGatewayAsync(Guid workspaceId, string datasetId, IDictionary<string, DeploymentParameter> parameters)
         {
-            if (!Enabled) return;
+            if (!Enabled) return false;
 
-            if (WhatIf) {
-                // TODO WhatIf
-                return;
-            }
-            else if (_options.GatewayId != default)
+            if (!WhatIf && _options.GatewayId != default)
             {
                 if (!Guid.TryParse(_options.GatewayId.ExpandParamsAndEnv(parameters), out var gatewayId))
                     throw new DeploymentException($"The GatewayId expression could not be resolved as a valid Guid: {_options.GatewayId}.");
@@ -86,18 +86,22 @@ namespace PbiTools.Deployments
                         ResolveDatasetSources(gatewayId, _options.DataSources, _powerBI)
                 ));
 
-                Log.Information("Successfully bound dataset to gateway: {GatewayId}", gatewayId);
+                Log.Information("Successfully bound dataset to gateway: {GatewayId} ({GatewayBindMode})", gatewayId, _options.Mode);
+
+                return true;
             }
+
+            return false;
         }
 
-        private static IList<Guid?> ResolveDatasetSources(Guid gatewayId, string[] datasources, IPowerBIClient powerbi)
+        private static IList<Guid?> ResolveDatasetSources(Guid gatewayId, string[] datasources, IPowerBIClient powerBI)
         {
             if (datasources == null || datasources.Length == 0) return default;
 
             var gatewaySources = new Lazy<IList<GatewayDatasource>>(() => 
             {
                 Log.Debug("Fetching datasources for gateway: {GatewayID}", gatewayId);
-                var result = powerbi.Gateways.GetDatasources(gatewayId);
+                var result = powerBI.Gateways.GetDatasources(gatewayId);
                 return result.Value;
             });
 

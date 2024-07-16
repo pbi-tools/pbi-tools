@@ -2,15 +2,8 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Xml;
-using System.Xml.Linq;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Serilog;
-using Formatting = Newtonsoft.Json.Formatting;
 
 namespace PbiTools.FileSystem
 {
@@ -101,6 +94,9 @@ namespace PbiTools.FileSystem
             this.MarkWritten();
         }
 
+        /// <summary>
+        /// Explicitly marks the file as written.
+        /// </summary>
         internal void MarkWritten()
         {
             _root.FileWritten(Path); // keeps track of files added or updated

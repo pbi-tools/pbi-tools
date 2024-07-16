@@ -139,22 +139,22 @@ namespace PbiTools.Deployments
         /// Looks up a Power BI workspace Id from its name, optionally using a session cache first, then the Power BI API.
         /// Only workspaces accessible to the authenticated user can be resolved.
         /// </summary>
-        public async static Task<Guid> ResolveWorkspaceIdAsync(this string name, IPowerBIClient powerbi, IDictionary<string, Guid> cache = null)
+        public static async Task<Guid> ResolveWorkspaceIdAsync(this string name, IPowerBIClient powerBI, IDictionary<string, (Group, Capacity)> cache = null)
         {
             DeploymentManager.Log.Debug("Resolving workspace ID for workspace: '{Workspace}'", name);
 
-            if (cache != null && cache.ContainsKey(name))
-                return cache[name];
+            if (cache != null && cache.TryGetValue(name, out var cached) && cached.Item1 is { } cachedWorkspace)
+                return cachedWorkspace.Id;
 
-            var apiResult = await powerbi.Groups.GetGroupsAsync(filter: $"name eq '{name}'", top: 2);
+            var apiResult = await powerBI.Groups.GetGroupsAsync(filter: $"name eq '{name}'", top: 2);
 
             switch (apiResult.Value.Count)
             {
                 case 1:
-                    var id = apiResult.Value[0].Id;
-                    if (cache != null) cache[name] = id;
-                    DeploymentManager.Log.Information("Resolved workspace ID '{Id}' for workspace: '{Workspace}'", id, name);
-                    return id;
+                    var workspace = apiResult.Value[0];
+                    if (cache != null) cache[name] = (workspace, null);
+                    DeploymentManager.Log.Information("Resolved workspace ID '{Id}' for workspace: '{Workspace}'", workspace.Id, name);
+                    return workspace.Id;
                 case 0:
                     throw new DeploymentException($"No Power BI workspace found matching the name '{name}'. Does the API user have the required permissions?");
                 default:
@@ -163,10 +163,58 @@ namespace PbiTools.Deployments
         }
 
         /// <summary>
+        /// Looks up the Power BI capacity for the given workspace name, optionally using a session cache first, then the Power BI API.
+        /// Only capacities accessible to the authenticated user can be resolved.
+        /// </summary>
+        public static async Task<Capacity> ResolveCapacityAsync(this string name, IPowerBIClient powerBI, IDictionary<string, (Group, Capacity)> cache = null)
+        {
+            DeploymentManager.Log.Debug("Resolving capacity for workspace: '{Workspace}'", name);
+
+            // Workspace is cached
+            if (cache != null && cache.TryGetValue(name, out var cached))
+            { 
+                if (cached.Item2 is { } cachedCapacity)
+                    return cachedCapacity;
+                
+                if (cached.Item1 is { } cachedWorkspace && cachedWorkspace.IsOnDedicatedCapacity != true)
+                    return default;
+            }
+
+            var apiResult = await powerBI.Groups.GetGroupsAsync(filter: $"name eq '{name}'", top: 2);
+            var workspace = apiResult.Value.Count switch
+            {
+                1 => apiResult.Value[0],
+                0 => throw new DeploymentException($"No Power BI workspace found matching the name '{name}'. Does the API user have the required permissions?"),
+                _ => throw new DeploymentException($"More than one Power BI workspace found matching the name '{name}'. Please specify the workspace Guid instead to avoid ambiguity.")
+            };
+
+            if (workspace.IsOnDedicatedCapacity == true)
+            {
+                DeploymentManager.Log.Debug("Retrieving all capacities...");
+                var capacities = await powerBI.Capacities.GetCapacitiesAsync();
+                if (capacities.Value.FirstOrDefault(c => c.Id == workspace.CapacityId) is { } capacity)
+                {
+                    if (cache != null) cache[name] = (workspace, capacity);
+                    DeploymentManager.Log.Information("Resolved capacity '{Capacity}' for workspace: '{Workspace}'", capacity.DisplayName, name);
+                    return capacity;
+                }
+                else
+                {
+                    DeploymentManager.Log.Warning("Capacity with ID '{CapacityId}' not found.", workspace.CapacityId);
+                }
+            }
+
+            var empty = new Capacity { };
+            if (cache != null) cache[name] = (workspace, empty);
+            return empty;
+        }
+
+        /// <summary>
         /// Expands environment variables referenced in ClientId, ClientSecret, TenantId, or Authority, and verifies all required settings are provided.
         /// </summary>
         public static PbiDeploymentOAuthCredentials ExpandAndValidate(this PbiDeploymentOAuthCredentials credentials)
         {
+            // ReSharper disable once SuspiciousParameterNameInArgumentNullException
             if (credentials == null) throw new ArgumentNullException(nameof(PbiDeploymentManifest.Authentication));
 
             if (credentials.ClientId == null) throw new ArgumentNullException(nameof(PbiDeploymentAuthentication.ClientId));

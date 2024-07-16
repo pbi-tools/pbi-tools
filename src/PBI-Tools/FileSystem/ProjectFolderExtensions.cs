@@ -70,7 +70,11 @@ namespace PbiTools.FileSystem
             return default;
         }
 
-        internal static void MarkWritten(this IProjectFolder folder) {
+        /// <summary>
+        /// Marks all files in this folder and its subfolders as written
+        /// </summary>
+        internal static void MarkWritten(this IProjectFolder folder)
+        {
             foreach (var projectFile in folder.GetFiles("*.*", searchOption: System.IO.SearchOption.AllDirectories).OfType<ProjectFile>())
             {
                 projectFile.MarkWritten();

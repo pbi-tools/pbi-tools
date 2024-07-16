@@ -1,9 +1,26 @@
 # Release Notes
 
+## 1.0.0 - 2024-07-16
+
+- Released under the AGPL-3.0 license
+- Upgraded to TOM 19.84.1 (TMDL Preview-15) - aligns with Tabular Editor 2.25
+- Gateway binding: New _Always_ mode introduced
+- In Dataset `WhatIf` mode, the target _capacity_ (if dedicated) is reported alongside the target workspace
+- Fixed [#338](https://github.com/pbi-tools/pbi-tools/issues/338) Deployment logging bug with unescaped markup
+- Implemented [#331](https://github.com/pbi-tools/pbi-tools/issues/331) Should report data sources **after** binding to gateway
+- [#339](https://github.com/pbi-tools/pbi-tools/issues/339) Updated Core version to .Net 8.0; dropped support for .Net 7.0
+- [#339](https://github.com/pbi-tools/pbi-tools/issues/339) Updated Docker version to .Net 8.0
+- [#43](https://github.com/pbi-tools/pbi-tools/issues/43) All Windows executables (Desktop & Core) are now digitally signed
+- Numerous dependencies updated
+- PbixProj v1.0 Schema
+  - `settings.model.metadataOrderHints`
+  - `settings.model.expressionTrimStyle` _(Note this is an EnumFlags property which is serialized as comma-separated strings)_
+  - `manifest.options.dataset.gateway.mode` { OnCreation, Disabled, Always }
+
 ## 1.0.0-rc.8 - 2024-01-09
 
 - Upgraded to TOM 19.74.2 (TMDL Preview-9)
-- PbixProj v0.13 Schema (_Note that the RC.3 release should have had a version bump, too._)
+- PbixProj v0.14 Schema (_Note that the RC.3 release should have had a version bump, too._)
   - settings.model.excludeChildrenMetadata
   - settings.model.includeRestrictedInformation
   - settings.model.formatting.encoding
@@ -57,7 +74,7 @@
 - #195 Set (Cloud) credentials during dataset deployment - Anonymous
 - #195 Set (Cloud) credentials during dataset deployment - OAuth2
 - #195 Case-insensitive matching of data sources
-- Manifest Schema Changes
+- Manifest Schema Changes 0.13
   - manifest.credentials[].updateMode: { NotSpecified, Always, Never, BeforeRefresh }
   - manifest.credentials[].type: { Basic, Anonymous, OAuth2 }
   - manifest.credentials[].authority

@@ -16,3 +16,4 @@ group Fake-Build
   Fake.DotNet.Testing.XUnit2
   Fake.IO.FileSystem
   Fake.IO.Zip
+  MSBuild.StructuredLogger

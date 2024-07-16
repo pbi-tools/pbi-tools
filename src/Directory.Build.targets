@@ -5,7 +5,7 @@
     <!-- See: https://github.com/dotnet/sdk/issues/1553 -->
     <Platforms>x64</Platforms>
     <PlatformTarget>x64</PlatformTarget>
-    <LangVersion>11.0</LangVersion>
+    <LangVersion>latest</LangVersion>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <ApplicationIcon>$(MSBuildThisFileDirectory)pbi-tools.ico</ApplicationIcon>
@@ -17,7 +17,7 @@
     <SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(RuntimeIdentifier)'=='win10-x64'">
+  <PropertyGroup Condition=" '$(RuntimeIdentifier)'=='win10-x64' Or '$(RuntimeIdentifier)'=='win-x64' ">
     <ApplicationManifest>..\app.manifest</ApplicationManifest>
     <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
   </PropertyGroup>

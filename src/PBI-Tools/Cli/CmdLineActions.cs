@@ -17,6 +17,7 @@ namespace PbiTools.Cli
     [ArgDescription(AssemblyVersionInformation.AssemblyProduct + " (" + AppSettings.Edition + "), " + AssemblyVersionInformation.AssemblyInformationalVersion + " - https://pbi.tools/")]
     [ArgProductVersion(AssemblyVersionInformation.AssemblyVersion)]
     [ArgProductName(AssemblyVersionInformation.AssemblyProduct)]
+    [ArgCopyright(AssemblyVersionInformation.AssemblyCopyright)]
     [ApplyDefinitionTransforms]
     public partial class CmdLineActions
     {

@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Identity.Client;
 using Microsoft.PowerBI.Api;
+using Microsoft.PowerBI.Api.Models;
 using Microsoft.Rest;
 using Spectre.Console;
 using AMO = Microsoft.AnalysisServices;
@@ -17,6 +18,7 @@ using TOM = Microsoft.AnalysisServices.Tabular;
 namespace PbiTools.Deployments
 {
     using Model;
+    using PowerBI;
     using Utils;
 
     public partial class DeploymentManager
@@ -81,22 +83,26 @@ namespace PbiTools.Deployments
             if (WhatIf) Log.Information("---");
 
             #region Connect to Destination Envionment
-            using var powerbi = PowerBIClientFactory(manifest?.Options?.PbiBaseUri ?? DefaultPowerBIApiBaseUri, tokenCredentials);
+            using var powerBI = PowerBIClientFactory(manifest?.Options?.PbiBaseUri ?? DefaultPowerBIApiBaseUri, tokenCredentials);
             using var server = new TOM.Server();
 
             var workspace = deploymentEnv.Workspace.ExpandParameters(dataset.Parameters);
             var workspaceId = Guid.TryParse(workspace, out var id)
                 ? id
-                : await workspace.ResolveWorkspaceIdAsync(powerbi);
+                : await workspace.ResolveWorkspaceIdAsync(powerBI, dataset.WorkspaceCache);
 
             if (WhatIf)
             {
+                var capacity = await workspace.ResolveCapacityAsync(powerBI, dataset.WorkspaceCache);
+
                 Log.Information("Dataset: {Path}", dataset.SourcePath);
                 Log.Information("  DisplayName: {DisplayName}", dataset.DisplayName);
                 Log.Information("  Parameters:");
                 foreach (var parameter in dataset.Parameters)
                     Log.Information("  * {ParamKey} = {ParamValue}", parameter.Key, parameter.Value.Value ?? "null");
                 Log.Information("  Workspace: {Workspace} ({WorkspaceId})", workspace, workspaceId);
+                if (capacity.TryGetCapacityInfo(out var capacityInfo))
+                    Log.Information("  Capacity: {CapacityDescription} ({CapacityId})", capacityInfo.Description, capacityInfo.Id);
                 Log.Information("---");
             }
 
@@ -306,7 +312,7 @@ namespace PbiTools.Deployments
 
             if (!WhatIf || !createdNewDb)
             {
-                var pbiDataset = await powerbi.Datasets.GetDatasetInGroupAsync(workspaceId, datasetId);
+                var pbiDataset = await powerBI.Datasets.GetDatasetInGroupAsync(workspaceId, datasetId);
                 Log.Information("Power BI Dataset Details:");
                 Log.Information("* ID                     : {ID}", pbiDataset.Id);
                 Log.Information("* Name                   : {Name}", pbiDataset.Name);
@@ -320,31 +326,8 @@ namespace PbiTools.Deployments
             #endregion
 
             #region Report Datasources
-            if (!WhatIf || !createdNewDb) {
-                var dataSources = await powerbi.Datasets.GetDatasourcesInGroupAsync(workspaceId, datasetId);
-
-                var table = new Spectre.Console.Table { Expand = manifest.Options.Console.ExpandTable };
-
-                table.AddColumns(
-                    nameof(Microsoft.PowerBI.Api.Models.Datasource.DatasourceType),
-                    nameof(Microsoft.PowerBI.Api.Models.Datasource.ConnectionDetails),
-                    nameof(Microsoft.PowerBI.Api.Models.Datasource.DatasourceId),
-                    nameof(Microsoft.PowerBI.Api.Models.Datasource.GatewayId)
-                );
-
-                foreach (var item in dataSources.Value)
-                {
-                    table.AddRow(
-                        $"{item.DatasourceType}",
-                        item.ConnectionDetails.ToJsonString(Newtonsoft.Json.Formatting.None).EscapeMarkup(),
-                        $"{item.DatasourceId}",
-                        $"{item.GatewayId}"
-                    );
-                }
-
-                Log.Information("Datasources:");
-
-                AnsiConsole.Write(table);
+            if (!WhatIf) {
+                ReportDatasources(await powerBI.Datasets.GetDatasourcesInGroupAsync(workspaceId, datasetId), manifest.Options.Console.ExpandTable);
             }
             #endregion
 
@@ -352,12 +335,14 @@ namespace PbiTools.Deployments
 
             #region Bind to Gateway (New dataset only)
 
-            var gatewayManager = new DatasetGatewayManager(dataset.Options.Dataset.Gateway, dataset.Options.Console, powerbi) { WhatIf = WhatIf };
+            var gatewayManager = new DatasetGatewayManager(dataset.Options.Dataset.Gateway, dataset.Options.Console, powerBI, createdNewDb) { WhatIf = WhatIf };
 
             await gatewayManager.DiscoverGatewaysAsync(workspaceId, datasetId);
 
-            if (createdNewDb)
-                await gatewayManager.BindToGatewayAsync(workspaceId, datasetId, dataset.Parameters);
+            if (await gatewayManager.BindToGatewayAsync(workspaceId, datasetId, dataset.Parameters))
+            {
+                ReportDatasources(await powerBI.Datasets.GetDatasourcesInGroupAsync(workspaceId, datasetId), manifest.Options.Console.ExpandTable);
+            }
 
             #endregion
 
@@ -374,7 +359,7 @@ namespace PbiTools.Deployments
 
             #region Set Credentials
 
-            var credsManager = new DatasetCredentialsManager(manifest, powerbi, refreshEnabled, authResult) { WhatIf = WhatIf };
+            var credsManager = new DatasetCredentialsManager(manifest, powerBI, refreshEnabled, authResult) { WhatIf = WhatIf };
             await credsManager.SetCredentialsAsync(workspaceId, datasetId);
 
             #endregion
@@ -407,7 +392,7 @@ namespace PbiTools.Deployments
                                                                           reportConnection.ToJson(datasetId));
 
                     var reportWorkspace = reportEnvironment.Workspace.ExpandParameters(dataset.Parameters) ?? workspaceId.ToString();
-                    await ImportReportAsync(reportDeploymentInfo, powerbi, reportWorkspace);
+                    await ImportReportAsync(reportDeploymentInfo, powerBI, reportWorkspace);
                 }
             }
             #endregion
@@ -464,6 +449,32 @@ namespace PbiTools.Deployments
 
         }
 
+        private static void ReportDatasources(Microsoft.PowerBI.Api.Models.Datasources dataSources, bool expand)
+        {
+            var table = new Spectre.Console.Table { Expand = expand };
+
+            table.AddColumns(
+                nameof(Microsoft.PowerBI.Api.Models.Datasource.DatasourceType),
+                nameof(Microsoft.PowerBI.Api.Models.Datasource.ConnectionDetails),
+                nameof(Microsoft.PowerBI.Api.Models.Datasource.DatasourceId),
+                nameof(Microsoft.PowerBI.Api.Models.Datasource.GatewayId)
+            );
+
+            foreach (var item in dataSources.Value)
+            {
+                table.AddRow(
+                    $"{item.DatasourceType}".EscapeMarkup(),
+                    item.ConnectionDetails.ToJsonString(Newtonsoft.Json.Formatting.None).EscapeMarkup(),
+                    $"{item.DatasourceId}".EscapeMarkup(),
+                    $"{item.GatewayId}".EscapeMarkup()
+                );
+            }
+
+            Log.Information("Datasources:");
+
+            AnsiConsole.Write(table);
+        }
+
         private static void ReportPartitionStatus(TOM.Model model, PbiDeploymentOptions.ConsoleOptions consoleOptions)
         {
             var partitions = model.Tables
@@ -497,14 +508,14 @@ namespace PbiTools.Deployments
             foreach (var item in partitions)
             {
                 table.AddRow(
-                    $"{item.Table}",
-                    $"{item.Partition}",
-                    $"{item.State}",
-                    $"{item.SourceType}",
-                    $"{item.Mode}",
-                    $"{item.ModifiedTime}",
-                    $"{item.RangeStart}",
-                    $"{item.RangeEnd}"
+                    $"{item.Table}".EscapeMarkup(),
+                    $"{item.Partition}".EscapeMarkup(),
+                    $"{item.State}".EscapeMarkup(),
+                    $"{item.SourceType}".EscapeMarkup(),
+                    $"{item.Mode}".EscapeMarkup(),
+                    $"{item.ModifiedTime}".EscapeMarkup(),
+                    $"{item.RangeStart}".EscapeMarkup(),
+                    $"{item.RangeEnd}".EscapeMarkup()
                 );
             }
 
@@ -587,6 +598,8 @@ namespace PbiTools.Deployments
             /// The <see cref="IPbixModel"/> containing the dataset sources.
             /// </summary>
             public IPbixModel Model { get; set; }
+
+            internal Dictionary<string, (Group, Capacity)> WorkspaceCache { get; } = new();
         }
 
     }

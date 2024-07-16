@@ -50,7 +50,11 @@ namespace PbiTools.ProjectSystem
             && SerializationMode == ModelSerializationMode.Default
             && Annotations.IsDefault()
             && Formatting.IsDefault()
-            && Measures.IsDefault();
+            && Measures.IsDefault()
+            && ExcludeChildrenMetadata == null
+            && IncludeRestrictedInformation == null
+            && MetadataOrderHints == null
+            && ExpressionTrimStyle == null;
 
         #region IgnoreProperties
 
@@ -100,6 +104,19 @@ namespace PbiTools.ProjectSystem
         /// </summary>
         [JsonProperty("includeRestrictedInformation", NullValueHandling = NullValueHandling.Ignore)]
         public bool? IncludeRestrictedInformation { get; set; }
+
+        /// <summary>
+        /// Sets an indication that metadata-order hints should be included in the generated TMDL content.
+        /// </summary>
+        [JsonProperty("metadataOrderHints", NullValueHandling = NullValueHandling.Ignore)]
+        public bool? MetadataOrderHints { get; set; }
+
+        /// <summary>
+        /// The trimming style for TMDL expression whitespace.
+        /// See <a href="https://docs.microsoft.com/dotnet/api/microsoft.analysisservices.tabular.tmdl.tmdlexpressiontrimstyle">here</a> for further details.
+        /// </summary>
+        [JsonProperty("expressionTrimStyle", NullValueHandling = NullValueHandling.Ignore)]
+        public Microsoft.AnalysisServices.Tabular.Tmdl.TmdlExpressionTrimStyle? ExpressionTrimStyle { get; set; }
 
 
 #region Json Serialization Support
