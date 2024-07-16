@@ -73,12 +73,11 @@ namespace PbiTools.Deployments
                 throw DeploymentException.From(ex);
             }
 
-            var tokenCredentials = new TokenCredentials(authResult.AccessToken, authResult.TokenType);
+            var tokenCredentials = new TokenCredentials(authResult!.AccessToken, authResult.TokenType);
             Log.Information("Access token received. Expires On: {ExpiresOn}", authResult.ExpiresOn);
             if (WhatIf) Log.Information("---");
 
-            using var powerbi = PowerBIClientFactory(manifest?.Options?.PbiBaseUri ?? DefaultPowerBIApiBaseUri, tokenCredentials);
-            var workspaceIdCache = new Dictionary<string, Guid>();
+            using var powerBI = PowerBIClientFactory(manifest?.Options?.PbiBaseUri ?? DefaultPowerBIApiBaseUri, tokenCredentials);
 
             foreach (var report in reports)
             {
@@ -96,7 +95,7 @@ namespace PbiTools.Deployments
                 }
 
                 try { 
-                    await ImportReportAsync(report, powerbi, workspace, workspaceIdCache);
+                    await ImportReportAsync(report, powerBI, workspace);
                 }
                 catch (HttpOperationException ex) {
                     if (ex.Response.Content.TryParseJson<JObject>(out var json)) {
@@ -289,17 +288,17 @@ namespace PbiTools.Deployments
             return reportInfo;
         }
 
-        internal static async Task ImportReportAsync(ReportDeploymentInfo args, IPowerBIClient powerbi, string workspace, IDictionary<string, Guid> workspaceIdCache = null)
+        internal static async Task ImportReportAsync(ReportDeploymentInfo args, IPowerBIClient powerBI, string workspace)
         {
             // Determine Workspace
             var workspaceId = Guid.TryParse(workspace, out var id)
                 ? id
-                : await workspace.ResolveWorkspaceIdAsync(powerbi, workspaceIdCache);
+                : await workspace.ResolveWorkspaceIdAsync(powerBI, args.WorkspaceCache);
 
             Import import;
             using (var file = File.OpenRead(args.PbixPath))
             {
-                import = await powerbi.Imports.PostImportWithFileAsyncInGroup(workspaceId, file,
+                import = await powerBI.Imports.PostImportWithFileAsyncInGroup(workspaceId, file,
                     datasetDisplayName: args.DisplayName, // will FAIL without the parameter (although the API marks it as optional)
                     nameConflict: args.Options.Import.NameConflict,
                     skipReport: args.Options.Import.SkipReport,
@@ -318,7 +317,7 @@ namespace PbiTools.Deployments
 
                 await Task.Delay(500);
 
-                import = await powerbi.Imports.GetImportInGroupAsync(workspaceId, import.Id);
+                import = await powerBI.Imports.GetImportInGroupAsync(workspaceId, import.Id);
             }
 
             Log.Information("Import succeeded: {Id} ({Name})", import.Id, import.Name);
@@ -350,6 +349,7 @@ namespace PbiTools.Deployments
             public string DisplayName { get; set; }
             public string PbixPath { get; set; }
             public IPbixModel Model { get; set; }
+            public Dictionary<string, (Group, Capacity)> WorkspaceCache { get; } = new();
         }
 
     }

@@ -484,6 +484,28 @@ namespace PbiTools.Deployments
                 /// </summary>
                 [JsonProperty("dataSources")]
                 public string[] DataSources { get; set; }
+
+                /// <summary>
+                /// Determines when, and if, the dataset is bound to a gateway during deployments.
+                /// </summary>
+                [JsonProperty("mode")]
+                public GatewayBindMode Mode { get; set; } = GatewayBindMode.OnCreation;
+
+                public enum GatewayBindMode
+                {
+                    /// <summary>
+                    /// Only binds newly created datasets to the specified gateway, if any.
+                    /// </summary>
+                    OnCreation = 0,
+                    /// <summary>
+                    /// Never binds the dataset to a gateway.
+                    /// </summary>
+                    Disabled,
+                    /// <summary>
+                    /// Always binds the dataset to the specified gateway, if any.
+                    /// </summary>
+                    Always
+                }
             }
 
             [JsonProperty("setCredentials")]
