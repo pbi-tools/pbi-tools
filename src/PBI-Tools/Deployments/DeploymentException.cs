@@ -28,9 +28,6 @@ namespace PbiTools.Deployments
         public DeploymentException() { }
         public DeploymentException(string message) : base(message) { }
         public DeploymentException(string message, System.Exception inner) : base(message, inner) { }
-        protected DeploymentException(
-            System.Runtime.Serialization.SerializationInfo info,
-            System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
 
         public static DeploymentException From(Microsoft.Identity.Client.MsalServiceException msalException)
         {

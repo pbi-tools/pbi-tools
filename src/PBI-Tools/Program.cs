@@ -213,10 +213,6 @@ See <https://goto.pbi.tools/license> for full license details.
         public PbiToolsCliException(ExitCode errorCode, Exception inner, string message) : base(message, inner) {
             this.ErrorCode = errorCode;
         }
-
-        protected PbiToolsCliException(
-            System.Runtime.Serialization.SerializationInfo info,
-            System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 
     internal static class Exceptions

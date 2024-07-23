@@ -77,8 +77,5 @@ namespace PbiTools.Serialization
         public PbixProjSerializationException() { }
         public PbixProjSerializationException(string message) : base(message) { }
         public PbixProjSerializationException(string message, System.Exception inner) : base(message, inner) { }
-        protected PbixProjSerializationException(
-            System.Runtime.Serialization.SerializationInfo info,
-            System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 }
