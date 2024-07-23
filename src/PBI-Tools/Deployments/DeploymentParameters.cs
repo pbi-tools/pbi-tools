@@ -51,14 +51,13 @@ namespace PbiTools.Deployments
         /// <summary>
         /// Generates common system parameters for the specified environment.
         /// </summary>
-        public static IDictionary<string, string> GetSystemParameters(string environment) => new Dictionary<string, string> {
+        public static ReadOnlyDictionary<string, string> GetSystemParameters(string environment) => new(new Dictionary<string, string> {
             { Names.ENVIRONMENT, environment },
             { Names.PBITOOLS_VERSION, AssemblyVersionInformation.AssemblyInformationalVersion },
-        };
+        });
 
-        internal DeploymentParameters(IDictionary<string, DeploymentParameter> parameters) : base(parameters) { }
-
-        internal new IDictionary<string, DeploymentParameter> Dictionary => base.Dictionary;
+        internal DeploymentParameters(IDictionary<string, DeploymentParameter> parameters) : base(parameters) 
+        { }
 
         public static DeploymentParameters From(IDictionary<string, JToken> dict) =>
             new(dict.ToDictionary(
@@ -73,16 +72,18 @@ namespace PbiTools.Deployments
         /// Furthermore, manifest and environment parameters can reference system parameters,
         /// and environment parameters can reference manifest parameters.
         /// </summary>
-        public static IDictionary<string, DeploymentParameter> CalculateForEnvironment(
+        public static ReadOnlyDictionary<string, DeploymentParameter> CalculateForEnvironment(
             PbiDeploymentManifest manifest,
             PbiDeploymentEnvironment environment,
             params (string Key, string Value)[] additionalSystemParams)
         {
+            // Start with SYSTEM params
             var systemParams = additionalSystemParams.Aggregate(
-                GetSystemParameters(environment.Name),
+                new Dictionary<string, string>(GetSystemParameters(environment.Name)),
                 (dict, x) => dict.With(x.Key, x.Value)
             );
 
+            // Then expand and add MANIFEST params
             var manifestParams = systemParams.Aggregate(   // System params overwrite Manifest params
                 manifest.Parameters
                     .ExpandEnv()
@@ -94,7 +95,9 @@ namespace PbiTools.Deployments
                 }
             );
 
-            return environment.Parameters
+            // Finally expand and add ENVIRONMENT params
+            // Return as read-only dictionary
+            return new ReadOnlyDictionary<string, DeploymentParameter>(environment.Parameters
                 .ExpandEnv()
                 .ExpandParameters(systemParams)
                 .ExpandParameters(manifestParams)
@@ -105,7 +108,7 @@ namespace PbiTools.Deployments
                         dict[x.Key] = x.Value;
                         return dict;
                     }
-                );
+                ));
         }
 
         /// <summary>
@@ -115,12 +118,16 @@ namespace PbiTools.Deployments
         /// Furthermore, manifest and environment parameters can reference system parameters,
         /// and environment parameters can reference manifest parameters.
         /// </summary>
-        public static IDictionary<string, DeploymentParameter> CalculateForEnvironment(
+        public static ReadOnlyDictionary<string, DeploymentParameter> CalculateForEnvironment(
             PbiDeploymentManifest manifest,
             PbiDeploymentEnvironment environment,
             IDictionary<string, string> additionalSystemParams)
         =>
-            CalculateForEnvironment(manifest, environment, additionalSystemParams.Select(x => (x.Key, x.Value)).ToArray());
+            CalculateForEnvironment(
+                manifest, 
+                environment, 
+                additionalSystemParams.Select(x => (x.Key, x.Value)).ToArray()
+            );
     }
 
     public enum DeploymentParameterValueType
@@ -132,7 +139,7 @@ namespace PbiTools.Deployments
         Expression
     }
 
-    public class DeploymentParameter
+    public readonly struct DeploymentParameter : IEquatable<DeploymentParameter>
     {
         
         public DeploymentParameterValueType ValueType { get; }
@@ -161,7 +168,8 @@ namespace PbiTools.Deployments
                 };
                 return new(result.Item1, result.Item2);
             }
-            else if (token is JObject obj
+            
+            if (token is JObject obj
                 && obj.TryGetValue("Value", StringComparison.InvariantCultureIgnoreCase, out var _value)
                 && _value is JValue value2)
             {
@@ -197,13 +205,15 @@ namespace PbiTools.Deployments
 
         public override string ToString() => $"{Value}";
 
-        public override bool Equals(object obj) =>
-            obj is DeploymentParameter other
-            ? this.ValueType == other.ValueType && this.Value.Equals(other.Value)
-            : base.Equals(obj);
+        #region Equality
 
-        public override int GetHashCode() => (this.ValueType, this.ValueType).GetHashCode();
+        public bool Equals(DeploymentParameter other) => ValueType == other.ValueType && Equals(Value, other.Value);
 
+        public override bool Equals(object obj) => obj is DeploymentParameter other && Equals(other);
+
+        public override int GetHashCode() => HashCode.Combine((int)ValueType, Value);
+
+        #endregion
     }
 
     public class DeploymentParametersConverter : JsonConverter<DeploymentParameters>
