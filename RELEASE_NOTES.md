@@ -1,5 +1,16 @@
 # Release Notes
 
+## 1.0.1 - 2024-07-23
+
+- Fixed [#343](https://github.com/pbi-tools/pbi-tools/issues/343) Report/DisplayName set incorrectly when wildcard source is used
+- Resolved [#324](https://github.com/pbi-tools/pbi-tools/issues/324) Add DESCRIPTION to DOCKERFILE
+- Resolved [#341](https://github.com/pbi-tools/pbi-tools/issues/341) Upgraded GH Actions workflow to latest
+- Various internal improvements; Addressed all compiler warnings
+- LICENSE: All C# file headers updated
+- Dependencies updated:
+  - System.IdentityModel.*, 8.0
+  - dbup-sqlserver, 5.0.41
+
 ## 1.0.0 - 2024-07-16
 
 - Released under the AGPL-3.0 license

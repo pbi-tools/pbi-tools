@@ -1,5 +1,20 @@
-// Copyright (c) Mathias Thierbach
-// Licensed under the MIT License. See LICENSE in the project root for license information.
+/*
+ * This file is part of the pbi-tools project <https://github.com/pbi-tools/pbi-tools>.
+ * Copyright (C) 2018 Mathias Thierbach
+ *
+ * pbi-tools is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * pbi-tools is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * A copy of the GNU Affero General Public License is available in the LICENSE file,
+ * and at <https://goto.pbi.tools/license>.
+ */
 
 using System;
 using System.Collections.Generic;
@@ -537,7 +552,11 @@ namespace PbiTools.Deployments
                 (DeploymentParameters.Names.FILE_NAME_WITHOUT_EXT, Path.GetFileNameWithoutExtension(sourceFile.Name))
             );
 
-            return GetDatasetInfo(manifest, converter.Model, sourceFile.FullName, parameters, parameters => deploymentEnv.DisplayName.ExpandParameters(parameters) ?? Path.GetFileNameWithoutExtension(sourceFile.Name));
+            return GetDatasetInfo(manifest,
+                converter.Model,
+                sourceFile.FullName,
+                parameters, 
+                @params => deploymentEnv.DisplayName.ExpandParameters(@params) ?? Path.GetFileNameWithoutExtension(sourceFile.Name));
         }
 
         internal DatasetDeploymentInfo GenerateDatasetFromFolderSource(PbiDeploymentManifest manifest, PbiDeploymentEnvironment deploymentEnv, string basePath)
@@ -572,32 +591,36 @@ namespace PbiTools.Deployments
                 Parameters = new DeploymentParameters(parameters)
             };
 
+
+        /// <summary>
+        /// Defines all information required for deploying a dataset into a specific target environment.
+        /// </summary>
         public class DatasetDeploymentInfo
         {
             /// <summary>
             /// The deployment options from the selected deployment profile.
             /// </summary>
-            public PbiDeploymentOptions Options { get; set; }
-            
+            public PbiDeploymentOptions Options { get; init; }
+
             /// <summary>
             /// The effective deployment parameters for the target environment.
             /// </summary>
-            public DeploymentParameters Parameters { get; set; }
+            public DeploymentParameters Parameters { get; init; }
 
             /// <summary>
             /// The folder or file where dataset sources reside.
             /// </summary>
-            public string SourcePath { get; set; }
+            public string SourcePath { get; init; }
 
             /// <summary>
             /// The effective dataset name in the Power BI workspace.
             /// </summary>
-            public string DisplayName { get; set; }
+            public string DisplayName { get; init; }
 
             /// <summary>
             /// The <see cref="IPbixModel"/> containing the dataset sources.
             /// </summary>
-            public IPbixModel Model { get; set; }
+            public IPbixModel Model { get; init; }
 
             internal Dictionary<string, (Group, Capacity)> WorkspaceCache { get; } = new();
         }

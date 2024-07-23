@@ -1,5 +1,20 @@
-// Copyright (c) Mathias Thierbach
-// Licensed under the MIT License. See LICENSE in the project root for license information.
+/*
+ * This file is part of the pbi-tools project <https://github.com/pbi-tools/pbi-tools>.
+ * Copyright (C) 2018 Mathias Thierbach
+ *
+ * pbi-tools is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * pbi-tools is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * A copy of the GNU Affero General Public License is available in the LICENSE file,
+ * and at <https://goto.pbi.tools/license>.
+ */
 
 using System;
 using System.Collections.Generic;
@@ -40,7 +55,9 @@ namespace PbiTools.Deployments
         public static IDictionary<string, DeploymentParameter> ExpandEnv(this IDictionary<string, DeploymentParameter> input) =>
             input == null
             ? new Dictionary<string, DeploymentParameter>(StringComparer.InvariantCultureIgnoreCase)
-            : input.ToDictionary(x => x.Key, x => x.Value.ExpandEnv(), StringComparer.InvariantCultureIgnoreCase);
+            : input.ToDictionary(
+                x => x.Key,
+                x => x.Value.ExpandEnv(), StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
         /// Performs parameter replacement in all dictionary values, using the <c>externalParameters</c> dictionary as a source.
@@ -79,7 +96,9 @@ namespace PbiTools.Deployments
         /// <summary>
         /// Adds or sets the specified dictionary value.
         /// </summary>
-        public static IDictionary<string, string> With(this IDictionary<string, string> dictionary, string key, string value) {
+        public static T With<T>(this T dictionary, string key, string value)
+            where T : IDictionary<string, string>
+        {
             dictionary[key] = value;
             return dictionary;
         }

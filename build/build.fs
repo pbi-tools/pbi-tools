@@ -364,6 +364,52 @@ let usageDocs _ =
     )
 
 
+let writeHeaders _ =
+    !! "src/**/*.cs"
+    ++ "tests/**/*.cs"
+    -- "src/**/AssemblyInfo.cs"
+    -- "src/**/obj/**/*.cs"
+    -- "tests/**/obj/**/*.cs"
+    |> Seq.iter (fun path ->
+        Trace.logfn "Processing: %s" path
+        use original = new StringReader(path |> File.ReadAllText)
+        use file = path |> File.CreateText
+
+        // loop through the lines of 'original'
+        // skip comment lines
+        // write header if not already written
+        // write remaining lines
+
+        let mutable line = original.ReadLine()
+        while (line <> null && not <| line.StartsWith("/**") && (line.StartsWith('/') || line.StartsWith(" *") || line = String.Empty)) do
+            // Skip comment lines and empty lines
+            line <- original.ReadLine()
+
+        file.WriteLine("/*")
+        file.WriteLine(" * This file is part of the pbi-tools project <https://github.com/pbi-tools/pbi-tools>.")
+        file.WriteLine(" * Copyright (C) 2018 Mathias Thierbach")
+        file.WriteLine(" *")
+        file.WriteLine(" * pbi-tools is free software: you can redistribute it and/or modify")
+        file.WriteLine(" * it under the terms of the GNU Affero General Public License as published by")
+        file.WriteLine(" * the Free Software Foundation, either version 3 of the License, or")
+        file.WriteLine(" * (at your option) any later version.")
+        file.WriteLine(" *")
+        file.WriteLine(" * pbi-tools is distributed in the hope that it will be useful,")
+        file.WriteLine(" * but WITHOUT ANY WARRANTY; without even the implied warranty of")
+        file.WriteLine(" * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the")
+        file.WriteLine(" * GNU Affero General Public License for more details.")
+        file.WriteLine(" *")
+        file.WriteLine(" * A copy of the GNU Affero General Public License is available in the LICENSE file,")
+        file.WriteLine(" * and at <https://goto.pbi.tools/license>.")
+        file.WriteLine(" */")
+        file.WriteLine()
+
+        while (line <> null) do
+            if not <| (original.Peek() = -1 && line = String.Empty) then
+                file.WriteLine(line)
+            line <- original.ReadLine()
+    )
+
 let help _ =
     Trace.traceImportant "Please specify a target to run."
     Target.listAvailable()
@@ -411,6 +457,7 @@ let initTargets () =
     Target.create "SmokeTest" smokeTest
     Target.create "UsageDocs" usageDocs
     Target.create "Help" help
+    Target.create "WriteHeaders" writeHeaders
 
     "Clean"
     ==> "AssemblyInfo"
