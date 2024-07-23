@@ -55,7 +55,9 @@ namespace PbiTools.Deployments
         public static IDictionary<string, DeploymentParameter> ExpandEnv(this IDictionary<string, DeploymentParameter> input) =>
             input == null
             ? new Dictionary<string, DeploymentParameter>(StringComparer.InvariantCultureIgnoreCase)
-            : input.ToDictionary(x => x.Key, x => x.Value.ExpandEnv(), StringComparer.InvariantCultureIgnoreCase);
+            : input.ToDictionary(
+                x => x.Key,
+                x => x.Value.ExpandEnv(), StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
         /// Performs parameter replacement in all dictionary values, using the <c>externalParameters</c> dictionary as a source.
@@ -94,7 +96,9 @@ namespace PbiTools.Deployments
         /// <summary>
         /// Adds or sets the specified dictionary value.
         /// </summary>
-        public static IDictionary<string, string> With(this IDictionary<string, string> dictionary, string key, string value) {
+        public static T With<T>(this T dictionary, string key, string value)
+            where T : IDictionary<string, string>
+        {
             dictionary[key] = value;
             return dictionary;
         }

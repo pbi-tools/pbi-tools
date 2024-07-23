@@ -552,7 +552,11 @@ namespace PbiTools.Deployments
                 (DeploymentParameters.Names.FILE_NAME_WITHOUT_EXT, Path.GetFileNameWithoutExtension(sourceFile.Name))
             );
 
-            return GetDatasetInfo(manifest, converter.Model, sourceFile.FullName, parameters, parameters => deploymentEnv.DisplayName.ExpandParameters(parameters) ?? Path.GetFileNameWithoutExtension(sourceFile.Name));
+            return GetDatasetInfo(manifest,
+                converter.Model,
+                sourceFile.FullName,
+                parameters, 
+                @params => deploymentEnv.DisplayName.ExpandParameters(@params) ?? Path.GetFileNameWithoutExtension(sourceFile.Name));
         }
 
         internal DatasetDeploymentInfo GenerateDatasetFromFolderSource(PbiDeploymentManifest manifest, PbiDeploymentEnvironment deploymentEnv, string basePath)
@@ -587,32 +591,36 @@ namespace PbiTools.Deployments
                 Parameters = new DeploymentParameters(parameters)
             };
 
+
+        /// <summary>
+        /// Defines all information required for deploying a dataset into a specific target environment.
+        /// </summary>
         public class DatasetDeploymentInfo
         {
             /// <summary>
             /// The deployment options from the selected deployment profile.
             /// </summary>
-            public PbiDeploymentOptions Options { get; set; }
-            
+            public PbiDeploymentOptions Options { get; init; }
+
             /// <summary>
             /// The effective deployment parameters for the target environment.
             /// </summary>
-            public DeploymentParameters Parameters { get; set; }
+            public DeploymentParameters Parameters { get; init; }
 
             /// <summary>
             /// The folder or file where dataset sources reside.
             /// </summary>
-            public string SourcePath { get; set; }
+            public string SourcePath { get; init; }
 
             /// <summary>
             /// The effective dataset name in the Power BI workspace.
             /// </summary>
-            public string DisplayName { get; set; }
+            public string DisplayName { get; init; }
 
             /// <summary>
             /// The <see cref="IPbixModel"/> containing the dataset sources.
             /// </summary>
-            public IPbixModel Model { get; set; }
+            public IPbixModel Model { get; init; }
 
             internal Dictionary<string, (Group, Capacity)> WorkspaceCache { get; } = new();
         }
