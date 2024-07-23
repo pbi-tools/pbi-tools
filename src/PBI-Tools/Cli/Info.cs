@@ -92,6 +92,7 @@ namespace PbiTools.Cli
         }
 
 #if WINDOWS
+#pragma warning disable CA1416
         public static class WindowsRegistry
         {
             public static bool IsEnabled(string keyName, string valueName)
@@ -108,6 +109,7 @@ namespace PbiTools.Cli
                 }
             }
         }
+#pragma warning restore CA1416
 #endif
 
     }
