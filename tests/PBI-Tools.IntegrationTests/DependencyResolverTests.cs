@@ -43,7 +43,7 @@ namespace PbiTools.IntegrationTests
             }
             else
             {
-                Assert.True(false, "Could not find msmdsrv.exe");
+                Assert.Fail("Could not find msmdsrv.exe");
             }
         }
 
