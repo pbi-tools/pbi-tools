@@ -1,5 +1,5 @@
 FROM mcr.microsoft.com/dotnet/runtime:8.0
-
+LABEL org.opencontainers.image.description DESCRIPTION
 ARG PBI_TOOLS_VERSION
 
 WORKDIR /app
