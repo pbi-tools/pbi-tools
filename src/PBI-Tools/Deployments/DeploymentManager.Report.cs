@@ -155,7 +155,7 @@ namespace PbiTools.Deployments
                 FullPath = x.Directory.FullName,
                 Parameters = x.Match.Groups.OfType<System.Text.RegularExpressions.Group>()
                     .Aggregate(
-                        systemParameters
+                        new Dictionary<string, string>(systemParameters)
                             .With(DeploymentParameters.Names.PBIXPROJ_NAME, x.Directory.Name)
                             .With(DeploymentParameters.Names.FILE_NAME_WITHOUT_EXT, x.Directory.Name),
                         (dict, group) => {
@@ -188,9 +188,9 @@ namespace PbiTools.Deployments
                     "*.*",
                     SearchOption.AllDirectories
                 )
-                .Select(path =>
+                .Select(filePath =>
                 {
-                    var file = new FileInfo(path);
+                    var file = new FileInfo(filePath);
                     var relPath = MakeRelativePath(currentDir, file.FullName);
                     var match = sourceFileRegex.Match(relPath.Replace('\\', '/'));
                     return new
@@ -210,7 +210,7 @@ namespace PbiTools.Deployments
                     FullPath = x.File.FullName,
                     Parameters = x.Match.Groups.OfType<System.Text.RegularExpressions.Group>()
                         .Aggregate(
-                            systemParameters
+                            new Dictionary<string, string>(systemParameters)
                                 .With(DeploymentParameters.Names.FILE_NAME, x.File.Name)
                                 .With(DeploymentParameters.Names.FILE_NAME_WITHOUT_EXT, Path.GetFileNameWithoutExtension(x.File.Name)),
                             (dict, group) => {
@@ -258,7 +258,10 @@ namespace PbiTools.Deployments
 
         internal ReportDeploymentInfo[] GetReportsFromFileSource(PbiDeploymentManifest manifest, PbiDeploymentEnvironment environment, string baseFolder = null)
         {
-            var sourceFiles = ResolveSourceFiles(manifest.Source.Path, baseFolder ?? Environment.CurrentDirectory, DeploymentParameters.GetSystemParameters(environment.Name));
+            var sourceFiles = ResolveSourceFiles(
+                manifest.Source.Path,
+                baseFolder ?? Environment.CurrentDirectory,
+                DeploymentParameters.GetSystemParameters(environment.Name));
 
             return sourceFiles.Select(file =>
             {
@@ -270,7 +273,7 @@ namespace PbiTools.Deployments
                 return new ReportDeploymentInfo
                 {
                     Options = manifest.Options,
-                    Parameters = parameters,
+                    Parameters = new DeploymentParameters(parameters),
                     SourcePath = file.FullPath,
                     PbixPath = file.FullPath,
                     DisplayName = environment.DisplayName.ExpandParameters(parameters) ?? Path.GetFileName(file.FullPath),
@@ -278,14 +281,19 @@ namespace PbiTools.Deployments
             }).ToArray();
         }
 
-        internal ReportDeploymentInfo CompileReportForDeployment(PbiDeploymentOptions options, string displayName, string pbixProjFolder, string tempDir, IDictionary<string, DeploymentParameter> parameters, JObject connectionsOverwrite = default)
+        internal ReportDeploymentInfo CompileReportForDeployment(PbiDeploymentOptions options, 
+            string displayName, 
+            string pbixProjFolder, 
+            string tempDir, 
+            IDictionary<string, DeploymentParameter> parameters, 
+            JObject connectionsOverwrite = default)
         {
             var reportPath = Path.Combine(tempDir, $"{Guid.NewGuid()}", $"{new DirectoryInfo(pbixProjFolder).Name}.pbix");
 
             var reportInfo = new ReportDeploymentInfo
             {
                 Options = options,
-                Parameters = parameters,
+                Parameters = new DeploymentParameters(parameters),
                 SourcePath = pbixProjFolder,
                 PbixPath = reportPath,
                 DisplayName = displayName.ExpandParameters(parameters) ?? Path.GetFileName(reportPath),
@@ -358,12 +366,12 @@ namespace PbiTools.Deployments
 
         public class ReportDeploymentInfo
         {
-            public PbiDeploymentOptions Options { get; set; }
-            public IDictionary<string, DeploymentParameter> Parameters { get; set; }
-            public string SourcePath { get; set; }
-            public string DisplayName { get; set; }
-            public string PbixPath { get; set; }
-            public IPbixModel Model { get; set; }
+            public PbiDeploymentOptions Options { get; init; }
+            public DeploymentParameters Parameters { get; init; }
+            public string SourcePath { get; init; }
+            public string DisplayName { get; init; }
+            public string PbixPath { get; init; }
+            public IPbixModel Model { get; internal set; }
             public Dictionary<string, (Group, Capacity)> WorkspaceCache { get; } = new();
         }
 
