@@ -6,8 +6,8 @@ PowerArgs
 HtmlAgilityPack
 CsvHelper
 WildcardMatch
-Microsoft.AnalysisServices.NetCore.retail.amd64
-Microsoft.AnalysisServices.AdomdClient.NetCore.retail.amd64
+Microsoft.AnalysisServices
+Microsoft.AnalysisServices.AdomdClient
 System.IO.Packaging
 Microsoft.Identity.Client
 Microsoft.PowerBI.Api
