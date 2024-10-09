@@ -169,12 +169,14 @@ let build _ =
                        | Some dir -> Trace.logfn "Using assembly ReferencePath: %s" dir
                                      [ "ReferencePath", dir ]
                        | _ -> [ "_", "dummy" ]  // temp fix for https://github.com/fsprojects/FAKE/issues/2738
-    // let setParams (defaults:MSBuildParams) =
-    //     { defaults with
-    //         MaxCpuCount = None 
-    //     }
 
-    !! solutionFile
+    let projects = match BuildServer.isLocalBuild with
+                    | true  -> !! "tests/**/*.csproj"
+                    | false -> !! "tests/**/*.csproj"
+                               -- "tests/**/PBI-Tools.Tests.csproj"
+                               -- "tests/**/PBI-Tools.IntegrationTests.csproj"
+
+    projects
     |> MSBuild.runReleaseExt id null msbuildProps "Restore;Rebuild"
     |> ignore
 
@@ -293,13 +295,14 @@ let pack _ =
 
 
 let test _ =
-    !! "tests/*/bin/Release/**/pbi-tools*tests.dll"
-    -- "tests/*/bin/Release/**/*netcore.tests.dll"
-    -- "tests/*/bin/Release/**/*net6.tests.dll"
-    |> XUnit2.run (fun p -> { p with HtmlOutputPath = Some (testDir @@ "xunit.html")
-                                     XmlOutputPath = Some (testDir @@ "xunit.xml")
-                                     ToolPath = "packages/fake-tools/xunit.runner.console/tools/net472/xunit.console.exe" } )
-    // TODO Does XUnit2.run fail silently??
+    if BuildServer.isLocalBuild then
+        !! "tests/*/bin/Release/**/pbi-tools*tests.dll"
+        -- "tests/*/bin/Release/**/*netcore.tests.dll"
+        -- "tests/*/bin/Release/**/*net6.tests.dll"
+        |> XUnit2.run (fun p ->
+                                    { p with HtmlOutputPath = Some (testDir @@ "xunit.html")
+                                             XmlOutputPath = Some (testDir @@ "xunit.xml")
+                                             ToolPath = "packages/fake-tools/xunit.runner.console/tools/net472/xunit.console.exe" } )
 
     // https://fake.build/apidocs/v5/fake-dotnet-dotnet-testoptions.html
     "tests/PBI-Tools.NetCore.Tests/PBI-Tools.NetCore.Tests.csproj"
@@ -420,7 +423,7 @@ open Fake.Core.TargetOperators
 
 let initTargets () =
     BuildServer.install [
-        TeamFoundation.Installer  // Adds support for Azure DevOps
+        GitHubActions.Installer  // Adds support for GH Actions
     ]
 
     //System.Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
@@ -465,19 +468,13 @@ let initTargets () =
     ==> "BuildTools"
     ==> "Build"
     ==> "Test"
-
-    "Publish"
-    ==> "SmokeTest"
-
-    "Build"
     ==> "Publish"
-
-    "Publish"
     ==> "Sign"
-    ==> "Test"
     ==> "UsageDocs"
     ==> "Pack"
 
+    "Publish"
+    ==> "SmokeTest"
 
 //-----------------------------------------------------------------------------
 // Target Start
