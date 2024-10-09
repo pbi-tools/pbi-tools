@@ -23,10 +23,8 @@ group Main
   nuget PeNet
   nuget CommandLineParser
   nuget WildcardMatch
-  nuget Microsoft.AnalysisServices.retail.amd64                     19.84.1 framework: net472
-  nuget Microsoft.AnalysisServices.AdomdClient.retail.amd64         19.84.1 framework: net472
-  nuget Microsoft.AnalysisServices.NetCore.retail.amd64             19.84.1 framework: net6.0,net8.0
-  nuget Microsoft.AnalysisServices.AdomdClient.NetCore.retail.amd64 19.84.1 framework: net6.0,net8.0
+  nuget Microsoft.AnalysisServices                     19.84.6
+  nuget Microsoft.AnalysisServices.AdomdClient         19.84.6
   nuget System.IO.Packaging
   nuget Microsoft.Identity.Client
   nuget Microsoft.PowerBI.Api
@@ -35,6 +33,7 @@ group Main
   nuget LibGit2Sharp
   nuget Spectre.Console
   nuget Spectre.Console.Cli
+  nuget dbup-core ~> 5
   nuget dbup-sqlserver
 
 group Tests
@@ -65,7 +64,7 @@ group Fake-Build
 
   nuget FSharp.Core
   nuget Fake.Api.GitHub
-  nuget Fake.BuildServer.TeamFoundation
+  nuget Fake.BuildServer.GitHubActions
   nuget Fake.Core.Environment
   nuget Fake.Core.Process
   nuget Fake.Core.ReleaseNotes

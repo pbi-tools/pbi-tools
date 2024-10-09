@@ -1,5 +1,12 @@
 # Release Notes
 
+## 1.1.0 - 2024-10-09
+
+- Dependencies updated:
+  - TOM, 19.84.6 (TMDL GA)
+  - MSAL.NET, 4.65
+- Set up CI build on GitHub Actions (excludes net472 targets due to PBI Desktop dependency)
+
 ## 1.0.1 - 2024-07-23
 
 - Fixed [#343](https://github.com/pbi-tools/pbi-tools/issues/343) Report/DisplayName set incorrectly when wildcard source is used
