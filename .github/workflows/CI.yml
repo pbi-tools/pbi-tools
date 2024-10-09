@@ -1,0 +1,30 @@
+name: pbi-tools CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - 'release/*'
+
+jobs:
+  build:
+    name: 'Build & Test'
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET 6
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.400'
+    - name: Restore dotnet tools
+      run: dotnet tool restore
+    - name: Build
+      run: dotnet run --project ./build/build.fsproj -- -t Test
