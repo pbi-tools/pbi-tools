@@ -64,7 +64,7 @@ group Fake-Build
 
   nuget FSharp.Core
   nuget Fake.Api.GitHub
-  nuget Fake.BuildServer.TeamFoundation
+  nuget Fake.BuildServer.GitHubActions
   nuget Fake.Core.Environment
   nuget Fake.Core.Process
   nuget Fake.Core.ReleaseNotes

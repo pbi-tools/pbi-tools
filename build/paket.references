@@ -2,7 +2,7 @@ group Fake-Build
 
   FSharp.Core
   Fake.Api.GitHub
-  Fake.BuildServer.TeamFoundation
+  Fake.BuildServer.GitHubActions
   Fake.Core.Environment
   Fake.Core.Process
   Fake.Core.ReleaseNotes
