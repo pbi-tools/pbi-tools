@@ -20,10 +20,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Setup .NET 6
+    - name: Setup .NET SDK
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.400'
+    - name: dotnet info
+      run: dotnet --info
     - name: Restore dotnet tools
       run: dotnet tool restore
     - name: Build

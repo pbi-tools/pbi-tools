@@ -170,16 +170,17 @@ let build _ =
                                      [ "ReferencePath", dir ]
                        | _ -> [ "_", "dummy" ]  // temp fix for https://github.com/fsprojects/FAKE/issues/2738
 
-    let projects = match BuildServer.isLocalBuild with
-                    | true  -> !! "tests/**/*.csproj"
-                    | false -> !! "tests/**/*.csproj"
-                               -- "tests/**/PBI-Tools.Tests.csproj"
-                               -- "tests/**/PBI-Tools.IntegrationTests.csproj"
-
-    projects
+    !! "tests/**/*.csproj"
     |> MSBuild.runReleaseExt id null msbuildProps "Restore;Rebuild"
     |> ignore
 
+let ciBuild _ =
+    !! "tests/**/*.csproj"
+    -- "tests/**/PBI-Tools.Tests.csproj"
+    -- "tests/**/PBI-Tools.IntegrationTests.csproj"
+    |> Seq.iter (
+        DotNet.build (fun args -> { args with Configuration = DotNet.BuildConfiguration.Release })
+    )
 
 let publish _ = 
     let msbuildProps = match pbiInstallDir.Value with
@@ -426,8 +427,6 @@ let initTargets () =
         GitHubActions.Installer  // Adds support for GH Actions
     ]
 
-    //System.Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
-
     // Read additional information from the release notes document
     releaseNotesData <- 
         File.ReadAllLines "RELEASE_NOTES.md"
@@ -453,6 +452,7 @@ let initTargets () =
     Target.create "ZipSampleData" zipSampleData
     Target.create "BuildTools" buildTools
     Target.create "Build" build
+    Target.create "CI-Build" ciBuild
     Target.create "Publish" publish
     Target.create "Sign" sign
     Target.create "Pack" pack
@@ -466,7 +466,7 @@ let initTargets () =
     ==> "AssemblyInfo"
     ==> "ZipSampleData"
     ==> "BuildTools"
-    ==> "Build"
+    ==> (if BuildServer.isLocalBuild then "Build" else "CI-Build")
     ==> "Test"
     ==> "Publish"
     ==> "Sign"
