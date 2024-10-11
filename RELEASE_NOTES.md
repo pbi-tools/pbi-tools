@@ -1,5 +1,9 @@
 # Release Notes
 
+## 1.1.1 - 2024-10-11
+
+- WIP: Resolves [#351](https://github.com/pbi-tools/pbi-tools/issues/351)
+
 ## 1.1.0 - 2024-10-09
 
 - Dependencies updated:
