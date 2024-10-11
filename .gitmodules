@@ -10,3 +10,7 @@
 	path = data/external/pbiworkshops
 	url = https://github.com/microsoft/pbiworkshops.git
 	branch = main
+[submodule "data/external/sales-sample"]
+	path = data/external/sales-sample
+	url = https://github.com/pbi-tools/sales-sample.git
+	branch = main
