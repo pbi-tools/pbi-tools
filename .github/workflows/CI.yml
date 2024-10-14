@@ -18,8 +18,15 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
 
+    env:
+      RUNTIME: ${{ matrix.os == 'windows-latest' && 'win-x64' || 'linux-x64' }}
+
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: false  # Disable automatic submodule checkout
+    - name: Init submodules
+      run: git submodule update --init  ./data/external/sales-sample
     - name: Setup .NET SDK
       uses: actions/setup-dotnet@v4
       with:
@@ -28,5 +35,9 @@ jobs:
       run: dotnet --info
     - name: Restore dotnet tools
       run: dotnet tool restore
-    - name: Build
-      run: dotnet run --project ./build/build.fsproj -- -t Test
+    - name: Run Unit Tests
+      run: dotnet run --project ./build/ -- -t Test
+    - name: Run Integration Tests
+      run: dotnet run --project ./src/PBI-Tools.NETCore/ -c Release -r ${{ env.RUNTIME }} -- deploy ./tests/projects/tmdl-deploy/ Model -basePath .
+      env:
+        PBI_CLIENT_SECRET: ${{ secrets.PBI_CLIENT_SECRET }}
