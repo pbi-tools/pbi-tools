@@ -1,0 +1,75 @@
+{
+  "version": "1.0",
+  "deployments": {
+    "Model": {
+      "mode": "Dataset",
+      "source": {
+        "type": "Folder",
+        "path": "./data/external/sales-sample/Sales.SemanticModel/definition"
+      },
+      "authentication": {
+        "type": "ServicePrincipal",
+        "tenantId": "pbitools.org",
+        "clientId": "755af0f2-d699-4f35-8a76-c850a30dc1c9",
+        "clientSecret": "%PBI_CLIENT_SECRET%"
+      },
+      "credentials": [
+        {
+          "match": {
+            "datasourceType": "Web",
+            "connectionDetails": {
+              "url": "https://raw.githubusercontent.com/"
+            }
+          },
+          "updateMode": "Always",
+          "type": "Anonymous"
+        }
+      ],
+      "options": {
+        "refresh": {
+          "enabled": true,
+          "skipNewDataset": false,
+          "type": "Automatic",
+          "objects": {
+            "About": "Full"
+          },
+          "tracing": {
+            "enabled": true,
+            "logEvents": {
+              "filter": [
+                "*|ReadData|*"
+              ]
+            },
+            "summary": {
+              "events": [
+                "TabularRefresh"
+              ],
+              "objectTypes": [
+                "Partition"
+              ],
+              "outPath": "./.artifacts/refresh-summary.csv",
+              "console": true
+            }
+          }
+        },
+        "dataset": {
+          "replaceParameters": true,
+          "setCredentials": true
+        },
+        "console": {}
+      },
+      "parameters": {
+        "WORKSPACE": "pbi-tools-integration-tests"
+      },
+      "environments": {
+        "Development": {
+          "workspace": "{{WORKSPACE}}",
+          "displayName": "Sales",
+          "parameters": {
+            "Randomizer": 0.8
+          }
+        }
+      }
+    }
+  }
+}

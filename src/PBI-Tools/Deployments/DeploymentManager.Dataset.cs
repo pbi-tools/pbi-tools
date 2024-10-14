@@ -26,6 +26,7 @@ using Microsoft.Identity.Client;
 using Microsoft.PowerBI.Api;
 using Microsoft.PowerBI.Api.Models;
 using Microsoft.Rest;
+using Newtonsoft.Json.Linq;
 using Spectre.Console;
 using AMO = Microsoft.AnalysisServices;
 using TOM = Microsoft.AnalysisServices.Tabular;
@@ -126,6 +127,22 @@ namespace PbiTools.Deployments
                 { "Data Source", dataSource },
                 { "Password", authResult.AccessToken }
             };
+
+            // Linux connect fix for #351
+            #if !WINDOWS
+            using var tomConfigFolder = new TempFolder();
+            var tomConfigOverride = new JObject {
+                { "asConfiguration" , new JObject {
+                    { "diagnostics", new JObject {
+                        { "rootDirectoryPath", tomConfigFolder.Path }
+                    }}
+                }}
+            };
+            var configOverridePath = Path.Combine(tomConfigFolder.Path, "asconfig.json");
+            File.WriteAllText(configOverridePath, tomConfigOverride.ToString());
+            Environment.SetEnvironmentVariable("MS_AS_AppSettingsPath", configOverridePath);
+            Log.Debug("Set AS_CONFIG_PATH to {ConfigPath}", configOverridePath);
+            #endif
 
             Log.Information("Connecting to XMLA endpoint: {XmlaDataSource}", dataSource);
             server.Connect(connectionStringBldr.ConnectionString);
