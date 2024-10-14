@@ -1,8 +1,10 @@
 # Release Notes
 
-## 1.1.1 - 2024-10-11
+## 1.1.1 - 2024-10-14
 
-- WIP: Resolves [#351](https://github.com/pbi-tools/pbi-tools/issues/351)
+- Resolves [#351](https://github.com/pbi-tools/pbi-tools/issues/351)
+  - Implements workaround for linux-specific bug in TOM
+- Adds CI integration test performing an e2e semantic model deployment (TMDL)
 
 ## 1.1.0 - 2024-10-09
 
