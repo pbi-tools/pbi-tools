@@ -5,7 +5,7 @@
       "mode": "Dataset",
       "source": {
         "type": "Folder",
-        "path": ".data/external/sales-sample/Sales.SemanticModel/definition"
+        "path": "./data/external/sales-sample/Sales.SemanticModel/definition"
       },
       "authentication": {
         "type": "ServicePrincipal",
