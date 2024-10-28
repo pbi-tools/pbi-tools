@@ -8,6 +8,8 @@ on:
   push:
     branches:
       - 'release/*'
+  schedule:
+    - cron: '0 3 * * *'
 
 jobs:
   build:
