@@ -39,6 +39,8 @@ jobs:
       run: dotnet tool restore
     - name: Run Unit Tests
       run: dotnet run --project ./build/ -- -t Test
+    - name: pbi-tools info
+      run: dotnet run --project ./src/PBI-Tools.NETCore/ -c Release -r ${{ env.RUNTIME }} -- info
     - name: Run Integration Tests
       run: dotnet run --project ./src/PBI-Tools.NETCore/ -c Release -r ${{ env.RUNTIME }} -- deploy ./tests/projects/tmdl-deploy/ Model -basePath .
       env:
