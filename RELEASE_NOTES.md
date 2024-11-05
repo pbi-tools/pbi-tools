@@ -1,5 +1,13 @@
 # Release Notes
 
+## 1.2.0 - 2024-11-05
+
+<version:1.2.0-pre>
+
+- Dependencies updated:
+  - TOM, 19.86.6 (Nov-2024 Version)
+  - MSAL.NET, 4.66.1
+
 ## 1.1.1 - 2024-10-14
 
 - Resolves [#351](https://github.com/pbi-tools/pbi-tools/issues/351)
