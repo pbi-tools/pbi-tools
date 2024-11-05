@@ -23,8 +23,8 @@ group Main
   nuget PeNet
   nuget CommandLineParser
   nuget WildcardMatch
-  nuget Microsoft.AnalysisServices                     19.84.6
-  nuget Microsoft.AnalysisServices.AdomdClient         19.84.6
+  nuget Microsoft.AnalysisServices                     19.86.6
+  nuget Microsoft.AnalysisServices.AdomdClient         19.86.6
   nuget System.IO.Packaging
   nuget Microsoft.Identity.Client
   nuget Microsoft.PowerBI.Api
