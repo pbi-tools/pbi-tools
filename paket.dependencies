@@ -78,10 +78,10 @@ group Fake-Build
   nuget Fake.DotNet.Testing.XUnit2
   nuget Fake.IO.FileSystem
   nuget Fake.IO.Zip
-  nuget Microsoft.Build
-  nuget Microsoft.Build.Framework
-  nuget Microsoft.Build.Tasks.Core
-  nuget Microsoft.Build.Utilities.Core
+  nuget Microsoft.Build                 ~> 17.11.4
+  nuget Microsoft.Build.Framework       ~> 17.11.4
+  nuget Microsoft.Build.Tasks.Core      ~> 17.11.4
+  nuget Microsoft.Build.Utilities.Core  ~> 17.11.4
   nuget MSBuild.StructuredLogger
 
 group Fake-Tools
