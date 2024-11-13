@@ -2,8 +2,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
-    <AssemblyName>pbi-tools.net6.tests</AssemblyName>
+    <TargetFramework>net9.0</TargetFramework>
+    <AssemblyName>pbi-tools.net9.tests</AssemblyName>
     <RootNamespace>PbiTools.NetCore.Tests</RootNamespace>
     <Platforms>x64</Platforms>
     <LangVersion>preview</LangVersion>
@@ -24,7 +24,7 @@
     <Compile Include="..\PBI-Tools.Tests\**\*.cs" Exclude="..\PBI-Tools.Tests\obj\**\*.*;..\PBI-Tools.Tests\Properties\**\*.*" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\PBI-Tools.NET6\PBI-Tools.NET6.csproj" />
+    <ProjectReference Include="..\..\src\PBI-Tools.NET9\PBI-Tools.NET9.csproj" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

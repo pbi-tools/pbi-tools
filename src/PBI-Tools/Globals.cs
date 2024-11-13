@@ -20,7 +20,7 @@ using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("pbi-tools.tests")]
 [assembly: InternalsVisibleTo("pbi-tools.netcore.tests")]
-[assembly: InternalsVisibleTo("pbi-tools.net6.tests")]
+[assembly: InternalsVisibleTo("pbi-tools.net9.tests")]
 
 #if NETFRAMEWORK
 

@@ -1,12 +1,14 @@
 # Release Notes
 
-## 1.2.0 - 2024-11-05
+## 1.2.0 - 2024-11-13
 
 <version:1.2.0-pre>
 
+- Upgraded project to .Net SDK 9.0 (GA 12-Nov)
+- Switched net6.0 build to net9.0 - "NetCore" remains on LTS version, net8.0
 - Dependencies updated:
   - TOM, 19.86.6 (Nov-2024 Version)
-  - MSAL.NET, 4.66.1
+  - MSAL.NET, 4.66.2
 
 ## 1.1.1 - 2024-10-14
 

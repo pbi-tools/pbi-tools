@@ -48,7 +48,7 @@ let outDir = buildDir @@ "out"
 let distDir = buildDir @@ "dist"
 let distFullDir = distDir @@ "desktop"
 let distCoreDir = distDir @@ "core"
-let distNet6Dir = distDir @@ "net6"
+let distNet9Dir = distDir @@ "net9"
 let testDir = buildDir @@ "test"
 let tempDir = ".temp"
 
@@ -225,21 +225,21 @@ let publish _ =
             (setParams (rid, distCoreDir @@ path)) 
     )
 
-    // Net6 build
-    [ "win10-x64",      "win-x64"
+    // Net9 build
+    [ "win-x64",        "win-x64"
       "linux-x64",      "linux-x64"
       "linux-musl-x64", "alpine-x64" ]
     |> Seq.iter (fun (rid, path) ->
-        "src/PBI-Tools.NET6/PBI-Tools.NET6.csproj"
+        "src/PBI-Tools.NET9/PBI-Tools.NET9.csproj"
         |> DotNet.publish 
-            (setParams (rid, distNet6Dir @@ path)) 
+            (setParams (rid, distNet9Dir @@ path)) 
     )
 
 
 let sign _ =
     // distFullDir @@ "pbi-tools.exe"
     // distCoreDir @@ "win-x64" @@ "pbi-tools.core.exe"
-    // distNet6Dir @@ "win-x64" @@ "pbi-tools.net6.exe"
+    // distNet9Dir @@ "win-x64" @@ "pbi-tools.net9.exe"
     // distDir/**/*.exe
 
     let ifl = distDir @@ "files.txt"
@@ -286,12 +286,12 @@ let pack _ =
         |> Zip.zip (distCoreDir @@ dist) (sprintf @"%s\pbi-tools.core.%s_%s.zip" buildDir releaseVersion dist)
     )
 
-    distNet6Dir
+    distNet9Dir
     |> Directory.EnumerateDirectories
     |> Seq.map (Path.GetFileName) 
     |> Seq.iter (fun dist ->
-        !! (distNet6Dir @@ dist @@ "*.*")
-        |> Zip.zip (distNet6Dir @@ dist) (sprintf @"%s\pbi-tools.net6.%s_%s.zip" buildDir releaseVersion dist)
+        !! (distNet9Dir @@ dist @@ "*.*")
+        |> Zip.zip (distNet9Dir @@ dist) (sprintf @"%s\pbi-tools.net9.%s_%s.zip" buildDir releaseVersion dist)
     )
 
 
@@ -299,7 +299,7 @@ let test _ =
     if BuildServer.isLocalBuild then
         !! "tests/*/bin/Release/**/pbi-tools*tests.dll"
         -- "tests/*/bin/Release/**/*netcore.tests.dll"
-        -- "tests/*/bin/Release/**/*net6.tests.dll"
+        -- "tests/*/bin/Release/**/*net9.tests.dll"
         |> XUnit2.run (fun p ->
                                     { p with HtmlOutputPath = Some (testDir @@ "xunit.html")
                                              XmlOutputPath = Some (testDir @@ "xunit.xml")
@@ -315,7 +315,7 @@ let test _ =
            Logger = Some "trx;LogFileName=TestOutput.NetCore.xml"
        })
 
-    "tests/PBI-Tools.Net6.Tests/PBI-Tools.Net6.Tests.csproj"
+    "tests/PBI-Tools.Net9.Tests/PBI-Tools.Net9.Tests.csproj"
     |> DotNet.test (fun defaults ->
        { defaults with
            ResultsDirectory = Some "./.build/test"
