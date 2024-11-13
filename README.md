@@ -26,7 +26,7 @@ An example project is available here: <https://github.com/pbi-tools/adventurewor
 
 - Visual Studio 2022 17.2 or later (for MSBuild dependencies), incl C# 11 Preview
 - .Net 4.7.2 Targeting Pack
-- .Net 8.0 SDK
+- .Net 9.0 SDK
 - Power BI Desktop x64 (Must be installed in default location for local development: `C:\Program Files\Microsoft Power BI Desktop\`)
 
 ### List Build Targets
