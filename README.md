@@ -1,5 +1,7 @@
 # pbi-tools
 
+![ci.yml](https://github.com/pbi-tools/pbi-tools/actions/workflows/CI.yml/badge.svg)
+
 `pbi-tools` is a command-line tool bringing source-control features to Power BI. It works alongside Power BI Desktop and enables mature enterprise workflows for Power BI projects.
 
 An example project is available here: <https://github.com/pbi-tools/adventureworksdw2020-pbix>
@@ -32,6 +34,16 @@ An example project is available here: <https://github.com/pbi-tools/adventurewor
 ### List Build Targets
 
     dotnet fake build --list
+
+Simply running the build script without any arguments will also list the available targets.
+
+On Windows:
+
+    ./build.cmd
+
+On Linux:
+
+    ./build.sh
 
 ### Versioning
 
@@ -113,7 +125,7 @@ _That is generally not needed as the `build.cmd` script takes care of fetching d
 
 ### Clone with submodules
 
-   git clone --recurse-submodules https://github.com/pbi-tools/pbi-tools.git
+    git clone --recurse-submodules https://github.com/pbi-tools/pbi-tools.git
 
 ### Init & Update
 
