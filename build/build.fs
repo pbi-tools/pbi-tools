@@ -220,15 +220,16 @@ let publish _ =
     -- "**/pbi-tools.*"
     |> File.deleteAll
 
-    [ "net8.0", "net9.0" ]
-    |> Seq.iter (fun tfm ->
+    [ "net8.0", distCoreDir
+      "net9.0", distNetXDir ]
+    |> Seq.iter (fun (tfm, dir) ->
         [ "win-x64",        "win-x64"
           "linux-x64",      "linux-x64"
           "linux-musl-x64", "alpine-x64" ]
         |> Seq.iter (fun (rid, path) ->
             "src/PBI-Tools.NETCore/PBI-Tools.NETCore.csproj"
             |> DotNet.publish 
-                (setParams (tfm, rid, distCoreDir @@ path)) 
+                (setParams (tfm, rid, dir @@ path)) 
         )
     )
 
