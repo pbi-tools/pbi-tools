@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     <AssemblyName>pbi-tools.core</AssemblyName>
     <StartupObject>PbiTools.Program</StartupObject>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>

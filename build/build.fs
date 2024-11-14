@@ -48,7 +48,8 @@ let outDir = buildDir @@ "out"
 let distDir = buildDir @@ "dist"
 let distFullDir = distDir @@ "desktop"
 let distCoreDir = distDir @@ "core"
-let distNet9Dir = distDir @@ "net9"
+let netXLabel   = "net9"
+let distNetXDir = distDir @@ netXLabel
 let testDir = buildDir @@ "test"
 let tempDir = ".temp"
 
@@ -144,6 +145,7 @@ let zipSampleData _ =
     !! "data/Samples/Adventure Works DW 2020 - TE/**/*.*"
     |> Zip.zip "data/Samples/Adventure Works DW 2020 - TE" (tempDir @@ "Adventure Works DW 2020 - TE.zip")
 
+
 let buildTools _ =
     !! "tools/*/*.csproj"
     |> Seq.iter (fun path ->
@@ -162,6 +164,7 @@ let buildTools _ =
 
     )
 
+
 // Including 'Restore' target addresses issue: https://github.com/fsprojects/Paket/issues/2697
 // Previously, msbuild would fail not being able to find **\obj\project.assets.json
 let build _ =
@@ -174,6 +177,7 @@ let build _ =
     |> MSBuild.runReleaseExt id null msbuildProps "Restore;Rebuild"
     |> ignore
 
+
 let ciBuild _ =
     !! "tests/**/*.csproj"
     -- "tests/**/PBI-Tools.Tests.csproj"
@@ -182,16 +186,18 @@ let ciBuild _ =
         DotNet.build (fun args -> { args with Configuration = DotNet.BuildConfiguration.Release })
     )
 
+
 let publish _ = 
     let msbuildProps = match pbiInstallDir.Value with
                        | Some dir -> Trace.logfn "Using assembly ReferencePath: %s" dir
                                      [ "ReferencePath", dir ]
                        | _ -> []
 
-    let setParams (rid, path) =
+    let setParams (tfm, rid, path) =
         fun (args : DotNet.PublishOptions) -> 
             { args with
                 Runtime = Some rid
+                Framework = Some tfm
                 SelfContained = Some false
                 //NoRestore = true
                 OutputPath = Some path
@@ -204,7 +210,7 @@ let publish _ =
     // Desktop build
     "src/PBI-Tools/PBI-Tools.csproj"
     |> DotNet.publish
-        (setParams ("win10-x64", distFullDir)) 
+        (setParams ("net472", "win10-x64", distFullDir)) 
 
     // Hack: Remove all libgit2sharp files
     (distFullDir @@ "lib")
@@ -214,32 +220,23 @@ let publish _ =
     -- "**/pbi-tools.*"
     |> File.deleteAll
 
-    
-    // Core build
-    [ "win-x64",        "win-x64"
-      "linux-x64",      "linux-x64"
-      "linux-musl-x64", "alpine-x64" ]
-    |> Seq.iter (fun (rid, path) ->
-        "src/PBI-Tools.NETCore/PBI-Tools.NETCore.csproj"
-        |> DotNet.publish 
-            (setParams (rid, distCoreDir @@ path)) 
-    )
-
-    // Net9 build
-    [ "win-x64",        "win-x64"
-      "linux-x64",      "linux-x64"
-      "linux-musl-x64", "alpine-x64" ]
-    |> Seq.iter (fun (rid, path) ->
-        "src/PBI-Tools.NET9/PBI-Tools.NET9.csproj"
-        |> DotNet.publish 
-            (setParams (rid, distNet9Dir @@ path)) 
+    [ "net8.0", "net9.0" ]
+    |> Seq.iter (fun tfm ->
+        [ "win-x64",        "win-x64"
+          "linux-x64",      "linux-x64"
+          "linux-musl-x64", "alpine-x64" ]
+        |> Seq.iter (fun (rid, path) ->
+            "src/PBI-Tools.NETCore/PBI-Tools.NETCore.csproj"
+            |> DotNet.publish 
+                (setParams (tfm, rid, distCoreDir @@ path)) 
+        )
     )
 
 
 let sign _ =
     // distFullDir @@ "pbi-tools.exe"
     // distCoreDir @@ "win-x64" @@ "pbi-tools.core.exe"
-    // distNet9Dir @@ "win-x64" @@ "pbi-tools.net9.exe"
+    // distNetXDir @@ "win-x64" @@ "pbi-tools.net9.exe"
     // distDir/**/*.exe
 
     let ifl = distDir @@ "files.txt"
@@ -286,12 +283,12 @@ let pack _ =
         |> Zip.zip (distCoreDir @@ dist) (sprintf @"%s\pbi-tools.core.%s_%s.zip" buildDir releaseVersion dist)
     )
 
-    distNet9Dir
+    distNetXDir
     |> Directory.EnumerateDirectories
     |> Seq.map (Path.GetFileName) 
     |> Seq.iter (fun dist ->
-        !! (distNet9Dir @@ dist @@ "*.*")
-        |> Zip.zip (distNet9Dir @@ dist) (sprintf @"%s\pbi-tools.net9.%s_%s.zip" buildDir releaseVersion dist)
+        !! (distNetXDir @@ dist @@ "*.*")
+        |> Zip.zip (distNetXDir @@ dist) (sprintf @"%s\pbi-tools.%s.%s_%s.zip" buildDir netXLabel releaseVersion dist)
     )
 
 
@@ -299,7 +296,6 @@ let test _ =
     if BuildServer.isLocalBuild then
         !! "tests/*/bin/Release/**/pbi-tools*tests.dll"
         -- "tests/*/bin/Release/**/*netcore.tests.dll"
-        -- "tests/*/bin/Release/**/*net9.tests.dll"
         |> XUnit2.run (fun p ->
                                     { p with HtmlOutputPath = Some (testDir @@ "xunit.html")
                                              XmlOutputPath = Some (testDir @@ "xunit.xml")
@@ -313,15 +309,6 @@ let test _ =
            Configuration = DotNet.BuildConfiguration.Release
            ListTests = true
            Logger = Some "trx;LogFileName=TestOutput.NetCore.xml"
-       })
-
-    "tests/PBI-Tools.Net9.Tests/PBI-Tools.Net9.Tests.csproj"
-    |> DotNet.test (fun defaults ->
-       { defaults with
-           ResultsDirectory = Some "./.build/test"
-           Configuration = DotNet.BuildConfiguration.Release
-           ListTests = true
-           Logger = Some "trx;LogFileName=TestOutput.Net7.xml"
        })
 
 
@@ -413,6 +400,7 @@ let writeHeaders _ =
                 file.WriteLine(line)
             line <- original.ReadLine()
     )
+
 
 let help _ =
     Trace.traceImportant "Please specify a target to run."
