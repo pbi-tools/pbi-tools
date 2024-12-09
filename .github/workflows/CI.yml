@@ -13,7 +13,7 @@ on:
     - cron: '0 3 * * *'
 
 concurrency:
-  group: ci-${{ github.sha || github.ref }}
+  group: ci-${{ github.event.pull_request.head.sha || github.sha || github.ref }}
   cancel-in-progress: true
 
 jobs:
