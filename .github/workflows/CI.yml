@@ -12,6 +12,10 @@ on:
   schedule:
     - cron: '0 3 * * *'
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: 'Build & Test'
