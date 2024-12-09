@@ -5,11 +5,16 @@ on:
   pull_request:
     branches:
       - main
+      - 'release/*'
   push:
     branches:
       - 'release/*'
   schedule:
     - cron: '0 3 * * *'
+
+concurrency:
+  group: ci-${{ github.event.pull_request.head.sha || github.sha || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -22,6 +27,7 @@ jobs:
 
     env:
       RUNTIME: ${{ matrix.os == 'windows-latest' && 'win-x64' || 'linux-x64' }}
+      TFM: net8.0
 
     steps:
     - uses: actions/checkout@v4
@@ -31,15 +37,15 @@ jobs:
       run: git submodule update --init  ./data/external/sales-sample
     - name: Setup .NET SDK
       uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.0.400'
     - name: dotnet info
       run: dotnet --info
     - name: Restore dotnet tools
       run: dotnet tool restore
     - name: Run Unit Tests
       run: dotnet run --project ./build/ -- -t Test
+    - name: pbi-tools info
+      run: dotnet run --project ./src/PBI-Tools.NETCore/ -f ${{ env.TFM }} -c Release -r ${{ env.RUNTIME }} -- info
     - name: Run Integration Tests
-      run: dotnet run --project ./src/PBI-Tools.NETCore/ -c Release -r ${{ env.RUNTIME }} -- deploy ./tests/projects/tmdl-deploy/ Model -basePath .
+      run: dotnet run --project ./src/PBI-Tools.NETCore/ -f ${{ env.TFM }} -c Release -r ${{ env.RUNTIME }} -- deploy ./tests/projects/tmdl-deploy/ Model -basePath .
       env:
         PBI_CLIENT_SECRET: ${{ secrets.PBI_CLIENT_SECRET }}
