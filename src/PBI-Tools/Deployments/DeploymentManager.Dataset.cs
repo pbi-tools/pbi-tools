@@ -101,10 +101,8 @@ namespace PbiTools.Deployments
             using var powerBI = PowerBIClientFactory(manifest?.Options?.PbiBaseUri ?? DefaultPowerBIApiBaseUri, tokenCredentials);
             using var server = new TOM.Server();
 
-            var workspace = deploymentEnv.Workspace.ExpandParameters(dataset.Parameters);
-            var workspaceId = Guid.TryParse(workspace, out var id)
-                ? id
-                : await workspace.ResolveWorkspaceIdAsync(powerBI, dataset.WorkspaceCache);
+            var workspaceRef = deploymentEnv.Workspace.ExpandParamsAndEnv(dataset.Parameters);
+            var workspace = await workspaceRef.ResolveWorkspaceAsync(powerBI, dataset.WorkspaceCache);
 
             if (WhatIf)
             {
@@ -115,13 +113,14 @@ namespace PbiTools.Deployments
                 Log.Information("  Parameters:");
                 foreach (var parameter in dataset.Parameters)
                     Log.Information("  * {ParamKey} = {ParamValue}", parameter.Key, parameter.Value.Value ?? "null");
-                Log.Information("  Workspace: {Workspace} ({WorkspaceId})", workspace, workspaceId);
+                Log.Information("  Workspace: {Workspace} ({WorkspaceId})", workspace.Name, workspace.Id);
                 if (capacity.TryGetCapacityInfo(out var capacityInfo))
                     Log.Information("  Capacity: {CapacityDescription} ({CapacityId})", capacityInfo.Description, capacityInfo.Id);
                 Log.Information("---");
             }
 
-            var dataSource = deploymentEnv.XmlaDataSource ?? $"powerbi://api.powerbi.com/v1.0/myorg/{workspace}";
+            var dataSource = deploymentEnv.XmlaDataSource.ExpandParamsAndEnv(dataset.Parameters)
+                ?? $"powerbi://api.powerbi.com/v1.0/myorg/{workspace.Name}";
             var connectionStringBldr = new DbConnectionStringBuilder {
                 { "Data Source", dataSource },
                 { "Password", authResult.AccessToken }
@@ -214,7 +213,7 @@ namespace PbiTools.Deployments
                 if (WhatIf)
                 {
                     // Does NOT exist...
-                    Log.Information("Workspace '{Workspace}' does not have existing dataset named '{DatasetName}'.", workspace, dataset.DisplayName);
+                    Log.Information("Workspace '{Workspace}' does not have existing dataset named '{DatasetName}'.", workspace.Name, dataset.DisplayName);
                 }
                 else
                 {
@@ -327,7 +326,7 @@ namespace PbiTools.Deployments
 
             if (!WhatIf || !createdNewDb)
             {
-                var pbiDataset = await powerBI.Datasets.GetDatasetInGroupAsync(workspaceId, datasetId);
+                var pbiDataset = await powerBI.Datasets.GetDatasetInGroupAsync(workspace.Id, datasetId);
                 Log.Information("Power BI Dataset Details:");
                 Log.Information("* ID                     : {ID}", pbiDataset.Id);
                 Log.Information("* Name                   : {Name}", pbiDataset.Name);
@@ -342,7 +341,7 @@ namespace PbiTools.Deployments
 
             #region Report Datasources
             if (!WhatIf) {
-                ReportDatasources(await powerBI.Datasets.GetDatasourcesInGroupAsync(workspaceId, datasetId), manifest.Options.Console.ExpandTable);
+                ReportDatasources(await powerBI.Datasets.GetDatasourcesInGroupAsync(workspace.Id, datasetId), manifest.Options.Console.ExpandTable);
             }
             #endregion
 
@@ -352,11 +351,11 @@ namespace PbiTools.Deployments
 
             var gatewayManager = new DatasetGatewayManager(dataset.Options.Dataset.Gateway, dataset.Options.Console, powerBI, createdNewDb) { WhatIf = WhatIf };
 
-            await gatewayManager.DiscoverGatewaysAsync(workspaceId, datasetId);
+            await gatewayManager.DiscoverGatewaysAsync(workspace.Id, datasetId);
 
-            if (await gatewayManager.BindToGatewayAsync(workspaceId, datasetId, dataset.Parameters))
+            if (await gatewayManager.BindToGatewayAsync(workspace.Id, datasetId, dataset.Parameters))
             {
-                ReportDatasources(await powerBI.Datasets.GetDatasourcesInGroupAsync(workspaceId, datasetId), manifest.Options.Console.ExpandTable);
+                ReportDatasources(await powerBI.Datasets.GetDatasourcesInGroupAsync(workspace.Id, datasetId), manifest.Options.Console.ExpandTable);
             }
 
             #endregion
@@ -375,7 +374,7 @@ namespace PbiTools.Deployments
             #region Set Credentials
 
             var credsManager = new DatasetCredentialsManager(manifest, powerBI, refreshEnabled, authResult) { WhatIf = WhatIf };
-            await credsManager.SetCredentialsAsync(workspaceId, datasetId);
+            await credsManager.SetCredentialsAsync(workspace.Id, datasetId);
 
             #endregion
 
@@ -406,7 +405,7 @@ namespace PbiTools.Deployments
                                                                           dataset.Parameters,
                                                                           reportConnection.ToJson(datasetId));
 
-                    var reportWorkspace = reportEnvironment.Workspace.ExpandParameters(dataset.Parameters) ?? workspaceId.ToString();
+                    var reportWorkspace = reportEnvironment.Workspace.ExpandParameters(dataset.Parameters) ?? workspace.Id.ToString();
                     await ImportReportAsync(reportDeploymentInfo, powerBI, reportWorkspace);
                 }
             }
@@ -572,7 +571,11 @@ namespace PbiTools.Deployments
                 (DeploymentParameters.Names.FILE_NAME_WITHOUT_EXT, Path.GetFileName(converter.Model.SourcePath))
             );
 
-            return GetDatasetInfo(manifest, converter.Model, sourceFolder.FullName, parameters, parameters => deploymentEnv.DisplayName.ExpandParameters(parameters) ?? sourceFolder.Name);
+            return GetDatasetInfo(manifest,
+                converter.Model,
+                sourceFolder.FullName,
+                parameters,
+                @params => deploymentEnv.DisplayName.ExpandParameters(@params) ?? sourceFolder.Name);
         }
 
         private DatasetDeploymentInfo GetDatasetInfo(

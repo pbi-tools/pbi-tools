@@ -155,29 +155,38 @@ namespace PbiTools.Deployments
         }
 
         /// <summary>
-        /// Looks up a Power BI workspace Id from its name, optionally using a session cache first, then the Power BI API.
+        /// Looks up a Power BI workspace from a manifest workspace reference,
+        /// optionally using a session cache first, then the Power BI API.
         /// Only workspaces accessible to the authenticated user can be resolved.
         /// </summary>
-        public static async Task<Guid> ResolveWorkspaceIdAsync(this string name, IPowerBIClient powerBI, IDictionary<string, (Group, Capacity)> cache = null)
+        public static async Task<Group> ResolveWorkspaceAsync(this string workspaceRef, IPowerBIClient powerBI, IDictionary<string, (Group, Capacity)> cache = null)
         {
-            DeploymentManager.Log.Debug("Resolving workspace ID for workspace: '{Workspace}'", name);
+            DeploymentManager.Log.Debug("Resolving details for workspace ref: '{Workspace}'", workspaceRef);
 
-            if (cache != null && cache.TryGetValue(name, out var cached) && cached.Item1 is { } cachedWorkspace)
-                return cachedWorkspace.Id;
+            if (cache != null && cache.TryGetValue(workspaceRef, out var cached) && cached.Item1 is { } cachedWorkspace)
+                return cachedWorkspace;
 
-            var apiResult = await powerBI.Groups.GetGroupsAsync(filter: $"name eq '{name}'", top: 2);
+            if (Guid.TryParse(workspaceRef, out var id))
+            { 
+                var workspace = await powerBI.Groups.GetGroupAsync(id);
+                if (cache != null) cache[workspaceRef] = (workspace, null);
+                DeploymentManager.Log.Information("Resolved workspace: '{Workspace}'", workspaceRef);
+                return workspace;
+            }
+
+            var apiResult = await powerBI.Groups.GetGroupsAsync(filter: $"name eq '{workspaceRef}'", top: 2);
 
             switch (apiResult.Value.Count)
             {
                 case 1:
                     var workspace = apiResult.Value[0];
-                    if (cache != null) cache[name] = (workspace, null);
-                    DeploymentManager.Log.Information("Resolved workspace ID '{Id}' for workspace: '{Workspace}'", workspace.Id, name);
-                    return workspace.Id;
+                    if (cache != null) cache[workspaceRef] = (workspace, null);
+                    DeploymentManager.Log.Information("Resolved workspace ID '{Id}' for workspace: '{Workspace}'", workspace.Id, workspaceRef);
+                    return workspace;
                 case 0:
-                    throw new DeploymentException($"No Power BI workspace found matching the name '{name}'. Does the API user have the required permissions?");
+                    throw new DeploymentException($"No Power BI workspace found matching the name '{workspaceRef}'. Does the API user have the required permissions?");
                 default:
-                    throw new DeploymentException($"More than one Power BI workspace found matching the name '{name}'. Please specify the workspace Guid instead to avoid ambiguity.");
+                    throw new DeploymentException($"More than one Power BI workspace found matching the name '{workspaceRef}'. Please specify the workspace Guid instead to avoid ambiguity.");
             }
         }
 
@@ -185,12 +194,12 @@ namespace PbiTools.Deployments
         /// Looks up the Power BI capacity for the given workspace name, optionally using a session cache first, then the Power BI API.
         /// Only capacities accessible to the authenticated user can be resolved.
         /// </summary>
-        public static async Task<Capacity> ResolveCapacityAsync(this string name, IPowerBIClient powerBI, IDictionary<string, (Group, Capacity)> cache = null)
+        public static async Task<Capacity> ResolveCapacityAsync(this Group workspace, IPowerBIClient powerBI, IDictionary<string, (Group, Capacity)> cache = null)
         {
-            DeploymentManager.Log.Debug("Resolving capacity for workspace: '{Workspace}'", name);
+            DeploymentManager.Log.Debug("Resolving capacity for workspace: '{Workspace}'", workspace.Name);
 
             // Workspace is cached
-            if (cache != null && cache.TryGetValue(name, out var cached))
+            if (cache != null && cache.TryGetValue(workspace.Name, out var cached))
             { 
                 if (cached.Item2 is { } cachedCapacity)
                     return cachedCapacity;
@@ -199,22 +208,14 @@ namespace PbiTools.Deployments
                     return default;
             }
 
-            var apiResult = await powerBI.Groups.GetGroupsAsync(filter: $"name eq '{name}'", top: 2);
-            var workspace = apiResult.Value.Count switch
-            {
-                1 => apiResult.Value[0],
-                0 => throw new DeploymentException($"No Power BI workspace found matching the name '{name}'. Does the API user have the required permissions?"),
-                _ => throw new DeploymentException($"More than one Power BI workspace found matching the name '{name}'. Please specify the workspace Guid instead to avoid ambiguity.")
-            };
-
             if (workspace.IsOnDedicatedCapacity == true)
             {
                 DeploymentManager.Log.Debug("Retrieving all capacities...");
                 var capacities = await powerBI.Capacities.GetCapacitiesAsync();
                 if (capacities.Value.FirstOrDefault(c => c.Id == workspace.CapacityId) is { } capacity)
                 {
-                    if (cache != null) cache[name] = (workspace, capacity);
-                    DeploymentManager.Log.Information("Resolved capacity '{Capacity}' for workspace: '{Workspace}'", capacity.DisplayName, name);
+                    if (cache != null) cache[workspace.Name] = (workspace, capacity);
+                    DeploymentManager.Log.Information("Resolved capacity '{Capacity}' for workspace: '{Workspace}'", capacity.DisplayName, workspace.Name);
                     return capacity;
                 }
                 else
@@ -224,7 +225,7 @@ namespace PbiTools.Deployments
             }
 
             var empty = new Capacity { };
-            if (cache != null) cache[name] = (workspace, empty);
+            if (cache != null) cache[workspace.Name] = (workspace, empty);
             return empty;
         }
 

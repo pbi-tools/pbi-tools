@@ -652,6 +652,7 @@ namespace PbiTools.Deployments
         /// <summary>
         /// The <c>Data Source</c> parameter in a XMLA connection string. Can be omitted if workspace name is provided and the default
         /// Power BI connection string applies.
+        /// Supports parameter expansion.
         /// </summary>
         [JsonProperty("xmlaDataSource")]
         public string XmlaDataSource { get; set; }
