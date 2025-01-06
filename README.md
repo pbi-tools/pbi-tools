@@ -121,6 +121,11 @@ _That is generally not needed as the `build.cmd` script takes care of fetching d
     .\build.cmd Publish -s
     .\build.cmd Pack -s
 
+### Invoke CI Build target locally
+
+    $env:PBITOOLS_IsLocalBuild = "false"
+    .\build.cmd CI-Build
+
 ## Git Submodules
 
 ### Clone with submodules
