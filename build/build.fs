@@ -48,9 +48,12 @@ let outDir = buildDir @@ "out"
 let distDir = buildDir @@ "dist"
 let distFullDir = distDir @@ "desktop"
 let distCoreDir = distDir @@ "core"
-let distNet6Dir = distDir @@ "net6"
+let netXLabel   = "net9"
+let distNetXDir = distDir @@ netXLabel
 let testDir = buildDir @@ "test"
 let tempDir = ".temp"
+let isLocalBuild = BuildServer.isLocalBuild
+                && (Environment.environVarAsBoolOrDefault "PBITOOLS_IsLocalBuild" true)
 
 // Pattern specifying assemblies to be tested using xUnit
 let testAssemblies = outDir @@ "*Tests*.dll"
@@ -144,6 +147,7 @@ let zipSampleData _ =
     !! "data/Samples/Adventure Works DW 2020 - TE/**/*.*"
     |> Zip.zip "data/Samples/Adventure Works DW 2020 - TE" (tempDir @@ "Adventure Works DW 2020 - TE.zip")
 
+
 let buildTools _ =
     !! "tools/*/*.csproj"
     |> Seq.iter (fun path ->
@@ -155,12 +159,14 @@ let buildTools _ =
             { args with
                 OutputPath = Some outPath
                 Configuration = DotNet.BuildConfiguration.Release
+                MSBuildParams = { MSBuild.CliArguments.Create() with DisableInternalBinLog = true }
             })
 
         !! (outPath @@ "*.*")
         |> Zip.zip outPath (outDir @@ (sprintf "%s.zip" proj.Directory.Name))
 
     )
+
 
 // Including 'Restore' target addresses issue: https://github.com/fsprojects/Paket/issues/2697
 // Previously, msbuild would fail not being able to find **\obj\project.assets.json
@@ -171,16 +177,24 @@ let build _ =
                        | _ -> [ "_", "dummy" ]  // temp fix for https://github.com/fsprojects/FAKE/issues/2738
 
     !! "tests/**/*.csproj"
-    |> MSBuild.runReleaseExt id null msbuildProps "Restore;Rebuild"
+    |> MSBuild.runReleaseExt
+      (fun args -> { args with DisableInternalBinLog = true })
+      null
+      msbuildProps
+      "Restore;Rebuild"
     |> ignore
+
 
 let ciBuild _ =
     !! "tests/**/*.csproj"
     -- "tests/**/PBI-Tools.Tests.csproj"
     -- "tests/**/PBI-Tools.IntegrationTests.csproj"
     |> Seq.iter (
-        DotNet.build (fun args -> { args with Configuration = DotNet.BuildConfiguration.Release })
+        DotNet.build (fun args ->
+        { args with Configuration = DotNet.BuildConfiguration.Release
+                    MSBuildParams = { args.MSBuildParams with DisableInternalBinLog = true } })
     )
+
 
 let publish _ = 
     let msbuildProps = match pbiInstallDir.Value with
@@ -188,10 +202,11 @@ let publish _ =
                                      [ "ReferencePath", dir ]
                        | _ -> []
 
-    let setParams (rid, path) =
+    let setParams (tfm, rid, path) =
         fun (args : DotNet.PublishOptions) -> 
             { args with
                 Runtime = Some rid
+                Framework = Some tfm
                 SelfContained = Some false
                 //NoRestore = true
                 OutputPath = Some path
@@ -204,7 +219,7 @@ let publish _ =
     // Desktop build
     "src/PBI-Tools/PBI-Tools.csproj"
     |> DotNet.publish
-        (setParams ("win10-x64", distFullDir)) 
+        (setParams ("net472", "win10-x64", distFullDir)) 
 
     // Hack: Remove all libgit2sharp files
     (distFullDir @@ "lib")
@@ -214,32 +229,24 @@ let publish _ =
     -- "**/pbi-tools.*"
     |> File.deleteAll
 
-    
-    // Core build
-    [ "win-x64",        "win-x64"
-      "linux-x64",      "linux-x64"
-      "linux-musl-x64", "alpine-x64" ]
-    |> Seq.iter (fun (rid, path) ->
-        "src/PBI-Tools.NETCore/PBI-Tools.NETCore.csproj"
-        |> DotNet.publish 
-            (setParams (rid, distCoreDir @@ path)) 
-    )
-
-    // Net6 build
-    [ "win10-x64",      "win-x64"
-      "linux-x64",      "linux-x64"
-      "linux-musl-x64", "alpine-x64" ]
-    |> Seq.iter (fun (rid, path) ->
-        "src/PBI-Tools.NET6/PBI-Tools.NET6.csproj"
-        |> DotNet.publish 
-            (setParams (rid, distNet6Dir @@ path)) 
+    [ "net8.0", distCoreDir
+      "net9.0", distNetXDir ]
+    |> Seq.iter (fun (tfm, dir) ->
+        [ "win-x64",        "win-x64"
+          "linux-x64",      "linux-x64"
+          "linux-musl-x64", "alpine-x64" ]
+        |> Seq.iter (fun (rid, path) ->
+            "src/PBI-Tools.NETCore/PBI-Tools.NETCore.csproj"
+            |> DotNet.publish 
+                (setParams (tfm, rid, dir @@ path)) 
+        )
     )
 
 
 let sign _ =
     // distFullDir @@ "pbi-tools.exe"
     // distCoreDir @@ "win-x64" @@ "pbi-tools.core.exe"
-    // distNet6Dir @@ "win-x64" @@ "pbi-tools.net6.exe"
+    // distNetXDir @@ "win-x64" @@ "pbi-tools.net9.exe"
     // distDir/**/*.exe
 
     let ifl = distDir @@ "files.txt"
@@ -286,20 +293,19 @@ let pack _ =
         |> Zip.zip (distCoreDir @@ dist) (sprintf @"%s\pbi-tools.core.%s_%s.zip" buildDir releaseVersion dist)
     )
 
-    distNet6Dir
+    distNetXDir
     |> Directory.EnumerateDirectories
     |> Seq.map (Path.GetFileName) 
     |> Seq.iter (fun dist ->
-        !! (distNet6Dir @@ dist @@ "*.*")
-        |> Zip.zip (distNet6Dir @@ dist) (sprintf @"%s\pbi-tools.net6.%s_%s.zip" buildDir releaseVersion dist)
+        !! (distNetXDir @@ dist @@ "*.*")
+        |> Zip.zip (distNetXDir @@ dist) (sprintf @"%s\pbi-tools.%s.%s_%s.zip" buildDir netXLabel releaseVersion dist)
     )
 
 
 let test _ =
-    if BuildServer.isLocalBuild then
+    if isLocalBuild then
         !! "tests/*/bin/Release/**/pbi-tools*tests.dll"
         -- "tests/*/bin/Release/**/*netcore.tests.dll"
-        -- "tests/*/bin/Release/**/*net6.tests.dll"
         |> XUnit2.run (fun p ->
                                     { p with HtmlOutputPath = Some (testDir @@ "xunit.html")
                                              XmlOutputPath = Some (testDir @@ "xunit.xml")
@@ -313,15 +319,7 @@ let test _ =
            Configuration = DotNet.BuildConfiguration.Release
            ListTests = true
            Logger = Some "trx;LogFileName=TestOutput.NetCore.xml"
-       })
-
-    "tests/PBI-Tools.Net6.Tests/PBI-Tools.Net6.Tests.csproj"
-    |> DotNet.test (fun defaults ->
-       { defaults with
-           ResultsDirectory = Some "./.build/test"
-           Configuration = DotNet.BuildConfiguration.Release
-           ListTests = true
-           Logger = Some "trx;LogFileName=TestOutput.Net7.xml"
+           MSBuildParams = { defaults.MSBuildParams with DisableInternalBinLog = true }
        })
 
 
@@ -414,6 +412,7 @@ let writeHeaders _ =
             line <- original.ReadLine()
     )
 
+
 let help _ =
     Trace.traceImportant "Please specify a target to run."
     Target.listAvailable()
@@ -466,7 +465,7 @@ let initTargets () =
     ==> "AssemblyInfo"
     ==> "ZipSampleData"
     ==> "BuildTools"
-    ==> (if BuildServer.isLocalBuild then "Build" else "CI-Build")
+    ==> (if isLocalBuild then "Build" else "CI-Build")
     ==> "Test"
     ==> "Publish"
     ==> "Sign"

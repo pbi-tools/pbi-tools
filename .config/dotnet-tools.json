@@ -3,14 +3,14 @@
   "isRoot": true,
   "tools": {
     "paket": {
-      "version": "8.0.3",
+      "version": "9.0.0",
       "commands": [
         "paket"
       ],
       "rollForward": false
     },
     "azuresigntool": {
-      "version": "5.0.0",
+      "version": "6.0.0",
       "commands": [
         "azuresigntool"
       ],

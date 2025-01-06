@@ -2,7 +2,7 @@
 
     pbi-tools.core <action> -options
 
-_pbi-tools (Core), 1.1.0 - https://pbi.tools/_
+_pbi-tools (Core), 1.2.0 - https://pbi.tools/_
 
 ### Actions
 

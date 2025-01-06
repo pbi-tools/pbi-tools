@@ -5,11 +5,13 @@ on:
   pull_request:
     branches:
       - main
-  push:
-    branches:
       - 'release/*'
   schedule:
     - cron: '0 3 * * *'
+
+concurrency:
+  group: ci-${{ github.event.pull_request.head.sha || github.sha || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -19,6 +21,8 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
+        tfm: [net8.0, net9.0]
+        env: [Dev-Name, Dev-ID]
 
     env:
       RUNTIME: ${{ matrix.os == 'windows-latest' && 'win-x64' || 'linux-x64' }}
@@ -31,15 +35,21 @@ jobs:
       run: git submodule update --init  ./data/external/sales-sample
     - name: Setup .NET SDK
       uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.0.400'
     - name: dotnet info
       run: dotnet --info
     - name: Restore dotnet tools
       run: dotnet tool restore
     - name: Run Unit Tests
       run: dotnet run --project ./build/ -- -t Test
-    - name: Run Integration Tests
-      run: dotnet run --project ./src/PBI-Tools.NETCore/ -c Release -r ${{ env.RUNTIME }} -- deploy ./tests/projects/tmdl-deploy/ Model -basePath .
+    - name: pbi-tools info
+      run: dotnet run --project ./src/PBI-Tools.NETCore/ -f ${{ matrix.tfm }} -c Release -r ${{ env.RUNTIME }} -- info
+    - name: 'Deploy: WHATIF'
+      run: dotnet run --project ./src/PBI-Tools.NETCore/ -f ${{ matrix.tfm }} -c Release -r ${{ env.RUNTIME }} -- deploy ./tests/projects/tmdl-deploy/ Model ${{ matrix.env }} -whatif -basePath .
       env:
         PBI_CLIENT_SECRET: ${{ secrets.PBI_CLIENT_SECRET }}
+        WORKSPACE_ID: 59068f65-46d1-4d0c-8b9e-30d069eaa226
+    - name: Deploy
+      run: dotnet run --project ./src/PBI-Tools.NETCore/ -f ${{ matrix.tfm }} -c Release -r ${{ env.RUNTIME }} -- deploy ./tests/projects/tmdl-deploy/ Model ${{ matrix.env }} -basePath .
+      env:
+        PBI_CLIENT_SECRET: ${{ secrets.PBI_CLIENT_SECRET }}
+        WORKSPACE_ID: 59068f65-46d1-4d0c-8b9e-30d069eaa226

@@ -2,7 +2,7 @@ version 7.1.5
 
 group Main
   source https://api.nuget.org/v3/index.json
-  framework: net472,net6.0,net8.0
+  framework: net472,net9.0,net8.0
   storage: none
   content: none
 
@@ -23,8 +23,8 @@ group Main
   nuget PeNet
   nuget CommandLineParser
   nuget WildcardMatch
-  nuget Microsoft.AnalysisServices                     19.84.6
-  nuget Microsoft.AnalysisServices.AdomdClient         19.84.6
+  nuget Microsoft.AnalysisServices              19.87.7
+  nuget Microsoft.AnalysisServices.AdomdClient  19.87.7
   nuget System.IO.Packaging
   nuget Microsoft.Identity.Client
   nuget Microsoft.PowerBI.Api
@@ -48,7 +48,7 @@ group Tests
 
 group Tests-netcore
   source https://api.nuget.org/v3/index.json
-  framework: net6.0,net8.0
+  framework: net9.0,net8.0
   storage: none
   content: none
 

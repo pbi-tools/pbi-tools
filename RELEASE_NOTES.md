@@ -1,5 +1,22 @@
 # Release Notes
 
+## 1.2.0 - 2024-01-06
+
+- Upgraded project to .Net SDK 9.0 (GA 12-Nov)
+- Switched net6.0 build to net9.0 - "NetCore" remains on LTS version, net8.0
+  - New distribution "pbi-tools.net9.\*.zip" instead of "pbi-tools.net6.\*.zip"
+- Dependencies updated:
+  - TOM, 19.87.7 (Jan-2025 Version)
+  - MSAL.NET, 4.66.2
+  - Power BI API, 4.22
+  - Polly, 8.5
+  - Serilog, 4.2
+  - Fody/Costura, 6.0 - #365
+  - System.*, 9.0
+- #359 Resolve XMLA endpoint when workspace Guid is provided
+- Various GitHub CI workflow and build script enhancements
+- #351 Workaround reverted
+
 ## 1.1.1 - 2024-10-14
 
 - Resolves [#351](https://github.com/pbi-tools/pbi-tools/issues/351)
