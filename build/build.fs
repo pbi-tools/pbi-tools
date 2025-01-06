@@ -52,6 +52,8 @@ let netXLabel   = "net9"
 let distNetXDir = distDir @@ netXLabel
 let testDir = buildDir @@ "test"
 let tempDir = ".temp"
+let isLocalBuild = BuildServer.isLocalBuild
+                && (Environment.environVarAsBoolOrDefault "PBITOOLS_IsLocalBuild" true)
 
 // Pattern specifying assemblies to be tested using xUnit
 let testAssemblies = outDir @@ "*Tests*.dll"
@@ -294,7 +296,7 @@ let pack _ =
 
 
 let test _ =
-    if BuildServer.isLocalBuild then
+    if isLocalBuild then
         !! "tests/*/bin/Release/**/pbi-tools*tests.dll"
         -- "tests/*/bin/Release/**/*netcore.tests.dll"
         |> XUnit2.run (fun p ->
@@ -455,7 +457,7 @@ let initTargets () =
     ==> "AssemblyInfo"
     ==> "ZipSampleData"
     ==> "BuildTools"
-    ==> (if BuildServer.isLocalBuild then "Build" else "CI-Build")
+    ==> (if isLocalBuild then "Build" else "CI-Build")
     ==> "Test"
     ==> "Publish"
     ==> "Sign"
