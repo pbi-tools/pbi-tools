@@ -311,17 +311,15 @@ namespace PbiTools.Deployments
             return reportInfo;
         }
 
-        internal static async Task ImportReportAsync(ReportDeploymentInfo args, IPowerBIClient powerBI, string workspace)
+        internal static async Task ImportReportAsync(ReportDeploymentInfo args, IPowerBIClient powerBI, string workspaceRef)
         {
             // Determine Workspace
-            var workspaceId = Guid.TryParse(workspace, out var id)
-                ? id
-                : await workspace.ResolveWorkspaceIdAsync(powerBI, args.WorkspaceCache);
+            var workspace = await workspaceRef.ResolveWorkspaceAsync(powerBI, args.WorkspaceCache);
 
             Import import;
             using (var file = File.OpenRead(args.PbixPath))
             {
-                import = await powerBI.Imports.PostImportWithFileAsyncInGroup(workspaceId, file,
+                import = await powerBI.Imports.PostImportWithFileAsyncInGroup(workspace.Id, file,
                     datasetDisplayName: args.DisplayName, // will FAIL without the parameter (although the API marks it as optional)
                     nameConflict: args.Options.Import.NameConflict,
                     skipReport: args.Options.Import.SkipReport,
@@ -340,7 +338,7 @@ namespace PbiTools.Deployments
 
                 await Task.Delay(500);
 
-                import = await powerBI.Imports.GetImportInGroupAsync(workspaceId, import.Id);
+                import = await powerBI.Imports.GetImportInGroupAsync(workspace.Id, import.Id);
             }
 
             Log.Information("Import succeeded: {Id} ({Name})", import.Id, import.Name);

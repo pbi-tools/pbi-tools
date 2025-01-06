@@ -157,6 +157,7 @@ namespace PbiTools.Deployments
         /// <summary>
         /// Looks up a Power BI workspace from a manifest workspace reference,
         /// optionally using a session cache first, then the Power BI API.
+        /// The workspace reference should have been expanded and can be either a GUID or a workspace name.
         /// Only workspaces accessible to the authenticated user can be resolved.
         /// </summary>
         public static async Task<Group> ResolveWorkspaceAsync(this string workspaceRef, IPowerBIClient powerBI, IDictionary<string, (Group, Capacity)> cache = null)
