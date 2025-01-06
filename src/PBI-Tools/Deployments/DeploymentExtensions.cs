@@ -168,10 +168,10 @@ namespace PbiTools.Deployments
                 return cachedWorkspace;
 
             if (Guid.TryParse(workspaceRef, out var id))
-            { 
+            {
                 var workspace = await powerBI.Groups.GetGroupAsync(id);
                 if (cache != null) cache[workspaceRef] = (workspace, null);
-                DeploymentManager.Log.Information("Resolved workspace: '{Workspace}'", workspaceRef);
+                DeploymentManager.Log.Information("Resolved workspace '{Workspace}' as '{WorkspaceName}'", workspaceRef, workspace.Name);
                 return workspace;
             }
 
