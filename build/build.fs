@@ -159,6 +159,7 @@ let buildTools _ =
             { args with
                 OutputPath = Some outPath
                 Configuration = DotNet.BuildConfiguration.Release
+                MSBuildParams = { MSBuild.CliArguments.Create() with DisableInternalBinLog = true }
             })
 
         !! (outPath @@ "*.*")
@@ -176,7 +177,11 @@ let build _ =
                        | _ -> [ "_", "dummy" ]  // temp fix for https://github.com/fsprojects/FAKE/issues/2738
 
     !! "tests/**/*.csproj"
-    |> MSBuild.runReleaseExt id null msbuildProps "Restore;Rebuild"
+    |> MSBuild.runReleaseExt
+      (fun args -> { args with DisableInternalBinLog = true })
+      null
+      msbuildProps
+      "Restore;Rebuild"
     |> ignore
 
 
@@ -185,7 +190,9 @@ let ciBuild _ =
     -- "tests/**/PBI-Tools.Tests.csproj"
     -- "tests/**/PBI-Tools.IntegrationTests.csproj"
     |> Seq.iter (
-        DotNet.build (fun args -> { args with Configuration = DotNet.BuildConfiguration.Release })
+        DotNet.build (fun args ->
+        { args with Configuration = DotNet.BuildConfiguration.Release
+                    MSBuildParams = { args.MSBuildParams with DisableInternalBinLog = true } })
     )
 
 
@@ -312,6 +319,7 @@ let test _ =
            Configuration = DotNet.BuildConfiguration.Release
            ListTests = true
            Logger = Some "trx;LogFileName=TestOutput.NetCore.xml"
+           MSBuildParams = { defaults.MSBuildParams with DisableInternalBinLog = true }
        })
 
 
