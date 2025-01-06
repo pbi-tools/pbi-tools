@@ -59,14 +59,22 @@
         "console": {}
       },
       "parameters": {
-        "WORKSPACE": "pbi-tools-integration-tests"
+        "WORKSPACE": "pbi-tools-integration-tests",
+        "WORKSPACE_ID": "%WORKSPACE_ID%"
       },
       "environments": {
-        "Development": {
+        "Dev-Name": {
           "workspace": "{{WORKSPACE}}",
           "displayName": "Sales",
           "parameters": {
             "Randomizer": 0.8
+          }
+        },
+        "Dev-ID": {
+          "workspace": "{{WORKSPACE_ID}}",
+          "displayName": "Sales (2)",
+          "parameters": {
+            "Randomizer": 0.9
           }
         }
       }

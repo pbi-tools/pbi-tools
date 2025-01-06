@@ -21,10 +21,11 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
+        tfm: [net8.0, net9.0]
+        env: [Dev-Name, Dev-ID]
 
     env:
       RUNTIME: ${{ matrix.os == 'windows-latest' && 'win-x64' || 'linux-x64' }}
-      TFM: net8.0
 
     steps:
     - uses: actions/checkout@v4
@@ -41,8 +42,14 @@ jobs:
     - name: Run Unit Tests
       run: dotnet run --project ./build/ -- -t Test
     - name: pbi-tools info
-      run: dotnet run --project ./src/PBI-Tools.NETCore/ -f ${{ env.TFM }} -c Release -r ${{ env.RUNTIME }} -- info
-    - name: Run Integration Tests
-      run: dotnet run --project ./src/PBI-Tools.NETCore/ -f ${{ env.TFM }} -c Release -r ${{ env.RUNTIME }} -- deploy ./tests/projects/tmdl-deploy/ Model -basePath .
+      run: dotnet run --project ./src/PBI-Tools.NETCore/ -f ${{ matrix.tfm }} -c Release -r ${{ env.RUNTIME }} -- info
+    - name: 'Deploy: WHATIF'
+      run: dotnet run --project ./src/PBI-Tools.NETCore/ -f ${{ matrix.tfm }} -c Release -r ${{ env.RUNTIME }} -- deploy ./tests/projects/tmdl-deploy/ Model ${{ matrix.env }} -whatif -basePath .
       env:
         PBI_CLIENT_SECRET: ${{ secrets.PBI_CLIENT_SECRET }}
+        WORKSPACE_ID: 59068f65-46d1-4d0c-8b9e-30d069eaa226
+    - name: Deploy
+      run: dotnet run --project ./src/PBI-Tools.NETCore/ -f ${{ matrix.tfm }} -c Release -r ${{ env.RUNTIME }} -- deploy ./tests/projects/tmdl-deploy/ Model ${{ matrix.env }} -basePath .
+      env:
+        PBI_CLIENT_SECRET: ${{ secrets.PBI_CLIENT_SECRET }}
+        WORKSPACE_ID: 59068f65-46d1-4d0c-8b9e-30d069eaa226
