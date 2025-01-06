@@ -8,11 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Reference Include="System.Net.Http" />
     <Reference Include="wix">
       <HintPath>..\..\packages\wix\WixSharp.wix.bin\tools\bin\wix.dll</HintPath>
       <Private>true</Private>
     </Reference>
-    <EmbeddedResource Include="..\..\packages\wix\WixSharp.wix.bin\tools\bin\winterop.dll" LinkBase="costura32" />
+    <EmbeddedResource Include="..\..\packages\wix\WixSharp.wix.bin\tools\bin\winterop.dll" LinkBase="costura-win-x86" />
   </ItemGroup>
 
   <Import Project="..\..\.paket\Paket.Restore.targets" />

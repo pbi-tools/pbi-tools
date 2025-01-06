@@ -22,9 +22,8 @@ NUGET
     Castle.Core (5.1.1)
       System.Diagnostics.EventLog (>= 6.0) - restriction: || (&& (== net472) (>= net6.0)) (== net8.0) (== net9.0)
     CommandLineParser (2.9.1)
-    Costura.Fody (5.7) - copy_local: true
-      Fody (>= 6.5.5)
-      NETStandard.Library (>= 1.6.1)
+    Costura.Fody (6.0) - copy_local: true
+      Fody (>= 6.8.2)
     CsvHelper (33.0.1)
       Microsoft.Bcl.AsyncInterfaces (>= 8.0) - restriction: || (== net472) (&& (== net8.0) (>= net462) (< netstandard2.0)) (&& (== net8.0) (>= net47)) (&& (== net8.0) (< netstandard2.1)) (&& (== net9.0) (>= net462) (< netstandard2.0)) (&& (== net9.0) (>= net47)) (&& (== net9.0) (< netstandard2.1))
       Microsoft.Bcl.HashCode (>= 1.1.1) - restriction: || (== net472) (&& (== net8.0) (>= net462) (< netstandard2.0)) (&& (== net8.0) (>= net47)) (&& (== net8.0) (< netstandard2.1)) (&& (== net9.0) (>= net462) (< netstandard2.0)) (&& (== net9.0) (>= net47)) (&& (== net9.0) (< netstandard2.1))
@@ -40,7 +39,7 @@ NUGET
       Microsoft.Azure.Services.AppAuthentication (>= 1.6.2)
       Microsoft.Data.SqlClient (>= 5.1.4) - restriction: || (&& (== net472) (>= net6.0)) (== net8.0) (== net9.0)
       System.Net.Security (>= 4.3.2)
-    Fody (6.8.2)
+    Fody (6.9.1)
     HtmlAgilityPack (1.11.71)
     LibGit2Sharp (0.30)
       LibGit2Sharp.NativeBinaries (2.0.322)
