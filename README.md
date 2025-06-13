@@ -7,9 +7,6 @@
 An example project is available here: <https://github.com/pbi-tools/adventureworksdw2020-pbix>
 
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/pbi-tools/pbi-tools)](https://github.com/pbi-tools/pbi-tools/releases/latest)
-[![Twitter Follow](https://img.shields.io/twitter/follow/mthierba)](https://twitter.com/mthierba) [![Join the chat at https://gitter.im/pbi-tools/general](https://badges.gitter.im/pbi-tools/general.svg)](https://gitter.im/pbi-tools/general?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
-- Twitter Hashtag: [#pbitools](https://twitter.com/search?q=%23pbitools&src=typed_query)
 
 ## User Notes
 
@@ -26,7 +23,7 @@ An example project is available here: <https://github.com/pbi-tools/adventurewor
 
 ### Prerequisites
 
-- Visual Studio 2022 17.2 or later (for MSBuild dependencies), incl C# 11 Preview
+- Visual Studio 2022 17.2 or later (for MSBuild dependencies), incl C# 11
 - .Net 4.7.2 Targeting Pack
 - .Net 9.0 SDK
 - Power BI Desktop x64 (Must be installed in default location for local development: `C:\Program Files\Microsoft Power BI Desktop\`)
