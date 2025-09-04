@@ -20,12 +20,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest]
         tfm: [net8.0, net9.0]
         env: [Dev-Name, Dev-ID]
 
     env:
-      RUNTIME: ${{ matrix.os == 'windows-latest' && 'win-x64' || 'linux-x64' }}
+      RUNTIME: ${{ matrix.os == 'windows-latest' && 'win-x64' || 'linux-x64' || 'linux-arm64'}}
 
     steps:
     - uses: actions/checkout@v4

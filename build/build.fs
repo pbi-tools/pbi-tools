@@ -234,7 +234,8 @@ let publish _ =
     |> Seq.iter (fun (tfm, dir) ->
         [ "win-x64",        "win-x64"
           "linux-x64",      "linux-x64"
-          "linux-musl-x64", "alpine-x64" ]
+          "linux-musl-x64", "alpine-x64" 
+	  "linux-arm64" ]
         |> Seq.iter (fun (rid, path) ->
             "src/PBI-Tools.NETCore/PBI-Tools.NETCore.csproj"
             |> DotNet.publish 
