@@ -24,6 +24,7 @@ using Newtonsoft.Json.Linq;
 using Serilog;
 #if NETFRAMEWORK
 using Castle.DynamicProxy;
+using Microsoft.PowerBI.Client.Windows;
 using Microsoft.PowerBI.Packaging;
 #endif
 #if NET
@@ -138,7 +139,7 @@ namespace PbiTools.PowerBI
                 // - Generate empty Report part
                 // - Generate Mashup part if pbix has DataModel
 
-                PowerBIPackager.Save(powerbiPackage, pbixFile);
+                PowerBIPackager.Save(powerbiPackage, pbixFile, SecurityBindingsEncrypter.Instance);
             }
         }
 
