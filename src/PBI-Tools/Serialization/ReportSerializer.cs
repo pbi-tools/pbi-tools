@@ -198,7 +198,7 @@ namespace PbiTools.Serialization
 
         internal static string GenerateVisualFolderName(JObject jVisual, JObject jConfig, ISet<string> folderNames)
         {
-            var name = jConfig.ReadPropertySafe<string>("name")?.Substring(0, 5);
+            var name = jConfig.ReadPropertySafe<string>("name");
             var id = jVisual.ReadPropertySafe<long>("id");
             var tabOrder = jVisual.ReadPropertySafe<int>("tabOrder");
             string ExtractTitle(string t) => t == null ? null : (t.StartsWith("'") && t.EndsWith("'") ? t.Substring(1, t.Length - 2) : t);
@@ -211,9 +211,18 @@ namespace PbiTools.Serialization
                 return nameBase;
             }
             else {
-                var nameWithId = $"{nameBase} ({name ?? id.ToString()})";
-                folderNames.Add(nameWithId);
-                return nameWithId;
+                var disambiguator = (name ?? id.ToString()).SanitizeFilename();
+                var nameWithId = $"{nameBase} ({disambiguator})";
+
+                if (folderNames.Add(nameWithId)) {
+                    return nameWithId;
+                }
+
+                var suffix = 2;
+                while (!folderNames.Add($"{nameWithId} {suffix}"))
+                    suffix++;
+
+                return $"{nameWithId} {suffix}";
             }
         }
 

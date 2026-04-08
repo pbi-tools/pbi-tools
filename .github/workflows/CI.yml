@@ -44,11 +44,13 @@ jobs:
     - name: pbi-tools info
       run: dotnet run --project ./src/PBI-Tools.NETCore/ -f ${{ matrix.tfm }} -c Release -r ${{ env.RUNTIME }} -- info
     - name: 'Deploy: WHATIF'
+      if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
       run: dotnet run --project ./src/PBI-Tools.NETCore/ -f ${{ matrix.tfm }} -c Release -r ${{ env.RUNTIME }} -- deploy ./tests/projects/tmdl-deploy/ Model ${{ matrix.env }} -whatif -basePath .
       env:
         PBI_CLIENT_SECRET: ${{ secrets.PBI_CLIENT_SECRET }}
         WORKSPACE_ID: 59068f65-46d1-4d0c-8b9e-30d069eaa226
     - name: Deploy
+      if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
       run: dotnet run --project ./src/PBI-Tools.NETCore/ -f ${{ matrix.tfm }} -c Release -r ${{ env.RUNTIME }} -- deploy ./tests/projects/tmdl-deploy/ Model ${{ matrix.env }} -basePath .
       env:
         PBI_CLIENT_SECRET: ${{ secrets.PBI_CLIENT_SECRET }}
